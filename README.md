@@ -1,6 +1,9 @@
-# ⚽ Sport event planning platform
+# ⚽ Sport tournament planning platform
 
-Simple platform for planning sport events
+Simple platform for planning sport tournaments
+
+- [High level overview](docs/High-level-overview.md)
+- [Tech requirements](docs/tech-requirements.md)
 
 ## 🏗️ tech stack
 
