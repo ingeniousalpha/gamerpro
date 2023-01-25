@@ -6,4 +6,7 @@
 
 ## ⚠️ Assumption / constrains / corner cases
 
+- User can be registered to tournament as a team member or / and individual separately
+    - Example: There are several categories in tournament for individuals & teams (Dota & Counter strike)
+- Users can be a member of many organizations and organization may hold many users (what forms teams entity)
 - 
