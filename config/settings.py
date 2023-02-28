@@ -60,30 +60,15 @@ SWAGGER_SETTINGS = {
     },
 }
 
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+
 CONSTANCE_CONFIG = {
     **ERROR_MESSAGES,
-    **CONTACT_INFORMATION,
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
-    **EMAIL_MESSAGES,
-    "CURRENCY_EXCHANGE_COMMISSION": (3, "Единая комиссия за обмен валют (%)", int),
-    "EXCHANGE_APPLICATION_LIFETIME": (60, "Время действия заявки на обмен в секундах", int),
-    "REFERRALS_COUNT_FOR_USING_BONUSES": (
-        5, "Кол-во активных рефералов которое нужно пригласить, чтобы пользоваться бонусами от них"
-    ),
-    "CRYPTOCURRENCY_DECIMALS": (8, "Кол-во цифр после запятой для криптовалюты", int),
-    "NON_CRYPTOCURRENCY_DECIMALS": (2, "Кол-во цифр после запятой для обычной валюты", int),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
-    ("Bonuses", ("REFERRALS_COUNT_FOR_USING_BONUSES", )),
-    ("Currency configs", (
-        "CURRENCY_EXCHANGE_COMMISSION",
-        "EXCHANGE_APPLICATION_LIFETIME",
-        "CRYPTOCURRENCY_DECIMALS",
-        "NON_CRYPTOCURRENCY_DECIMALS",
-    )),
-    ("Contact information", tuple(CONTACT_INFORMATION.keys())),
-    ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
+    # ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
 ])
@@ -102,9 +87,9 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "phonenumber_field",
     "constance",
-    "django_celery_beat",
-    "ckeditor",
-    "ckeditor_uploader",
+    # "django_celery_beat",
+    # "ckeditor",
+    # "ckeditor_uploader",
 ]
 
 DJANGO_APPS = [
@@ -121,15 +106,6 @@ LOCAL_APPS = [
     'apps.common.apps.CommonConfig',
     'apps.users.apps.UsersConfig',
     'apps.pipeline.apps.PipelineConfig',
-    'apps.translations.apps.TranslationsConfig',
-    'apps.currencies.apps.CurrenciesConfig',
-    'apps.applications.apps.ApplicationsConfig',
-    'apps.articles.apps.ArticlesConfig',
-    'apps.feedback.apps.FeedbackConfig',
-    'apps.kyc.apps.KycConfig',
-    'apps.notifications.apps.NotificationsConfig',
-    'apps.bonus_system.apps.BonusSystemConfig',
-    'apps.locations.apps.LocationsConfig'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -143,7 +119,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'apps.translations.middleware.LanguageHeaderMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -176,9 +151,9 @@ WSGI_APPLICATION = 'config.server.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        "NAME": os.getenv("DB_NAME", "bitswapdb"),
-        "USER": os.getenv("DB_USER", "bitswapdb"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "bitswapdb"),
+        "NAME": os.getenv("DB_NAME", "gamerprodb"),
+        "USER": os.getenv("DB_USER", "gamerprodb"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
@@ -292,15 +267,15 @@ SIMPLE_JWT = {
 }
 
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.getenv('REDIS_HOST', 'localhost')}:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": f"redis://{os.getenv('REDIS_HOST', 'localhost')}:6379/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
 
 # Celery settings
 
@@ -319,7 +294,7 @@ CELERY_TASK_PUBLISH_RETRY = True
 CELERY_DISABLE_RATE_LIMITS = False
 CELERY_TASK_TRACK_STARTED = True
 
-CKEDITOR_UPLOAD_PATH = "ncrm_helper"
+# CKEDITOR_UPLOAD_PATH = "ncrm_helper"
 
 LOGFILE_SIZE = 1024 * 1024 * 5
 LOGFILE_COUNT = 10

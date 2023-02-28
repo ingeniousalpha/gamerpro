@@ -16,11 +16,9 @@ class AbstractHandler(ABC):
 
     def __init__(
             self,
-            raw_data: Dict,
-            language: str = None,
+            raw_data: Dict
     ) -> None:
         self.raw_data = raw_data
-        self.language = language or settings.DEFAULT_LANGUAGE
 
     def get_error_detail(self) -> Tuple[int, str, str]:
         _error_code, _error_message = self._default_error_code, ""

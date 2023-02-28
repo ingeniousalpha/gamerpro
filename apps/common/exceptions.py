@@ -7,9 +7,8 @@ from config.constants.error_codes import EMAIL_CONFIRMATION_EXPIRED, EMAIL_ALREA
 
 class BaseAPIException(APIException):
 
-    def get_message(self, lang=settings.DEFAULT_LANGUAGE):
-        error_code = f"{self.default_code}_{lang}"
-        return getattr(config, error_code)
+    def get_message(self):
+        return getattr(config, self.default_code)
 
 
 class EmailConfirmationExpired(BaseAPIException):

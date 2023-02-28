@@ -1,5 +1,5 @@
-from ckeditor_uploader.fields import RichTextUploadingField
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+# from ckeditor_uploader.fields import RichTextUploadingField
+# from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.urls import reverse
 from django.contrib import admin
@@ -10,8 +10,8 @@ from django.contrib.contenttypes.admin import GenericTabularInline, GenericStack
 from apps.common.models import HandledException
 from apps.pipeline.models import ServiceHistory
 
-admin.site.site_header = "Bitswap Project"
-admin.site.site_title = "Bitswap Project"
+admin.site.site_header = "Gamer Pro Project"
+admin.site.site_title = "Gamer Pro Project"
 admin.site.index_title = ""
 
 
@@ -177,42 +177,42 @@ class AbstractDescriptionModelForm(forms.ModelForm):
         return obj
 
 
-class AbstractTemplateModelForm(forms.ModelForm):
-    template_ru = forms.CharField(label="HTML Шаблон (рус)", required=True, widget=CKEditorUploadingWidget())
-    template_kk = forms.CharField(label="HTML Шаблон (каз)", required=False, widget=CKEditorUploadingWidget())
-    template_en = forms.CharField(label="HTML Шаблон (англ)", required=False, widget=CKEditorUploadingWidget())
-
-    class Meta:
-        fields = ('template_ru', 'template_kk', 'template_en',)
-
-    def __init__(self, *args, **kwargs):
-        super(AbstractTemplateModelForm, self).__init__(*args, **kwargs)
-        if self.instance.template:
-            template_ru = self.instance.template.ru
-            template_kk = self.instance.template.kk
-            template_en = self.instance.template.en
-            self.initial['template_ru'] = template_ru
-            self.initial['template_kk'] = template_kk
-            self.initial['template_en'] = template_en
-
-    def save(self, commit=True):
-        obj = super(AbstractTemplateModelForm, self).save(commit=False)
-        lang_dict = {
-            'ru': self.cleaned_data.get('template_ru', None),
-            'kk': self.cleaned_data.get('template_kk', None),
-            'en': self.cleaned_data.get('template_en', None)
-        }
-        if obj.template:
-            obj.template.set_all_langs(lang_dict)
-        # else:
-        #     mlchar, created = MultiLanguageTextEditor.objects.get_or_create(
-        #         text_ru=lang_dict['ru'], text_kk=lang_dict['kk'], text_en=lang_dict['en']
-        #     )
-        #     if created:
-        #         obj.template = mlchar
-        if commit:
-            obj.save()
-        return obj
+# class AbstractTemplateModelForm(forms.ModelForm):
+#     template_ru = forms.CharField(label="HTML Шаблон (рус)", required=True, widget=CKEditorUploadingWidget())
+#     template_kk = forms.CharField(label="HTML Шаблон (каз)", required=False, widget=CKEditorUploadingWidget())
+#     template_en = forms.CharField(label="HTML Шаблон (англ)", required=False, widget=CKEditorUploadingWidget())
+#
+#     class Meta:
+#         fields = ('template_ru', 'template_kk', 'template_en',)
+#
+#     def __init__(self, *args, **kwargs):
+#         super(AbstractTemplateModelForm, self).__init__(*args, **kwargs)
+#         if self.instance.template:
+#             template_ru = self.instance.template.ru
+#             template_kk = self.instance.template.kk
+#             template_en = self.instance.template.en
+#             self.initial['template_ru'] = template_ru
+#             self.initial['template_kk'] = template_kk
+#             self.initial['template_en'] = template_en
+#
+#     def save(self, commit=True):
+#         obj = super(AbstractTemplateModelForm, self).save(commit=False)
+#         lang_dict = {
+#             'ru': self.cleaned_data.get('template_ru', None),
+#             'kk': self.cleaned_data.get('template_kk', None),
+#             'en': self.cleaned_data.get('template_en', None)
+#         }
+#         if obj.template:
+#             obj.template.set_all_langs(lang_dict)
+#         # else:
+#         #     mlchar, created = MultiLanguageTextEditor.objects.get_or_create(
+#         #         text_ru=lang_dict['ru'], text_kk=lang_dict['kk'], text_en=lang_dict['en']
+#         #     )
+#         #     if created:
+#         #         obj.template = mlchar
+#         if commit:
+#             obj.save()
+#         return obj
 
 
 class AbstractImageModelForm(forms.ModelForm):
