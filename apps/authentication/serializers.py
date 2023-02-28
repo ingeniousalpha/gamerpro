@@ -31,7 +31,7 @@ class RegisterSerializer(UserCredentials, serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = "email", "password",
+        fields = "mobile_phone", "password",
 
     def validate_email(self, value):
         if User.objects.filter(email=value, is_email_confirmed=True).exists():

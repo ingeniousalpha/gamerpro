@@ -14,7 +14,7 @@ from .serializers import (
 User = get_user_model()
 
 
-class RegisterView(PublicJSONRendererMixin, CreateAPIView):
+class SigninView(PublicJSONRendererMixin, CreateAPIView):
     """ Регистрация в системе """
 
     queryset = User.objects.all()
