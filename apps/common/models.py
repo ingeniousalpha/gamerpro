@@ -42,12 +42,8 @@ class OuterIDModel(MainModel):
 
 
 class TimestampModel(MainModel):
-    created_at = models.DateTimeField(
-        _("Время создания"), default=timezone.now, db_index=True
-    )
-    updated_at = models.DateTimeField(
-        _("Время последнего изменения"), auto_now=True, db_index=True
-    )
+    created_at = models.DateTimeField("Время создания", default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField("Время последнего изменения", auto_now=True, db_index=True)
 
     class Meta:
         abstract = True

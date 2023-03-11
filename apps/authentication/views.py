@@ -10,6 +10,7 @@ from apps.common.mixins import PublicJSONRendererMixin
 from .serializers import (
     RegisterSerializer, TokenRefreshSerializer, LoginSerializer,
 )
+from ..notifications.services import send_otp
 
 User = get_user_model()
 
@@ -21,9 +22,9 @@ class SigninView(PublicJSONRendererMixin, CreateAPIView):
     serializer_class = RegisterSerializer
 
     def perform_create(self, serializer):
-        email = serializer.validated_data["email"]
+        mobile_phone = serializer.validated_data["mobile_phone"]
         serializer.save()
-        # task_send_letter_for_email_confirmation.delay(email, self.request.language)
+        send_otp(mobile_phone)
 
 
 class TokenRefreshView(PublicJSONRendererMixin, DRFTokenRefreshView):

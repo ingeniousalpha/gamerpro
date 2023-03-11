@@ -39,7 +39,7 @@ ALLOWED_HOSTS = ['*']
 
 HOTP_KEY = base64.b32encode(SECRET_KEY.encode("utf-8"))
 OTP_LENGTH = 4
-OTP_VALIDITY_PERIOD = 1.5  # in minutes
+OTP_VALIDITY_PERIOD = 90  # in seconds
 
 SITE_URL = os.getenv('SITE_URL', '127.0.0.1:8000')
 DEV_MODE = bool(os.getenv('DEV_MODE', 1))
@@ -154,7 +154,7 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "gamerprodb"),
         "USER": os.getenv("DB_USER", "gamerprodb"),
         "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
+        "HOST": os.getenv("DB_HOST", "gp-postgres"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }

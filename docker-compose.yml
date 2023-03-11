@@ -3,7 +3,7 @@ version: '3.9'
 volumes:
   media:
   static:
-  postgres_data:
+  gp-postgres_data:
 #  portainer_data:
 
 networks:
@@ -11,8 +11,8 @@ networks:
     driver: bridge
 
 services:
-  rest-server:
-    container_name: rest-server
+  gp-rest-server:
+    container_name: gp-rest-server
     restart: always
     build:
       context: .
@@ -68,12 +68,12 @@ services:
 #    networks:
 #      - airba-net
 
-  postgres:
-    container_name: postgres
+  gp-postgres:
+    container_name: gp-postgres
     restart: always
     image: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - gp-postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=gamerprodb
       - POSTGRES_USER=gamerprodb
@@ -85,8 +85,8 @@ services:
     networks:
       - airba-net
 
-  pgadmin:
-    container_name: pgadmin
+  gp-pgadmin:
+    container_name: gp-pgadmin
     image: dpage/pgadmin4
     restart: always
     environment:
