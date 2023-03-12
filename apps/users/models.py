@@ -1,4 +1,4 @@
-import uuid
+import uuid as uuid_lib
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
@@ -19,7 +19,7 @@ class User(PermissionsMixin, AbstractBaseUser):
         verbose_name = _("Учетная запись")
         verbose_name_plural = _("Учетная запись")
 
-    uuid = models.UUIDField("UUID пользователя", default=uuid.uuid4, unique=True)
+    uuid = models.UUIDField("UUID пользователя", default=uuid_lib.uuid4, unique=True)
     email = models.EmailField("Почта", max_length=40, unique=True)
     full_name = models.CharField("Имя", max_length=256, null=True, blank=True)
     mobile_phone = PhoneNumberField("Моб. телефон", blank=True, null=True)

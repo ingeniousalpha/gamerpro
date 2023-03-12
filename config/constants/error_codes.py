@@ -21,3 +21,4 @@ PASSWORDS_ARE_NOT_EQUAL = "passwords_are_not_equal"
 PASSWORD_INVALID = "password_invalid"
 EMAIL_CONFIRMATION_EXPIRED = "email_confirmation_expired"
 EMAIL_ALREADY_CONFIRMED = "email_already_confirmed"
+

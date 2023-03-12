@@ -18,7 +18,6 @@ def _get_handler_class(status_code: str):
 def execute_handler(
     data: Dict,
     raw_response: 'Response',
-    language: str = None,
 ) -> Dict:
     status_code = str(raw_response.status_code)
     handler_class = _get_handler_class(status_code)
@@ -26,8 +25,6 @@ def execute_handler(
     if handler_class is None:
         return data
 
-    data, error = handler_class(
-        data, language # noqa
-    ).format()
+    data, error = handler_class(data).format()
 
     return CustomResponse(data, error).__dict__

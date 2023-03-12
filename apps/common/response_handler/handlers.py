@@ -27,7 +27,7 @@ class AbstractHandler(ABC):
             _error_code = self.raw_data.get("detail").code
             _error_message = self.raw_data.get("detail")
 
-        _config_error_code = f"{_error_code}_{self.language}"
+        _config_error_code = f"{_error_code}"
 
         if hasattr(config, _config_error_code):
             _error_message = getattr(config, _config_error_code)

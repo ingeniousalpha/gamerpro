@@ -8,7 +8,6 @@ class JSONRenderer(DefaultJSONRenderer):
         formatted_response = execute_handler(
             data=data,
             raw_response=renderer_context['response'],
-            language=renderer_context["request"].language
         )
 
         return super(JSONRenderer, self).render(formatted_response, accepted_media_type, renderer_context)

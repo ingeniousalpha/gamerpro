@@ -1,4 +1,4 @@
-from apps.authentication.exceptions import UserNotFound
+from apps.authentication.exceptions import UserNotFound, UserAlreadyExists
 from apps.users.models import User
 
 
@@ -13,6 +13,20 @@ def create_user(email, password):
     user.save(update_fields=['password'])
 
     return user
+
+
+def get_or_create_user_by_phone(mobile_phone, raise_exception=False):
+    """Returns True if created, else False"""
+
+    user = User.objects.filter(mobile_phone=str(mobile_phone)).first()
+
+    if user:
+        if raise_exception:
+            raise UserAlreadyExists
+        return user, False
+
+    user = User.objects.create(mobile_phone=mobile_phone)
+    return user, True
 
 
 def get_user(email):

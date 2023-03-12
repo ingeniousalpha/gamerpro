@@ -65,12 +65,15 @@ CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_CONFIG = {
     **ERROR_MESSAGES,
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
+    "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
+    "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
     # ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
+    ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP"))
 ])
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 

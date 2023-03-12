@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
 
-from .exceptions import UserAlreadyExists
-from .services import validate_password
-from apps.users.services import create_user, get_user_by_login
+from .services import validate_password, verify_otp
+from apps.users.services import get_user_by_login, get_or_create_user_by_phone
+from ..common.exceptions import InvalidInputData
 
 User = get_user_model()
 
@@ -27,20 +28,38 @@ class UserCredentials(serializers.Serializer):
         }
 
 
-class RegisterSerializer(UserCredentials, serializers.ModelSerializer):
+class SigninSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = "mobile_phone",
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value, is_email_confirmed=True).exists():
-            raise UserAlreadyExists
+    def create(self, validated_data):
+        user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
+        return user
+
+
+class VerifyOTPSerializer(serializers.Serializer):
+    mobile_phone = PhoneNumberField(required=True, write_only=True)
+    otp_code = serializers.CharField(required=True, write_only=True, min_length=4, max_length=4)
+
+    def validate_otp_code(self, value):
+        if not value.isnumeric():
+            raise InvalidInputData
         return value
 
-    def create(self, validated_data):
-        user = create_user(validated_data['email'], validated_data['password'])
-        return user
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        print(attrs)
+        verify_otp(code=attrs['otp_code'], mobile_phone=attrs['mobile_phone'], save=True)
+
+        user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
+        refresh = CustomTokenObtainPairSerializer.get_token(user)
+        return {
+            "refresh_token": str(refresh),
+            "access_token": str(refresh.access_token),
+        }
+        # return attrs
 
 
 class LoginSerializer(UserCredentials):

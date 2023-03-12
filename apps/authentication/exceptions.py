@@ -1,5 +1,5 @@
 from apps.common.exceptions import BaseAPIException
-from config.constants.error_codes import USER_NOT_FOUND, USER_ALREADY_EXISTS
+from config.constants.error_codes import USER_NOT_FOUND, USER_ALREADY_EXISTS, INVALID_OTP
 
 
 class UserNotFound(BaseAPIException):
@@ -10,3 +10,8 @@ class UserNotFound(BaseAPIException):
 class UserAlreadyExists(BaseAPIException):
     status_code = 400
     default_code = USER_ALREADY_EXISTS
+
+
+class InvalidOTP(BaseAPIException):
+    status_code = 400
+    default_code = INVALID_OTP

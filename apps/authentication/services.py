@@ -1,8 +1,12 @@
 import logging
 from django.core.exceptions import ValidationError
+from phonenumber_field.phonenumber import PhoneNumber
+from constance import config
 
 from apps.common.exceptions import BaseAPIException
 from apps.users.exceptions import PasswordMinLength, PasswordsAreNotEqual, PasswordInvalid
+from .exceptions import InvalidOTP
+from .models import OTP
 
 logger_users = logging.getLogger("users")
 
@@ -38,6 +42,20 @@ def validate_password_in_forms(password1, password2=None):
     except BaseAPIException as e:
         ValidationError(e.get_message())
 
+
+def verify_otp(code: str, mobile_phone: PhoneNumber, save=False):
+    otp = OTP.objects.active().filter(mobile_phone=str(mobile_phone)).last()
+
+    if config.USE_DEFAULT_OTP and code == config.DEFAULT_OTP:
+        return True
+    elif not otp or otp.code != code:
+        raise InvalidOTP
+
+    if save:
+        otp.verified = True
+        otp.save(update_fields=["verified"])
+
+    return True
 
 # def validate_email(email):
 #     """ Проверка почты при регистрации """

@@ -2,7 +2,7 @@ from constance import config
 from django.conf import settings
 from rest_framework.exceptions import APIException
 
-from config.constants.error_codes import EMAIL_CONFIRMATION_EXPIRED, EMAIL_ALREADY_CONFIRMED
+from config.constants.error_codes import EMAIL_CONFIRMATION_EXPIRED, EMAIL_ALREADY_CONFIRMED, INVALID_INPUT_DATA
 
 
 class BaseAPIException(APIException):
@@ -17,5 +17,10 @@ class EmailConfirmationExpired(BaseAPIException):
 
 
 class EmailAlreadyConfirmed(BaseAPIException):
-    status = 400
+    status_code = 400
     default_code = EMAIL_ALREADY_CONFIRMED
+
+
+class InvalidInputData(BaseAPIException):
+    status_code = 400
+    default_code = INVALID_INPUT_DATA
