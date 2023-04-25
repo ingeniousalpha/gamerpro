@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && apt-get install -y gettext libgettextpo-dev
 
-RUN mkdir -p /static /media
+RUN mkdir -p static media
 
 COPY ./requirements.txt /requirements.txt
 RUN pip3 install --upgrade pip

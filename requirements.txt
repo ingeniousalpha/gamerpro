@@ -18,7 +18,7 @@ djangorestframework-simplejwt==5.2.2
 kombu==5.2.4
 phonenumbers==8.13.6
 prompt-toolkit==3.0.37
-psycopg2==2.9.3
+psycopg2-binary
 pycparser==2.21
 PyJWT==2.6.0
 pytz==2022.7.1
