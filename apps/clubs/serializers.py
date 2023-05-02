@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from apps.clubs import ClubHallTypes
-from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware
+from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
+    ClubComputerGroup
 
 
 class ClubListSerializer(serializers.ModelSerializer):
@@ -36,18 +37,20 @@ class ClubBranchHardwareSerializer(serializers.ModelSerializer):
 class ClubComputerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubComputer
-        fields = ('number', 'is_booked')
+        fields = ('id', 'number', 'is_booked')
 
 
 class ClubBranchInfoSerializer(serializers.ModelSerializer):
-    prices = serializers.SerializerMethodField()
+    hall_name = serializers.CharField(source='name')
     properties = serializers.SerializerMethodField()
     hardware = serializers.SerializerMethodField()
+    prices = serializers.SerializerMethodField()
     computers = serializers.SerializerMethodField()
 
     class Meta:
-        model = ClubBranch
+        model = ClubComputerGroup
         fields = (
+            'hall_name',
             'prices',
             'properties',
             'hardware',
@@ -55,76 +58,97 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
         )
 
     def get_prices(self, obj):
-        queryset = obj.prices.all()
-        if hall_type := self.context.get('hall_type'):
-            queryset = queryset.filter(hall_type=hall_type)
+        queryset = obj.club_branch.prices.filter(group_id=obj.id)
         return ClubBranchPriceSerializer(queryset, many=True).data
 
     def get_properties(self, obj):
-        queryset = obj.properties.all()
-        if hall_type := self.context.get('hall_type'):
-            queryset = queryset.filter(hall_type=hall_type)
+        queryset = obj.club_branch.properties.filter(group_id=obj.id)
         return ClubBranchPropertySerializer(queryset, many=True).data
 
     def get_hardware(self, obj):
-        queryset = obj.hardware.all()
-        if hall_type := self.context.get('hall_type'):
-            queryset = queryset.filter(hall_type=hall_type)
+        queryset = obj.club_branch.hardware.filter(group_id=obj.id)
         return ClubBranchHardwareSerializer(queryset, many=True).data
 
     def get_computers(self, obj):
-        queryset = obj.computers.all()
-        if hall_type := self.context.get('hall_type'):
-            queryset = queryset.filter(hall_type=hall_type)
+        queryset = obj.club_branch.computers.filter(group_id=obj.id)
         return ClubComputerSerializer(queryset, many=True).data
+
+
+class ClubComputerListSerializer(serializers.ModelSerializer):
+    hall_name = serializers.CharField(source='group.name')
+
+    class Meta:
+        model = ClubComputer
+        fields = (
+            'id',
+            'number',
+            'is_booked',
+            'hall_name',
+        )
 
 
 class ClubBranchDetailSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
-    vip = serializers.SerializerMethodField()
-    standard = serializers.SerializerMethodField()
+    halls_info = ClubBranchInfoSerializer(source='computer_groups', many=True)
+    computers = ClubComputerListSerializer(many=True)
 
     class Meta:
         model = ClubBranch
         fields = (
+            'id',
             'name',
             'address',
             'is_favorite',
-            'vip',
-            'standard',
+            'halls_info',
+            'computers',
         )
 
     def get_name(self, obj):
         return obj.club.name
 
-    def get_vip(self, obj):
-        return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.VIP}).data
+    # def get_vip(self, obj):
+    #     return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.VIP}).data
+    #
+    # def get_standard(self, obj):
+    #     return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.STANDARD}).data
 
-    def get_standard(self, obj):
-        return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.STANDARD}).data
+
+class ClubComputerGroupLanding(serializers.ModelSerializer):
+    hall_name = serializers.CharField(source='name')
+    computers_total = serializers.SerializerMethodField()
+    computers_free = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubComputerGroup
+        fields = (
+            'hall_name',
+            'computers_total',
+            'computers_free',
+        )
+
+    def get_computers_total(self, obj):
+        return obj.club_branch.computers.filter(group_id=obj.id).count()
+
+    def get_computers_free(self, obj):
+        return obj.club_branch.computers.filter(group_id=obj.id, is_booked=False).count()
 
 
 class ClubBranchListSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
-    standard_total = serializers.SerializerMethodField()
-    standard_booked = serializers.SerializerMethodField()
-    vip_total = serializers.SerializerMethodField()
-    vip_booked = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
+    landing = ClubComputerGroupLanding(source='computer_groups', many=True)
 
     class Meta:
         model = ClubBranch
         fields = (
+            'id',
             'name',
             'description',
             'address',
-            'standard_total',
-            'standard_booked',
-            'vip_total',
-            'vip_booked',
-            'is_favorite'
+            'is_favorite',
+            'landing',
         )
 
     def get_name(self, obj):
@@ -132,15 +156,9 @@ class ClubBranchListSerializer(serializers.ModelSerializer):
 
     def get_description(self, obj):
         return obj.club.description
-
-    def get_standard_total(self, obj):
-        return obj.computers.standard().count()
-
-    def get_standard_booked(self, obj):
-        return obj.computers.standard().filter(is_booked=True).count()
-
-    def get_vip_total(self, obj):
-        return obj.computers.vip().count()
-
-    def get_vip_booked(self, obj):
-        return obj.computers.vip().filter(is_booked=True).count()
+    #
+    # def get_landing(self, obj):
+    #     halls = []
+    #     for group in obj.computer_groups.all():
+    #         halls.append(ClubComputerGroupLanding(obj, context={"group_name": group.name}).data)
+    #     return halls

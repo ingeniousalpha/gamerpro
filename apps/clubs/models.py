@@ -27,46 +27,66 @@ class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=255)
+    ip_address = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
+    gizmo_payment_method = models.IntegerField(default=2)
+    is_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Филиал Клуба"
         verbose_name_plural = "Филиалы Клубов"
 
     def __str__(self):
+        return f"{self.club} {self.name}"
+
+
+class ClubComputerGroup(models.Model):
+    club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")
+    name = models.CharField(max_length=20)
+    gizmo_id = models.IntegerField(null=True)
+
+    def __str__(self):
         return self.name
 
 
-class ClubComputer(HallTypesManagerMixin, models.Model):
+class ClubComputer(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computers")
     number = models.IntegerField()
-    hall_type = models.CharField(max_length=20, choices=ClubHallTypes.choices, default=ClubHallTypes.STANDARD)
+    group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
     is_booked = models.BooleanField(default=False)
+    gizmo_id = models.IntegerField(null=True)
+    gizmo_hostname = models.CharField(max_length=10, null=True)
+
+    def __str__(self):
+        if self.gizmo_hostname:
+            return self.gizmo_hostname
+        return f"Comp({self.number})"
 
 
-class ClubBranchProperty(HallTypesManagerMixin, models.Model):
+class ClubBranchProperty(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="properties")
-    hall_type = models.CharField(max_length=20, choices=ClubHallTypes.choices, default=ClubHallTypes.STANDARD)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100)
 
 
-class ClubBranchHardware(HallTypesManagerMixin, models.Model):
+class ClubBranchHardware(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="hardware")
-    hall_type = models.CharField(max_length=20, choices=ClubHallTypes.choices, default=ClubHallTypes.STANDARD)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100)
 
 
-class ClubBranchPrice(HallTypesManagerMixin, models.Model):
+class ClubBranchPrice(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="prices")
-    hall_type = models.CharField(max_length=20, choices=ClubHallTypes.choices, default=ClubHallTypes.STANDARD)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100)
     price = models.IntegerField()
 
 
-class ClubUserInfo(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_accounts")
+class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_accounts")
+    gizmo_id = models.IntegerField(null=True)
     login = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
-    balance = models.IntegerField()
+    balance = models.IntegerField(default=0)
+
 
 

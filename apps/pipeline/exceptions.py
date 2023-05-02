@@ -7,3 +7,7 @@ class ServiceUnavailable(Exception):
 
 class ServiceNotFound(Exception):
     ...
+
+
+class UnauthorizedError(Exception):
+    ...

@@ -1,0 +1,16 @@
+{% load i18n admin_urls %}
+{% block object-tools-items %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<li>
+    {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+    <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
+    <a href="{% add_preserved_filters history_url %}" class="historylink">History</a>
+</li>
+<script>
+    function run_sync_gizmo() {
+        $('#clubbranch_form').append('<input type="hidden" name="sync_gizmo" value="" />');
+        $('#clubbranch_form').submit()
+    }
+</script>
+{% if has_absolute_url %}<li><a href="{{ absolute_url }}" class="viewsitelink">{% translate "View on site" %}</a></li>{% endif %}
+{% endblock %}

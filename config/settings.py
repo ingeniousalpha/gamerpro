@@ -89,7 +89,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "phonenumber_field",
     "constance",
-    # "django_celery_beat",
+    "django_celery_beat",
     # "ckeditor",
     # "ckeditor_uploader",
 ]
@@ -283,7 +283,7 @@ SIMPLE_JWT = {
 # Celery settings
 
 CELERY_BROKER_URL = "redis://{host}:{port}/{db_index}".format(
-    host=os.getenv("REDIS_HOST", "localhost"),
+    host=os.getenv("REDIS_HOST", "redis"),
     port=os.getenv("REDIS_PORT", "6379"),
     db_index=os.getenv("CELERY_REDIS_DB_INDEX", "0"),
 )
@@ -341,5 +341,10 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'gizmo': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        }
     }
 }

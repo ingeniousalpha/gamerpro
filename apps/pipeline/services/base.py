@@ -1,5 +1,6 @@
 import time
 import traceback
+import logging
 from copy import deepcopy
 from abc import ABC, abstractmethod
 from typing import Optional, Type, Tuple, Union, Any
@@ -7,18 +8,27 @@ from typing import Optional, Type, Tuple, Union, Any
 from requests import Session
 from urllib.parse import urljoin
 from requests.models import Response
+from rest_framework.exceptions import ValidationError
 
 from apps.pipeline import ServiceStatuses
 from apps.pipeline.models import ServiceHistory
 from apps.pipeline.exceptions import (
     ServiceUnavailable,
     ServiceNotFound,
+    UnauthorizedError,
 )
+
+logger = logging.getLogger("pipeline")
 
 
 class BaseService(ABC):
     instance = None
+    instance_class = None
     save_serializer: Optional[Type] = None
+
+    log_headers: bool = False
+    log_request: bool = False
+    log_response: bool = False
 
     headers: dict = None
     url: str = None
@@ -32,6 +42,7 @@ class BaseService(ABC):
     host_verify: bool = True
 
     # History attrs
+    status_code: int = None
     data: dict = None
     code: str = None
     status: ServiceStatuses
@@ -40,7 +51,7 @@ class BaseService(ABC):
     runtime: float = 0
 
     def __init__(self, instance=None, **kwargs):
-        self.instance = instance
+        self.instance = self.instance_class(instance) if self.instance_class else instance
         self.kwargs = kwargs
         self.status = ServiceStatuses.NO_REQUEST
         self.last_request, self.last_response = "", ""
@@ -49,25 +60,34 @@ class BaseService(ABC):
     def session(self) -> Session:
         if self._session is None:
             self._session = Session()
-
-        self._session.hooks["response"].append(self.history)
+            self._session.hooks["response"].append(self.history)
         return self._session
 
     def history(self, response: Response, *args, **kwargs) -> None:
         self.last_request = response.request.body
         self.last_response = response.text
+        logger.info('url: %s' % self.url)
+        if self.log_headers:
+            logger.info('headers: %s' % self.headers)  # TODO log properly
+        if self.log_request:
+            logger.info('request: %s' % self.last_request)
+        if self.log_response:
+            logger.info('response: %s' % self.last_response)
 
-    def get_url(self) -> str:
-        return urljoin(self.host, self.endpoint)
+    def get_url(self, path_params) -> str:
+        if path_params:
+            self.endpoint = self.endpoint.format(**path_params)
+        url = urljoin(self.host, self.endpoint)
+        return url
 
     def get_headers(self) -> dict:
         return self.headers
 
-    def fetch(self, params=None, data=None, json=None, files=None, **kwargs):
+    def fetch(self, params=None, path_params=None, data=None, json=None, files=None, **kwargs):
         _start = time.perf_counter()
 
         if self.url is None:
-            self.url = self.get_url()
+            self.url = self.get_url(path_params)
 
         if self.headers is None:
             self.headers = self.get_headers()
@@ -85,6 +105,7 @@ class BaseService(ABC):
             verify=self.host_verify,
             **kwargs
         )
+        self.status_code = response_raw.status_code
 
         self.runtime = time.perf_counter() - _start
         self.code = str(response_raw.status_code)
@@ -92,22 +113,35 @@ class BaseService(ABC):
         if response_raw.status_code == 400:
             return self.handle_400(response_raw)
 
+        if response_raw.status_code == 401:
+            return self.handle_401(response_raw)
+
         if response_raw.status_code == 404:
             return self.handle_404(response_raw)
 
+        if response_raw.status_code >= 500:
+            return self.handle_500(response_raw)
+
         return self.get_response(response_raw)
 
-    def handle_400(self, response: Response): # noqa
+    def handle_400(self, response: Response):  # noqa
         return response.json()
 
-    def handle_404(self, response: Response): # noqa
+    def handle_401(self, response: Response):
+        raise UnauthorizedError
+
+    def handle_404(self, response: Response):  # noqa
         raise ServiceNotFound
 
     def handle_500(self, response: Response):
         raise ServiceUnavailable
 
-    def get_response(self, response: Response): # noqa
-        return response.json()
+    def get_response(self, response: Response):  # noqa
+        try:
+            return response.json()
+        except Exception as e:
+            logger.info("JSON PARSE ERROR body %s, status_code %s" % (response.text, str(response.status_code)))
+            raise e
 
     def get_instance(self):
         return self.instance
@@ -121,8 +155,15 @@ class BaseService(ABC):
         This method should be overload
         """
 
+    def skip_task(self):
+        ...
+
     def run(self):
         response_data = None
+        skip_task = self.skip_task()
+
+        if skip_task:
+            return skip_task
 
         try:
             response_data = self.run_service()
@@ -130,12 +171,17 @@ class BaseService(ABC):
             self.save(response_data)
 
         except ServiceUnavailable:
-            print(f"Service is unavailable {self.__class__.__name__}")
+            logger.error(f"Service is unavailable {self.__class__.__name__}")
             self.status = ServiceStatuses.SERVICE_UNAVAILABLE
 
+        except UnauthorizedError:
+            logger.error(f"Service is unauthorized {self.__class__.__name__}")
+            self.status = ServiceStatuses.UNAUTHORIZED
+
         except Exception as exc:
-            print(f"Exception({self.__class__.__name__}): {exc.__class__} {exc}")
-            print(traceback.format_exc())
+            logger.exception(exc)
+            logger.error(f"Exception({self.__class__.__name__}): {exc.__class__} {exc}")
+            logger.error(traceback.format_exc())
             self.status = ServiceStatuses.REQUEST_ERROR
 
         else:
@@ -169,7 +215,7 @@ class BaseService(ABC):
                     response=self.last_response,
                 )
             except Exception as exc:
-                print('Exception:', exc)
+                logger.exception(exc)
 
     def prepare_to_save(self, data: dict) -> dict:  # noqa
         return data
@@ -180,8 +226,25 @@ class BaseService(ABC):
 
             if instance and prepared_data:
                 serializer = self.save_serializer(
-                   instance=self.instance,
-                   data=self.prepare_to_save(prepared_data)
+                    instance=self.instance,
+                    data=self.prepare_to_save(prepared_data)
                 )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
+            elif prepared_data:
+                serializer = self.save_serializer(
+                    data=self.prepare_to_save(prepared_data)
+                )
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                except ValidationError as e:
+                    pass
+                except Exception as e:
+                    logger.exception(e)
+
+
+class ServiceLoggingMixin:
+    log_response = True
+    log_request = True
+    log_headers = True
