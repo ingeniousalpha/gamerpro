@@ -42,7 +42,8 @@ class ClubBranchPriceInline(admin.TabularInline):
 class ClubBranchComputerInline(admin.TabularInline):
     model = ClubComputer
     extra = 0
-    fields = ('group', 'number', 'is_booked')
+    ordering = ['number']
+    fields = ('group', 'gizmo_hostname', 'is_booked')
 
 
 @admin.register(Club)
@@ -57,7 +58,9 @@ class ClubBranchAdmin(admin.ModelAdmin):
         'name',
         'address',
         'club',
-        'ip_address',
+        'api_host',
+        'api_user',
+        'api_password',
         'gizmo_payment_method',
         'is_active',
     )

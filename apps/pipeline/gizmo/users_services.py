@@ -14,6 +14,17 @@ class GizmoGetUsersService(BaseGizmoService):
     def run_service(self) -> Any:
         return self.fetch()
 
+    def get_correct_phone(self, *args):
+        correct_phone = ""
+        for phone in args:
+            if phone and phone.startswith('+7') and len(phone) == 12:
+                correct_phone = phone
+
+            if phone and phone.startswith('8') and len(phone) == 11:
+                correct_phone = "+7" + phone[1:]
+
+        return correct_phone
+
     def finalize_response(self, response):
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
@@ -25,8 +36,9 @@ class GizmoGetUsersService(BaseGizmoService):
                     serializer = self.save_serializer(
                         data={
                             "gizmo_id": gizmo_user['id'],
+                            "gizmo_phone": self.get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone']),
                             "login": gizmo_user['username'],
-                            "club_branch": self.instance
+                            "club_branch": self.instance.id
                         }
                     )
                     try:

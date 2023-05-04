@@ -8,18 +8,18 @@ class GizmoUsersSaveSerializer(serializers.ModelSerializer):
         model = ClubBranchUser
         fields = (
             'gizmo_id',
+            'gizmo_phone',
             'login',
             'club_branch',
         )
 
 
 class GizmoComputersSaveSerializer(serializers.ModelSerializer):
-    group = serializers.IntegerField(source='group.gizmo_id')
-
     class Meta:
         model = ClubComputer
         fields = (
             'gizmo_id',
+            'number',
             'gizmo_hostname',
             'is_booked',
             'club_branch',

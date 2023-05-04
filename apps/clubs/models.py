@@ -27,7 +27,9 @@ class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=255)
-    ip_address = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
+    api_host = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
+    api_user = models.CharField("Логин для API филиала", max_length=20, null=True)
+    api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
     gizmo_payment_method = models.IntegerField(default=2)
     is_active = models.BooleanField(default=False)
 
@@ -64,27 +66,28 @@ class ClubComputer(models.Model):
 
 class ClubBranchProperty(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="properties")
-    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100)
 
 
 class ClubBranchHardware(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="hardware")
-    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100)
 
 
 class ClubBranchPrice(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="prices")
-    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True)
+    group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100)
     price = models.IntegerField()
 
 
 class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_accounts")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
     gizmo_id = models.IntegerField(null=True)
+    gizmo_phone = models.CharField(max_length=12, null=True)
     login = models.CharField(max_length=50)
     balance = models.IntegerField(default=0)
 

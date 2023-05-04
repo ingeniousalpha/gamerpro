@@ -25,7 +25,7 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
                         data={
                             "gizmo_id": gizmo_comp_group['id'],
                             "name": gizmo_comp_group['name'],
-                            "club_branch": self.instance,
+                            "club_branch": self.instance.id,
                         }
                     )
                     try:
@@ -47,6 +47,7 @@ class GizmoGetComputersService(BaseGizmoService):
         return True if state == 2 else False
 
     def finalize_response(self, response):
+        print(response.get('result'))
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             for gizmo_computer in resp_data:
@@ -55,13 +56,17 @@ class GizmoGetComputersService(BaseGizmoService):
                     club_branch_id=self.instance.id
                 ).first()
                 if computer is None:
+                    group_id = None
+                    if group := ClubComputerGroup.objects.filter(gizmo_id=gizmo_computer['hostGroupId']).first():
+                        group_id = group.id
                     serializer = self.save_serializer(
                         data={
                             "gizmo_id": gizmo_computer['id'],
+                            "number": gizmo_computer['number'],
                             "gizmo_hostname": gizmo_computer['hostname'],
-                            "group": gizmo_computer['hostGroupId'],
-                            "club_branch": self.instance,
+                            "club_branch": self.instance.id,
                             "is_booked": self.get_booking_state(gizmo_computer['state']),
+                            "group": group_id,
                         }
                     )
                     try:

@@ -14,6 +14,5 @@ def synchronize_gizmo_club_branch(club_branch_id):
 
 @cel_app.task
 def synchronize_gizmo_computers_state():
-    print('task executed')
-    # for club_branch in ClubBranch.objects.filter(ip_address__isnull=False, is_active=True):
-    #     GizmoGetComputersService(instance=club_branch).run()
+    for club_branch in ClubBranch.objects.filter(is_active=True):
+        GizmoGetComputersService(instance=club_branch).run()

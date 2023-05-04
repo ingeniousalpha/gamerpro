@@ -83,6 +83,9 @@ class BaseService(ABC):
     def get_headers(self) -> dict:
         return self.headers
 
+    def get_auth(self):
+        return self.auth
+
     def fetch(self, params=None, path_params=None, data=None, json=None, files=None, **kwargs):
         _start = time.perf_counter()
 
@@ -91,6 +94,9 @@ class BaseService(ABC):
 
         if self.headers is None:
             self.headers = self.get_headers()
+
+        if self.auth is None:
+            self.auth = self.get_auth()
 
         response_raw = self.session.request(
             method=self.method,
