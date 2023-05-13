@@ -35,7 +35,13 @@ class User(PermissionsMixin, AbstractBaseUser):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return str(self.username)
+
+    @property
+    def username(self):
+        if self.email:
+            return self.email
+        return str(self.mobile_phone)
 
     def has_perm(self, perm, obj=None):
         if not self.is_active:

@@ -20,5 +20,8 @@ class BaseGizmoService(BaseService):
         print('get_auth executed')
         return self.instance.api_user, self.instance.api_password
 
+    def run_service(self):
+        return self.fetch()
+
     def log_error(self, e):
         logger.info(f"{self.__class__.__name__} Error: {e}")

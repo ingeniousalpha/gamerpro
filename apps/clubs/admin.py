@@ -3,8 +3,13 @@ from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
 
-admin.site.register(ClubComputer)
 admin.site.register(ClubComputerGroup)
+
+
+@admin.register(ClubComputer)
+class ClubComputerAdmin(admin.ModelAdmin):
+    list_display = ('number', 'gizmo_hostname',)
+    ordering = ('number',)
 
 
 class ClubBranchInline(admin.StackedInline):
@@ -83,5 +88,6 @@ class ClubBranchAdmin(admin.ModelAdmin):
 
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(admin.ModelAdmin):
+    search_fields = ('gizmo_id', 'login',)
     list_display = ('gizmo_id', 'login', 'club_branch')
     list_filter = ('club_branch',)

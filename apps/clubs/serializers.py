@@ -114,6 +114,10 @@ class ClubBranchDetailSerializer(serializers.ModelSerializer):
     #     return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.STANDARD}).data
 
 
+class ClubBranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubBranch
+
 class ClubComputerGroupLanding(serializers.ModelSerializer):
     hall_name = serializers.CharField(source='name')
     computers_total = serializers.SerializerMethodField()
@@ -156,7 +160,7 @@ class ClubBranchListSerializer(serializers.ModelSerializer):
 
     def get_description(self, obj):
         return obj.club.description
-    #
+
     # def get_landing(self, obj):
     #     halls = []
     #     for group in obj.computer_groups.all():

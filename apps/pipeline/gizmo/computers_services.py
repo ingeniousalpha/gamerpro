@@ -10,10 +10,7 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
     save_serializer = GizmoComputerGroupsSaveSerializer
     method = "GET"
 
-    def run_service(self) -> Any:
-        return self.fetch()
-
-    def finalize_response(self, response):
+    def save(self, response):
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             for gizmo_comp_group in resp_data:
@@ -21,14 +18,14 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
                     gizmo_id=gizmo_comp_group['id'],
                     club_branch_id=self.instance.id
                 ).exists():
-                    serializer = self.save_serializer(
-                        data={
-                            "gizmo_id": gizmo_comp_group['id'],
-                            "name": gizmo_comp_group['name'],
-                            "club_branch": self.instance.id,
-                        }
-                    )
                     try:
+                        serializer = self.save_serializer(
+                            data={
+                                "gizmo_id": gizmo_comp_group['id'],
+                                "name": gizmo_comp_group['name'],
+                                "club_branch": self.instance.id,
+                            }
+                        )
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
                     except Exception as e:
@@ -40,13 +37,10 @@ class GizmoGetComputersService(BaseGizmoService):
     save_serializer = GizmoComputersSaveSerializer
     method = "GET"
 
-    def run_service(self) -> Any:
-        return self.fetch()
-
     def get_booking_state(self, state: int) -> bool:
         return True if state == 2 else False
 
-    def finalize_response(self, response):
+    def save(self, response):
         print(response.get('result'))
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']

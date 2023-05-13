@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.clubs.models import ClubBranchUser, ClubComputer, ClubComputerGroup
 
 
-class GizmoUsersSaveSerializer(serializers.ModelSerializer):
+class GizmoUserSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubBranchUser
         fields = (

@@ -1,6 +1,8 @@
 import logging
+
 from django.core.exceptions import ValidationError
 from phonenumber_field.phonenumber import PhoneNumber
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from constance import config
 
 from apps.common.exceptions import BaseAPIException
@@ -93,3 +95,11 @@ def verify_otp(code: str, mobile_phone: PhoneNumber, save=False):
 #         return message_user_exists
 #
     # return None
+
+
+def generate_access_and_refresh_tokens_for_user(user):
+    refresh = BaseTokenObtainPairSerializer.get_token(user)
+    return {
+        "refresh_token": str(refresh),
+        "access_token": str(refresh.access_token),
+    }

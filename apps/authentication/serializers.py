@@ -1,31 +1,16 @@
 from django.contrib.auth import get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
 
-from .services import validate_password, verify_otp
-from apps.users.services import get_user_by_login, get_or_create_user_by_phone
+from .services import verify_otp, generate_access_and_refresh_tokens_for_user
+from apps.users.services import get_or_create_user_by_phone
+from ..clubs.exceptions import ClubBranchNotFound
+from ..clubs.models import ClubBranch
+from ..clubs.serializers import ClubBranchSerializer
 from ..common.exceptions import InvalidInputData
 
 User = get_user_model()
-
-
-class UserCredentials(serializers.Serializer):
-    email = serializers.EmailField(required=True, write_only=True)
-    password = serializers.CharField(required=True, write_only=True)
-
-    def validate_password(self, value):
-        validate_password(value)
-        return value
-
-    def to_representation(self, instance):
-        refresh = CustomTokenObtainPairSerializer.get_token(instance)
-
-        return {
-            "access_token": str(refresh.access_token),
-            "refresh_token": str(refresh),
-        }
 
 
 class SigninSerializer(serializers.ModelSerializer):
@@ -54,39 +39,19 @@ class VerifyOTPSerializer(serializers.Serializer):
         verify_otp(code=attrs['otp_code'], mobile_phone=attrs['mobile_phone'], save=True)
 
         user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
-        refresh = CustomTokenObtainPairSerializer.get_token(user)
-        return {
-            "refresh_token": str(refresh),
-            "access_token": str(refresh.access_token),
-        }
-        # return attrs
+        return generate_access_and_refresh_tokens_for_user(user)
 
 
-class LoginSerializer(UserCredentials):
+class SigninByUsernameSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    club_branch = serializers.IntegerField()
 
-    def validate(self, attrs):
-        self.instance = get_user_by_login(attrs['email'], attrs['password'], raise_exception=True)
-        return attrs
-
-
-class CustomTokenObtainPairSerializer(BaseTokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        # token["device_uuid"] = str(user.device_uuid)
-
-        return token
-
-
-class TokenObtainPairSerializer(serializers.Serializer): # noqa
-    def validate(self, attrs):
-        user = self.context["user"]
-        refresh = CustomTokenObtainPairSerializer.get_token(user)
-
-        return {
-            "refresh_token": str(refresh),
-            "access_token": str(refresh.access_token),
-        }
+    def validate_club_branch(self, value):
+        club_branch = ClubBranch.objects.filter(pk=value).first()
+        if not club_branch:
+            raise ClubBranchNotFound
+        self.context['club_branch'] = club_branch
+        return value
 
 
 class TokenRefreshSerializer(BaseTokenRefreshSerializer):

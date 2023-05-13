@@ -226,20 +226,20 @@ class BaseService(ABC):
     def prepare_to_save(self, data: dict) -> dict:  # noqa
         return data
 
-    def save(self, prepared_data):
-        if self.save_serializer and isinstance(prepared_data, dict):
+    def save(self, response):
+        if self.save_serializer and isinstance(response, dict):
             instance = self.get_instance()
 
-            if instance and prepared_data:
+            if instance and response:
                 serializer = self.save_serializer(
                     instance=self.instance,
-                    data=self.prepare_to_save(prepared_data)
+                    data=self.prepare_to_save(response)
                 )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-            elif prepared_data:
+            elif response:
                 serializer = self.save_serializer(
-                    data=self.prepare_to_save(prepared_data)
+                    data=self.prepare_to_save(response)
                 )
                 try:
                     serializer.is_valid(raise_exception=True)
