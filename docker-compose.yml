@@ -119,7 +119,7 @@ services:
 
   portainer:
     container_name: portainer
-    command: -H tcp://portainer-agent:9001
+    command: -H tcp://portainer-agent:9001 --tlsskipverify
     image: portainer/portainer:alpine
     ports:
       - "9000:9000"
