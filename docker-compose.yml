@@ -119,13 +119,12 @@ services:
 
   portainer:
     container_name: portainer
-    command: -H tcp://portainer-agent:9001 --tlsskipverify
     image: portainer/portainer-ce:latest
+    environment:
+      - TZ=Asia/Almaty
     ports:
       - "9000:9000"
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
-    networks:
-      - gp-net
