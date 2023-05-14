@@ -135,7 +135,7 @@ services:
       - portainer_data:/data
     depends_on:
       - gp-rest-server
-      - portainer-agent
+#      - portainer-agent
     restart: always
     networks:
       - gp-net
