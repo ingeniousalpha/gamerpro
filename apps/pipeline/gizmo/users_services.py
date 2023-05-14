@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from apps.authentication.exceptions import UserNotFound
-from apps.clubs.models import ClubBranchUser
+from apps.clubs.models import ClubBranchUser, ClubComputer
 from apps.clubs.services import get_correct_phone
 from apps.pipeline.gizmo.base import BaseGizmoService
 from apps.pipeline.gizmo.exceptions import UserDoesNotHavePhoneNumber
@@ -80,3 +80,22 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
 
         except Exception as e:
             self.log_error(e)
+
+
+class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
+    endpoint = "/api/usersessions/activeinfo"
+    save_serializer = None
+    method = "GET"
+
+    def finalize_response(self, response):
+        print(response)
+        if response.get('result') and isinstance(response['result'], list):
+            resp_data = response['result']
+            for user_session in resp_data:
+                computer = ClubComputer.objects.filter(
+                    gizmo_id=user_session['hostId'],
+                    club_branch_id=self.instance.id
+                ).first()
+                if computer:
+                    computer.is_booked = True
+                    computer.save()

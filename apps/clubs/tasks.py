@@ -1,6 +1,6 @@
 from apps.clubs.models import ClubBranch
 from apps.pipeline.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
-from apps.pipeline.gizmo.users_services import GizmoGetUsersService
+from apps.pipeline.gizmo.users_services import GizmoGetUsersService, GizmoUpdateComputerStateByUserSessionsService
 from config.celery_app import cel_app
 
 
@@ -16,3 +16,4 @@ def synchronize_gizmo_club_branch(club_branch_id):
 def synchronize_gizmo_computers_state():
     for club_branch in ClubBranch.objects.filter(is_active=True):
         GizmoGetComputersService(instance=club_branch).run()
+        GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
