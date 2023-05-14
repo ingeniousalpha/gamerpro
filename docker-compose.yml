@@ -10,6 +10,9 @@ volumes:
 networks:
   gp-net:
     driver: bridge
+  portainer_agent:
+    driver: overlay
+    attachable: true
 
 services:
   gp-rest-server:
@@ -104,26 +107,27 @@ services:
     networks:
       - gp-net
 
-#  portainer-agent:
-#    image: portainer/agent
-#    environment:
-#      AGENT_CLUSTER_ADDR: tasks.agent
-#      CAP_HOST_MANAGEMENT: 1
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
-#      - /var/lib/docker/volumes:/var/lib/docker/volumes
-#      - /:/host
-#    ports:
-#      - target: 9001
-#        published: 9001
-#        protocol: tcp
-#        mode: host
-#    networks:
-#      - gp-net
-#    deploy:
-#      mode: global
-#      placement:
-#        constraints: [ node.platform.os == linux ]
+  portainer-agent:
+    container_name: portainer-agent
+    image: portainer/agent
+    environment:
+      AGENT_CLUSTER_ADDR: tasks.agent
+      CAP_HOST_MANAGEMENT: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /:/host
+    ports:
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    networks:
+      - portainer_agent
+    deploy:
+      mode: global
+      placement:
+        constraints: [ node.platform.os == linux ]
 
   portainer:
     container_name: portainer
@@ -138,4 +142,4 @@ services:
 #      - portainer-agent
     restart: always
     networks:
-      - gp-net
+      - portainer_agent
