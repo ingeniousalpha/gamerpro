@@ -1,5 +1,12 @@
+from uuid import uuid4
+
 from apps.authentication.exceptions import UserNotFound, UserAlreadyExists
 from apps.users.models import User
+
+
+def generate_mock_email():
+    random_string = str(uuid4())[:8]
+    return f"{random_string}@gp.com"
 
 
 def create_user(email, password):
@@ -25,7 +32,7 @@ def get_or_create_user_by_phone(mobile_phone, raise_exception=False):
             raise UserAlreadyExists
         return user, False
 
-    user = User.objects.create(mobile_phone=mobile_phone)
+    user = User.objects.create(mobile_phone=mobile_phone, email=generate_mock_email())
     return user, True
 
 
