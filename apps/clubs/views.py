@@ -3,6 +3,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from apps.clubs.models import Club, ClubBranch
 from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer
+from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.common.mixins import PublicJSONRendererMixin
 from apps.pipeline.gizmo.computers_services import GizmoGetComputersService
 
@@ -22,5 +23,5 @@ class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     serializer_class = ClubBranchDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        GizmoGetComputersService(instance=self.get_object()).run()
+        _sync_gizmo_computers_state_of_club_branch(self.get_object())
         return super().retrieve(request, *args, **kwargs)

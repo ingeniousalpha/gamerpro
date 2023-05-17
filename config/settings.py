@@ -77,7 +77,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 
 CONSTANCE_REDIS_CONNECTION = {
-    'host': os.getenv("REDIS_HOST", "localhost"),
+    'host': os.getenv("REDIS_HOST", "redis"),
     'port': 6379,
     'db': 0,
 }
