@@ -36,6 +36,7 @@ class ClubBranch(models.Model):
     class Meta:
         verbose_name = "Филиал Клуба"
         verbose_name_plural = "Филиалы Клубов"
+        ordering = ['id']
 
     def __str__(self):
         return f"{self.club} {self.name}"
@@ -63,6 +64,11 @@ class ClubComputer(models.Model):
             return self.gizmo_hostname
         return f"Comp({self.number})"
 
+    class Meta:
+        ordering = ['number']
+        verbose_name = "Компьютер клуба"
+        verbose_name_plural = "Компьютеры клуба"
+
 
 class ClubBranchProperty(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="properties")
@@ -89,7 +95,7 @@ class ClubBranchUser(models.Model):
     gizmo_id = models.IntegerField(null=True)
     gizmo_phone = models.CharField(max_length=12, null=True)
     login = models.CharField(max_length=50)
-    balance = models.IntegerField(default=0)
+    balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
 
 
 

@@ -82,6 +82,30 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
             self.log_error(e)
 
 
+class GizmoGetUserBalanceService(BaseGizmoService):
+    endpoint = "/api/users/{user_id}/balance"
+    save_serializer = None
+    method = "GET"
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id')
+        })
+
+    def finalize_response(self, response):
+        print(response)
+        gizmo_user = response.get('result')
+        if not gizmo_user:
+            raise UserNotFound
+
+        club_user = ClubBranchUser.objects.filter(gizmo_id=gizmo_user["userId"]).first()
+        if club_user:
+            club_user.balance = gizmo_user['balance']
+            club_user.save()
+
+        return gizmo_user['balance']
+
+
 class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
     endpoint = "/api/usersessions/activeinfo"
     save_serializer = None

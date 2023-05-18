@@ -56,13 +56,17 @@ class AbstractImageSerializer(serializers.ModelSerializer):
         return None
 
 
-class UserPropertyMixin:
+class RequestPropertyMixin:
+    @property
+    def request(self):
+        return self.context.get('request')
 
+
+class RequestUserPropertyMixin(RequestPropertyMixin):
     @property
     def user(self):
-        user = self.context.get('request').user
-        if user.is_authenticated:
-            return user
+        if self.request and self.request.user.is_authenticated:
+            return self.request.user
 
 
 class FilePathMethodMixin:

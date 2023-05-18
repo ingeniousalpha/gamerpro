@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 from apps.clubs import ClubHallTypes
 from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
-    ClubComputerGroup
+    ClubComputerGroup, ClubBranchUser
+from apps.common.serializers import RequestUserPropertyMixin
+from apps.pipeline.gizmo.users_services import GizmoGetUserBalanceService
 
 
 class ClubListSerializer(serializers.ModelSerializer):
@@ -118,6 +120,7 @@ class ClubBranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubBranch
 
+
 class ClubComputerGroupLanding(serializers.ModelSerializer):
     hall_name = serializers.CharField(source='name')
     computers_total = serializers.SerializerMethodField()
@@ -138,11 +141,12 @@ class ClubComputerGroupLanding(serializers.ModelSerializer):
         return obj.club_branch.computers.filter(group_id=obj.id, is_booked=False).count()
 
 
-class ClubBranchListSerializer(serializers.ModelSerializer):
+class ClubBranchListSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
     landing = ClubComputerGroupLanding(source='computer_groups', many=True)
+    user_balance = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubBranch
@@ -153,6 +157,7 @@ class ClubBranchListSerializer(serializers.ModelSerializer):
             'address',
             'is_favorite',
             'landing',
+            'user_balance',
         )
 
     def get_name(self, obj):
@@ -160,6 +165,13 @@ class ClubBranchListSerializer(serializers.ModelSerializer):
 
     def get_description(self, obj):
         return obj.club.description
+
+    def get_user_balance(self, obj):
+        if self.user:
+            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
+            if club_user:
+                return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
+        return 0
 
     # def get_landing(self, obj):
     #     halls = []
