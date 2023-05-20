@@ -7,6 +7,39 @@ from apps.common.serializers import RequestUserPropertyMixin
 from apps.pipeline.gizmo.users_services import GizmoGetUserBalanceService
 
 
+class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
+    login = serializers.SerializerMethodField()
+    balance = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            'login',
+            'balance'
+        )
+
+    def get_balance(self, obj):
+        if self.user:
+            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
+            if club_user:
+                return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
+        return 0
+
+    def get_login(self, obj):
+        if self.user:
+            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
+            if club_user:
+                return club_user.login
+        return None
+
+
+class ClubUserSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        if self.user:
+            return BaseClubUserSerializer(obj, context=self.context).data
+
+
 class ClubListSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -89,7 +122,7 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
         )
 
 
-class ClubBranchDetailSerializer(serializers.ModelSerializer):
+class ClubBranchDetailSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
     halls_info = ClubBranchInfoSerializer(source='computer_groups', many=True)
@@ -102,6 +135,7 @@ class ClubBranchDetailSerializer(serializers.ModelSerializer):
             'name',
             'address',
             'is_favorite',
+            'user',
             'halls_info',
             'computers',
         )
@@ -141,12 +175,11 @@ class ClubComputerGroupLanding(serializers.ModelSerializer):
         return obj.club_branch.computers.filter(group_id=obj.id, is_booked=False).count()
 
 
-class ClubBranchListSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
+class ClubBranchListSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
     landing = ClubComputerGroupLanding(source='computer_groups', many=True)
-    user_balance = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubBranch
@@ -156,8 +189,8 @@ class ClubBranchListSerializer(RequestUserPropertyMixin, serializers.ModelSerial
             'description',
             'address',
             'is_favorite',
+            'user',
             'landing',
-            'user_balance',
         )
 
     def get_name(self, obj):
@@ -165,13 +198,6 @@ class ClubBranchListSerializer(RequestUserPropertyMixin, serializers.ModelSerial
 
     def get_description(self, obj):
         return obj.club.description
-
-    def get_user_balance(self, obj):
-        if self.user:
-            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
-            if club_user:
-                return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
-        return 0
 
     # def get_landing(self, obj):
     #     halls = []
