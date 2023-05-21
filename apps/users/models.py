@@ -78,3 +78,6 @@ class User(PermissionsMixin, AbstractBaseUser):
         if self.created_at + timezone.timedelta(days=1) > timezone.now():
             return True
         return self.is_active
+
+    def get_club_accont(self, club_branch):
+        return self.club_accounts.filter(club_branch=club_branch).first()

@@ -2,6 +2,7 @@ from typing import Any
 
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.pipeline.gizmo.base import BaseGizmoService
+from apps.pipeline.gizmo.exceptions import GizmoRequestError
 from apps.pipeline.gizmo.serializers import GizmoComputersSaveSerializer, GizmoComputerGroupsSaveSerializer
 
 
@@ -71,3 +72,35 @@ class GizmoGetComputersService(BaseGizmoService):
                 else:
                     computer.is_booked = self.get_booking_state(gizmo_computer['state'])
                     computer.save()
+
+
+class GizmoLockComputerService(BaseGizmoService):
+    endpoint = "/api/hosts/{computer_id}/lock/true"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "computer_id": self.kwargs.get('computer_id')
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError
+
+
+class GizmoUnlockComputerService(BaseGizmoService):
+    endpoint = "/api/hosts/{computer_id}/lock/false"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "computer_id": self.kwargs.get('computer_id')
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError

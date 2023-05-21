@@ -4,7 +4,7 @@ from apps.authentication.exceptions import UserNotFound
 from apps.clubs.models import ClubBranchUser, ClubComputer
 from apps.clubs.services import get_correct_phone
 from apps.pipeline.gizmo.base import BaseGizmoService
-from apps.pipeline.gizmo.exceptions import UserDoesNotHavePhoneNumber
+from apps.pipeline.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError
 from apps.pipeline.gizmo.serializers import GizmoUserSaveSerializer
 
 User = get_user_model()
@@ -123,3 +123,36 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                 if computer:
                     computer.is_booked = True
                     computer.save()
+
+
+class GizmoStartUserSessionService(BaseGizmoService):
+    endpoint = "/api/users/{user_id}/login/{computer_id}"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id'),
+            "computer_id": self.kwargs.get('computer_id'),
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError
+
+
+class GizmoEndUserSessionService(BaseGizmoService):
+    endpoint = "/api/users/{user_id}/logout"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id')
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError

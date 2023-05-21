@@ -17,7 +17,6 @@ class BaseGizmoService(BaseService):
         return super().get_url(path_params)
 
     def get_auth(self):
-        print('get_auth executed')
         return self.instance.api_user, self.instance.api_password
 
     def run_service(self):

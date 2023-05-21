@@ -108,7 +108,8 @@ LOCAL_APPS = [
     'apps.common.apps.CommonConfig',
     'apps.users.apps.UsersConfig',
     'apps.pipeline.apps.PipelineConfig',
-    'apps.clubs.apps.ClubsConfig'
+    'apps.clubs.apps.ClubsConfig',
+    'apps.bookings.apps.BookingsConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

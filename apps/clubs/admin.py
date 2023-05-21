@@ -8,7 +8,7 @@ admin.site.register(ClubComputerGroup)
 
 @admin.register(ClubComputer)
 class ClubComputerAdmin(admin.ModelAdmin):
-    list_display = ('number', 'gizmo_hostname',)
+    list_display = ('id', 'number', 'gizmo_hostname', 'is_booked')
     ordering = ('number',)
 
 
@@ -48,7 +48,7 @@ class ClubBranchComputerInline(admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
-    fields = ('group', 'gizmo_hostname', 'is_booked')
+    fields = ('id', 'group', 'gizmo_hostname', 'is_booked')
 
 
 @admin.register(Club)
