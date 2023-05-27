@@ -223,8 +223,8 @@ class BaseService(ABC):
             except Exception as exc:
                 logger.exception(exc)
 
-    def prepare_to_save(self, data: dict) -> dict:  # noqa
-        return data
+    def prepare_to_save(self, response: dict) -> dict:  # noqa
+        return response
 
     def save(self, response):
         if self.save_serializer and isinstance(response, dict):

@@ -40,3 +40,21 @@ class BookedComputer(models.Model):
         on_delete=models.PROTECT,
     )
 
+
+class DepositReplenishment(TimestampModel):
+    gizmo_id = models.IntegerField(null=True)
+    club_branch = models.ForeignKey(
+        "clubs.ClubBranch",
+        on_delete=models.CASCADE,
+        related_name="user_replenishments"
+    )
+    club_user = models.ForeignKey(
+        "clubs.ClubBranchUser",
+        on_delete=models.CASCADE,
+        related_name="replenishments"
+    )
+    amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )

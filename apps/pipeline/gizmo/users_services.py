@@ -46,13 +46,13 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
     method = "GET"
 
     def run_service(self):
-        print("self.kwargs.get('username'): ", self.kwargs.get('username'))
+        # print("self.kwargs.get('username'): ", self.kwargs.get('username'))
         return self.fetch(path_params={
             "username": self.kwargs.get('username')
         })
 
     def finalize_response(self, response):
-        print(response)
+        # print(response)
         gizmo_user = response.get('result')
         if not gizmo_user:
             raise UserNotFound
@@ -113,7 +113,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
     def finalize_response(self, response):
         print(response)
-        if response.get('result') and isinstance(response['result'], list):
+        if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             for user_session in resp_data:
                 computer = ClubComputer.objects.filter(
@@ -137,6 +137,7 @@ class GizmoStartUserSessionService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
+        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

@@ -42,8 +42,8 @@ class GizmoGetComputersService(BaseGizmoService):
         return True if state == 2 else False
 
     def save(self, response):
-        print(response.get('result'))
-        if response.get('result') and isinstance(response['result'], list):
+        # print(response.get('result'))
+        if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             for gizmo_computer in resp_data:
                 computer = ClubComputer.objects.filter(
@@ -85,6 +85,7 @@ class GizmoLockComputerService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
+        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

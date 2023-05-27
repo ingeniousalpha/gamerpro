@@ -66,13 +66,15 @@ CONSTANCE_CONFIG = {
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
     "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
+    "FREE_SECONDS_BEFORE_START_TARIFFING": (600, "Бесплатное время перед началом тарификации (сек)", int),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
     # ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
+    ("Billing", ("FREE_SECONDS_BEFORE_START_TARIFFING",)),
+    ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
-    ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP"))
 ])
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 
@@ -89,6 +91,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "phonenumber_field",
     "constance",
+    "constance.backends.database",
     "django_celery_beat",
     # "ckeditor",
     # "ckeditor_uploader",
