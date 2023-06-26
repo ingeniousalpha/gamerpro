@@ -30,4 +30,3 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
 
     def get_queryset(self):
         return Booking.objects.filter(club_user__user=self.request.user).order_by('-created_at')
-d
