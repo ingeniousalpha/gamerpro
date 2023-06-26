@@ -1,6 +1,6 @@
 from apps.clubs.models import ClubBranch
-from apps.pipeline.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
-from apps.pipeline.gizmo.users_services import GizmoGetUsersService, GizmoUpdateComputerStateByUserSessionsService
+from apps.integrations.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
+from apps.integrations.gizmo.users_services import GizmoGetUsersService, GizmoUpdateComputerStateByUserSessionsService
 from config.celery_app import cel_app
 
 

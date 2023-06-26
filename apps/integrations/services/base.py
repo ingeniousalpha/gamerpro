@@ -10,15 +10,15 @@ from urllib.parse import urljoin
 from requests.models import Response
 from rest_framework.exceptions import ValidationError
 
-from apps.pipeline import ServiceStatuses
-from apps.pipeline.models import ServiceHistory
-from apps.pipeline.exceptions import (
+from apps.integrations import ServiceStatuses
+from apps.integrations.models import ServiceHistory
+from apps.integrations.exceptions import (
     ServiceUnavailable,
     ServiceNotFound,
     UnauthorizedError,
 )
 
-logger = logging.getLogger("pipeline")
+logger = logging.getLogger("integrations")
 
 
 class BaseService(ABC):
@@ -29,6 +29,7 @@ class BaseService(ABC):
     log_headers: bool = False
     log_request: bool = False
     log_response: bool = False
+    log_url: bool = False
 
     headers: dict = None
     url: str = None
@@ -67,12 +68,6 @@ class BaseService(ABC):
         self.last_request = response.request.body
         self.last_response = response.text
         logger.info('url: %s' % self.url)
-        if self.log_headers:
-            logger.info('headers: %s' % self.headers)  # TODO log properly
-        if self.log_request:
-            logger.info('request: %s' % self.last_request)
-        if self.log_response:
-            logger.info('response: %s' % self.last_response)
 
     def get_url(self, path_params) -> str:
         if path_params:
@@ -97,6 +92,15 @@ class BaseService(ABC):
 
         if self.auth is None:
             self.auth = self.get_auth()
+
+        if self.log_url:
+            logger.info('headers: %s' % self.url)
+        if self.log_headers:
+            logger.info('headers: %s' % self.headers)  # TODO log properly
+        if self.log_request:
+            logger.info('request: %s' % self.last_request)
+        if self.log_response:
+            logger.info('response: %s' % self.last_response)
 
         response_raw = self.session.request(
             method=self.method,
@@ -251,6 +255,7 @@ class BaseService(ABC):
 
 
 class ServiceLoggingMixin:
-    log_response = True
-    log_request = True
+    log_url = True
     log_headers = True
+    log_request = True
+    log_response = True

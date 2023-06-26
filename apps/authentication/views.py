@@ -14,7 +14,7 @@ from .serializers import (
 from .services import generate_access_and_refresh_tokens_for_user
 from ..clubs.services import get_club_branch_user_by_username
 from ..notifications.services import send_otp
-from ..pipeline.gizmo.users_services import GizmoGetUserByUsernameService
+from ..integrations.gizmo.users_services import GizmoGetUserByUsernameService
 from ..users.services import get_or_create_user_by_phone
 
 User = get_user_model()

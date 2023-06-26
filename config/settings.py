@@ -67,11 +67,12 @@ CONSTANCE_CONFIG = {
     "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
     "FREE_SECONDS_BEFORE_START_TARIFFING": (600, "Бесплатное время перед началом тарификации (сек)", int),
+    "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
     # ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
-    ("Billing", ("FREE_SECONDS_BEFORE_START_TARIFFING",)),
+    ("Billing", ("FREE_SECONDS_BEFORE_START_TARIFFING", "PAYMENT_EXPIRY_TIME")),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
@@ -110,9 +111,10 @@ LOCAL_APPS = [
     'apps.authentication.apps.AuthenticationConfig',
     'apps.common.apps.CommonConfig',
     'apps.users.apps.UsersConfig',
-    'apps.pipeline.apps.PipelineConfig',
+    'apps.integrations.apps.IntegrationsConfig',
     'apps.clubs.apps.ClubsConfig',
     'apps.bookings.apps.BookingsConfig',
+    'apps.payments.apps.PaymentsConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -301,6 +303,13 @@ CELERY_TASK_PUBLISH_RETRY = False
 CELERY_DISABLE_RATE_LIMITS = False
 CELERY_TASK_TRACK_STARTED = True
 
+# ONE_VISION_API_KEY = "MmI4OGExYTAtZjBjYi0wMTNiLTA5ZDktMDY0NWRjZmQwNjE0"
+ONE_VISION_API_KEY = "2b88a1a0-f0cb-013b-09d9-0645dcfd0614"
+ONE_VISION_API_SECRET_KEY = "d84bbb92956b51282ef2cdf9e1c14e60c4a6484945e77497"
+
+# ONE_VISION_API_KEY = "123"
+# ONE_VISION_API_SECRET_KEY = "qwerty"
+
 # CKEDITOR_UPLOAD_PATH = "ncrm_helper"
 
 LOGFILE_SIZE = 1024 * 1024 * 5
@@ -346,6 +355,16 @@ LOGGING = {
             'propagate': True,
         },
         'gizmo': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'onevision': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'integrations': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

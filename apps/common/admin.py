@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.admin import GenericTabularInline, GenericStackedInline
 
 from apps.common.models import HandledException
-from apps.pipeline.models import ServiceHistory
+from apps.integrations.models import ServiceHistory
 
 admin.site.site_header = "Gamer Pro Project"
 admin.site.site_title = "Gamer Pro Project"

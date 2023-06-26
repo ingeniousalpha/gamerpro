@@ -3,9 +3,9 @@ from django.contrib.auth import get_user_model
 from apps.authentication.exceptions import UserNotFound
 from apps.clubs.models import ClubBranchUser, ClubComputer
 from apps.clubs.services import get_correct_phone
-from apps.pipeline.gizmo.base import BaseGizmoService
-from apps.pipeline.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError
-from apps.pipeline.gizmo.serializers import GizmoUserSaveSerializer
+from apps.integrations.gizmo.base import BaseGizmoService
+from apps.integrations.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError
+from apps.integrations.gizmo.serializers import GizmoUserSaveSerializer
 
 User = get_user_model()
 

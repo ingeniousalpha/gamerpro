@@ -7,7 +7,6 @@ from .services import verify_otp, generate_access_and_refresh_tokens_for_user
 from apps.users.services import get_or_create_user_by_phone
 from ..clubs.exceptions import ClubBranchNotFound
 from ..clubs.models import ClubBranch
-from ..clubs.serializers import ClubBranchSerializer
 from ..common.exceptions import InvalidInputData
 
 User = get_user_model()

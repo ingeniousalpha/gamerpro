@@ -25,7 +25,7 @@ class AbstractHandler(ABC):
 
         if isinstance(self.raw_data.get("detail"), ErrorDetail):
             _error_code = self.raw_data.get("detail").code
-            _error_message = self.raw_data.get("detail")
+            _error_message = str(self.raw_data.get("detail"))
 
         _config_error_code = f"{_error_code}"
 

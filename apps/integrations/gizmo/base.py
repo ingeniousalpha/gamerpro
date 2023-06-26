@@ -1,7 +1,7 @@
 import logging
 
 from apps.clubs.models import ClubBranch
-from apps.pipeline.services import BaseService
+from apps.integrations.services import BaseService
 
 logger = logging.getLogger("gizmo")
 
@@ -10,7 +10,7 @@ class BaseGizmoService(BaseService):
     headers = {
         "Content-Type": "application/json",
     }
-    instance = ClubBranch
+    instance: ClubBranch
 
     def get_url(self, path_params) -> str:
         self.host = self.instance.api_host

@@ -2,7 +2,7 @@ import traceback
 
 from django.conf import settings
 from django.http import JsonResponse
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from constance import config
 
 from .renderers import JSONRenderer

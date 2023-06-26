@@ -1,7 +1,9 @@
+import pytz
 import datetime
 import logging
 import string
 from random import choice, randint
+from django.conf import settings
 
 from apps.common.models import HandledException
 
@@ -35,3 +37,7 @@ def save_error(error_code, error_message, stack_trace=None):
 
 def str_to_datetime(string_dt):
     return datetime.datetime.strptime(string_dt, '%Y-%m-%d %H:%M:%S')
+
+
+def date_format(string_dt):
+    return datetime.datetime.strftime(string_dt.astimezone(pytz.timezone(settings.TIME_ZONE)), '%Y-%m-%d %H:%M')

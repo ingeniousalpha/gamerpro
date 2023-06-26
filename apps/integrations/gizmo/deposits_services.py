@@ -1,6 +1,6 @@
 from apps.bookings.models import DepositReplenishment
-from apps.pipeline.gizmo.base import BaseGizmoService
-from apps.pipeline.gizmo.exceptions import GizmoRequestError
+from apps.integrations.gizmo.base import BaseGizmoService
+from apps.integrations.gizmo.exceptions import GizmoRequestError
 
 
 class GizmoCreateDepositTransactionService(BaseGizmoService):

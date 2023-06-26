@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('response', models.TextField(blank=True, null=True, verbose_name='Ответ от сервиса')),
                 ('code', models.CharField(blank=True, max_length=5, null=True, verbose_name='Код ответа')),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Дата запроса')),
-                ('history', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='service_response', to='pipeline.servicehistory', verbose_name='Лог')),
+                ('history', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='service_response', to='integrations.servicehistory', verbose_name='Лог')),
             ],
             options={
                 'verbose_name': 'Лог сервиса',

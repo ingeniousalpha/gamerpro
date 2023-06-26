@@ -4,7 +4,7 @@ from apps.clubs import ClubHallTypes
 from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
     ClubComputerGroup, ClubBranchUser
 from apps.common.serializers import RequestUserPropertyMixin
-from apps.pipeline.gizmo.users_services import GizmoGetUserBalanceService
+from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
 
 
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
@@ -151,8 +151,16 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
 
 
 class ClubBranchSerializer(serializers.ModelSerializer):
+    branch_name = serializers.CharField(source='name')
+    club_name = serializers.CharField(source='club.name')
+
     class Meta:
         model = ClubBranch
+        fields = (
+            'id',
+            'club_name',
+            'branch_name'
+        )
 
 
 class ClubComputerGroupLanding(serializers.ModelSerializer):

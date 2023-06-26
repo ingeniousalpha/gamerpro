@@ -1,9 +1,9 @@
 from typing import Any
 
 from apps.clubs.models import ClubComputer, ClubComputerGroup
-from apps.pipeline.gizmo.base import BaseGizmoService
-from apps.pipeline.gizmo.exceptions import GizmoRequestError
-from apps.pipeline.gizmo.serializers import GizmoComputersSaveSerializer, GizmoComputerGroupsSaveSerializer
+from apps.integrations.gizmo.base import BaseGizmoService
+from apps.integrations.gizmo.exceptions import GizmoRequestError
+from apps.integrations.gizmo.serializers import GizmoComputersSaveSerializer, GizmoComputerGroupsSaveSerializer
 
 
 class GizmoGetComputerGroupsService(BaseGizmoService):

@@ -1,6 +1,6 @@
 from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
-from apps.pipeline.gizmo.computers_services import GizmoLockComputerService
-from apps.pipeline.gizmo.users_services import GizmoStartUserSessionService
+from apps.integrations.gizmo.computers_services import GizmoLockComputerService
+from apps.integrations.gizmo.users_services import GizmoStartUserSessionService
 from config.celery_app import cel_app
 from django.conf import settings
 

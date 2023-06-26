@@ -5,7 +5,7 @@ from apps.clubs.models import Club, ClubBranch
 from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.common.mixins import PublicJSONRendererMixin
-from apps.pipeline.gizmo.computers_services import GizmoGetComputersService
+from apps.integrations.gizmo.computers_services import GizmoGetComputersService
 
 
 class ClublistView(PublicJSONRendererMixin, ListAPIView):

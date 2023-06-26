@@ -34,7 +34,7 @@ class ServiceResponseInline(ReadOnlyMixin, admin.StackedInline):
         if len(obj.request) > 4096:
             return format_html(
                 '<a href="{}">Скачать запрос</a>',
-                reverse('admin:pipeline_servicehistory_request_log', args=[obj.id, 'request'])
+                reverse('admin:integrations_servicehistory_request_log', args=[obj.id, 'request'])
             )
 
         return obj.request or '-'
@@ -46,7 +46,7 @@ class ServiceResponseInline(ReadOnlyMixin, admin.StackedInline):
         if len(obj.response) > 4096:
             return format_html(
                 '<a href="{}">Скачать ответ</a>',
-                reverse('admin:pipeline_servicehistory_request_log', args=[obj.id, 'response'])
+                reverse('admin:integrations_servicehistory_request_log', args=[obj.id, 'response'])
             )
 
         return obj.response or '-'

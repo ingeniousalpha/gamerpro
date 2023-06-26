@@ -23,6 +23,12 @@ class User(PermissionsMixin, AbstractBaseUser):
     email = models.EmailField("Почта", max_length=40, unique=True)
     full_name = models.CharField("Имя", max_length=256, null=True, blank=True)
     mobile_phone = PhoneNumberField("Моб. телефон", blank=True, null=True)
+    secret_key = models.UUIDField("Секретный ключ", default=uuid_lib.uuid4, unique=True)
+    outer_payer_id = models.CharField(
+        "ID юзера в платежной системе",
+        null=True, blank=True,
+        max_length=255
+    )
 
     is_active = models.BooleanField("Активный", default=True)
     is_staff = models.BooleanField("Сотрудник", default=False)
@@ -42,6 +48,10 @@ class User(PermissionsMixin, AbstractBaseUser):
         if self.mobile_phone:
             return str(self.mobile_phone)
         return self.email
+
+    def set_current_card(self, card: 'PaymentCard'):
+        self.payment_cards.exclude(id=card.id).update(is_current=False)
+        self.payment_cards.filter(id=card.id).update(is_current=True)
 
     def has_perm(self, perm, obj=None):
         if not self.is_active:

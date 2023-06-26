@@ -58,7 +58,7 @@ class TimestampModel(MainModel):
 
 
 class ServiceHistoryModel(MainModel):
-    history = GenericRelation('pipeline.ServiceHistory')
+    history = GenericRelation('integrations.ServiceHistory')
 
     class Meta:
         abstract = True

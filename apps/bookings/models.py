@@ -27,6 +27,13 @@ class Booking(UUIDModel, TimestampModel):
         decimal_places=2,
         default=0.0
     )
+    payment_card = models.ForeignKey(
+        "payments.PaymentCard",
+        on_delete=models.SET_NULL,
+        related_name="bookings",
+        null=True, blank=True
+    )
+    expiration_date = models.DateTimeField(auto_now=True)
 
 
 class BookedComputer(models.Model):
