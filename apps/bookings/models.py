@@ -34,6 +34,7 @@ class Booking(UUIDModel, TimestampModel):
         null=True, blank=True
     )
     expiration_date = models.DateTimeField(auto_now=True)
+    is_cancelled = models.BooleanField(default=False)
 
 
 class BookedComputer(models.Model):
