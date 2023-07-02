@@ -12,7 +12,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
         return self.fetch(json={
             "userId": self.kwargs.get("user_gizmo_id"),
             "type": 0,
-            "amount": str(self.kwargs.get("amount")),
+            "amount": int(self.kwargs.get("amount")),
             "paymentMethodId": self.instance.gizmo_payment_method,
             "receiptOverride": True
         })
