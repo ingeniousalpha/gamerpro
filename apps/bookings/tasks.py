@@ -26,7 +26,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         booked_computer.computer.is_booked = True
         booked_computer.computer.save()
         start_user_session.apply_async(
-            (booking.club_branch.id, booking.club_user.gizmo_id, booked_computer.gizmo_id),
+            (booking.club_branch.id, booking.club_user.gizmo_id, booked_computer.computer.gizmo_id),
             countdown=settings.FREE_SECONDS_BEFORE_START_TARIFFING
         )
 
