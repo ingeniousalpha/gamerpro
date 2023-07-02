@@ -67,7 +67,7 @@ class CreateBookingByBalanceSerializer(BaseCreateBookingSerializer):
 
     def extra_task(self, instance, validated_data):
         if config.INTEGRATIONS_TURNED_ON:
-            gizmo_book_computers(str(instance.uuid))
+            gizmo_book_computers(str(instance.uuid), from_balance=True)
 
     def to_representation(self, instance):
         return {

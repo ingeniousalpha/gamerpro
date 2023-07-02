@@ -7,16 +7,17 @@ from config.celery_app import cel_app
 from django.conf import settings
 
 
-def gizmo_book_computers(booking_uuid):
+def gizmo_book_computers(booking_uuid, from_balance=False):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
 
-    GizmoCreateDepositTransactionService(
-        instance=booking.club_branch,
-        user_id=booking.club_user.gizmo_id,
-        amount=booking.amount
-    ).run()
+    if not from_balance:
+        GizmoCreateDepositTransactionService(
+            instance=booking.club_branch,
+            user_id=booking.club_user.gizmo_id,
+            amount=booking.amount
+        ).run()
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
             instance=booking.club_branch,
