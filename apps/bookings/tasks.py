@@ -4,7 +4,7 @@ from apps.integrations.gizmo.computers_services import GizmoLockComputerService,
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from config.celery_app import cel_app
-from django.conf import settings
+from constance import config
 
 
 def gizmo_book_computers(booking_uuid, from_balance=False):
@@ -27,7 +27,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         booked_computer.computer.save()
         start_user_session.apply_async(
             (booking.club_branch.id, booking.club_user.gizmo_id, booked_computer.computer.gizmo_id),
-            countdown=settings.FREE_SECONDS_BEFORE_START_TARIFFING
+            countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
         )
 
 
