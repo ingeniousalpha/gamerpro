@@ -68,10 +68,11 @@ CONSTANCE_CONFIG = {
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
     "FREE_SECONDS_BEFORE_START_TARIFFING": (600, "Бесплатное время перед началом тарификации (сек)", int),
     "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
+    "INTEGRATIONS_TURNED_ON": (False, "Включить интеграции с Gizmo", bool),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
-    # ("Email Configs", tuple(EMAIL_MESSAGES.keys())),
+    ("Settings", ("INTEGRATIONS_TURNED_ON",)),
     ("Billing", ("FREE_SECONDS_BEFORE_START_TARIFFING", "PAYMENT_EXPIRY_TIME")),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),

@@ -66,8 +66,8 @@ class BaseCreateBookingSerializer(
 class CreateBookingByBalanceSerializer(BaseCreateBookingSerializer):
 
     def extra_task(self, instance, validated_data):
-        # gizmo_book_computers(str(instance.uuid))
-        pass
+        if config.INTEGRATIONS_TURNED_ON:
+            gizmo_book_computers(str(instance.uuid))
 
     def to_representation(self, instance):
         return {
@@ -84,7 +84,8 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
             OVCreatePayerService(instance=instance.club_user.user).run()
         payment_url = OVInitPaymentService(instance=instance).run()
         if payment_url:
-            # gizmo_book_computers(str(instance.uuid))
+            if config.INTEGRATIONS_TURNED_ON:
+                gizmo_book_computers(str(instance.uuid))
             self.context['payment_url'] = payment_url
         else:
             raise Exception
@@ -109,7 +110,8 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         status, error = OVRecurrentPaymentService(instance=instance).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
-        # gizmo_book_computers(str(instance.uuid))
+        if config.INTEGRATIONS_TURNED_ON:
+            gizmo_book_computers(str(instance.uuid))
         self.context['status'] = status
 
     def to_representation(self, instance):
