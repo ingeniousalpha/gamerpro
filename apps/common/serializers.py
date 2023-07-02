@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from apps.common.models import Document
+
 
 class AbstractNameSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -73,3 +75,12 @@ class FilePathMethodMixin:
 
     def file_path(self, file_field):
         return self.context.get('request').build_absolute_uri(file_field.url)
+
+
+class DocumentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = (
+            'code',
+            'file'
+        )

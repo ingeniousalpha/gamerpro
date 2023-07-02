@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.admin import GenericTabularInline, GenericStackedInline
 
-from apps.common.models import HandledException
+from apps.common.models import HandledException, Document
 from apps.integrations.models import ServiceHistory
 
 admin.site.site_header = "Gamer Pro Project"
@@ -266,3 +266,17 @@ class HandledExceptionAdmin(admin.ModelAdmin):
     search_fields = ('id', 'code')
     readonly_fields = ('created_at', 'id')
     date_hierarchy = 'created_at'
+
+
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+    fields = (
+        'name',
+        'code',
+        'file'
+    )
+    list_display = (
+        'id',
+        'name',
+        'code'
+    )

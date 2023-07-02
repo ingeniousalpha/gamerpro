@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKe
 from django.contrib.contenttypes.models import ContentType
 
 from .managers import MainManager
+from .utils import OverwriteStorage
 
 
 class MainModel(models.Model):
@@ -74,3 +75,13 @@ class HandledException(TimestampModel):
     code = models.CharField("Код ошибки", max_length=256)
     message = models.CharField("Описание ошибки", max_length=256)
     stack_trace = models.TextField("Traceback", null=True, blank=True)
+
+
+class Document(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+    file = models.FileField(upload_to='documents', storage=OverwriteStorage())
+
+    class Meta:
+        verbose_name = "Документ"
+        verbose_name_plural = "Документы"

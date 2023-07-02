@@ -323,6 +323,7 @@ coverage.xml
 .static_storage/
 .media/
 local_settings.py
+media
 
 # Flask stuff:
 instance/
