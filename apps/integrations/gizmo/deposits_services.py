@@ -9,7 +9,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
     method = "POST"
 
     def run_service(self):
-        return self.fetch(json={
+        return self.fetch(data={
             "userId": self.kwargs.get("user_gizmo_id"),
             "type": 0,
             "amount": int(self.kwargs.get("amount")),
