@@ -47,7 +47,7 @@ class BaseCreateBookingSerializer(
         attrs['computers'] = computers
         return attrs
 
-    def extra_task(self, instance, validated_data, computers):
+    def extra_task(self, instance, validated_data):
         ...
 
     def create(self, validated_data):
@@ -58,15 +58,15 @@ class BaseCreateBookingSerializer(
             booking = super().create(validated_data)
             for computer in computers:
                 BookedComputer.objects.create(booking=booking, computer=computer)
-            self.extra_task(booking, validated_data, computers)
+            self.extra_task(booking, validated_data)
 
         return booking
 
 
 class CreateBookingByBalanceSerializer(BaseCreateBookingSerializer):
 
-    def extra_task(self, instance, validated_data, computers):
-        # gizmo_book_computers(**validated_data, computers=computers)
+    def extra_task(self, instance, validated_data):
+        # gizmo_book_computers(str(instance.uuid))
         pass
 
     def to_representation(self, instance):
@@ -79,12 +79,12 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
     class Meta(BaseCreateBookingSerializer.Meta):
         fields = BaseCreateBookingSerializer.Meta.fields + ('amount',)
 
-    def extra_task(self, instance, validated_data, computers):
+    def extra_task(self, instance, validated_data):
         if not instance.club_user.user.outer_payer_id:
             OVCreatePayerService(instance=instance.club_user.user).run()
         payment_url = OVInitPaymentService(instance=instance).run()
         if payment_url:
-            # gizmo_book_computers(**validated_data, computers=computers)
+            # gizmo_book_computers(str(instance.uuid))
             self.context['payment_url'] = payment_url
         else:
             raise Exception
@@ -103,13 +103,13 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
             'payment_card'
         )
 
-    def extra_task(self, instance, validated_data, computers):
+    def extra_task(self, instance, validated_data):
         if not instance.club_user.user.outer_payer_id:
             OVCreatePayerService(instance=instance.club_user.user).run()
         status, error = OVRecurrentPaymentService(instance=instance).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
-        # gizmo_book_computers(**validated_data, computers=computers)
+        # gizmo_book_computers(str(instance.uuid))
         self.context['status'] = status
 
     def to_representation(self, instance):
