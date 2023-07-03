@@ -24,7 +24,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             raise GizmoRequestError
 
         DepositReplenishment.objects.create(
-            gizmo_id=response['id'],
+            gizmo_id=response['result']['id'],
             club_branch=self.instance,
             club_user_id=self.kwargs.get('user_gizmo_id'),
             amount=self.kwargs.get('amount')
