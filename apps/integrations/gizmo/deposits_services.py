@@ -1,4 +1,5 @@
 from apps.bookings.models import DepositReplenishment
+from apps.clubs.models import ClubBranchUser
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
 
@@ -26,6 +27,6 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
         DepositReplenishment.objects.create(
             gizmo_id=response['result']['id'],
             club_branch=self.instance,
-            club_user_id=self.kwargs.get('user_gizmo_id'),
+            club_user=ClubBranchUser.objects.filter(gizmo_id=self.kwargs.get('user_gizmo_id')).first(),
             amount=self.kwargs.get('amount')
         )
