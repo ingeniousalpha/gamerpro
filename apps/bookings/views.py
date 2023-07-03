@@ -11,6 +11,7 @@ from apps.bookings.serializers import (
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
+from constance import config
 
 
 class CreateBookingByBalanceView(PublicJSONRendererMixin, CreateAPIView):
@@ -39,7 +40,8 @@ class CancelBookingView(JSONRendererMixin, GenericAPIView):
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
-        # gizmo_cancel_booking.delay(booking.uuid)
+        if config.INTEGRATIONS_TURNED_ON:
+            gizmo_cancel_booking.delay(booking.uuid)
         return Response({})
 
 
@@ -54,7 +56,8 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
-        # gizmo_unlock_computers.delay(booking.uuid)
+        if config.INTEGRATIONS_TURNED_ON:
+            gizmo_unlock_computers.delay(booking.uuid)
         return Response({})
 
 
