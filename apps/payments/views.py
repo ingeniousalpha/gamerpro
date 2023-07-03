@@ -21,6 +21,7 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
         success = Response(status=status.HTTP_200_OK)
         try:
             webhook_data = b64_decode(urllib.parse.unquote_plus(request.data.get('data')))
+            print('This is webhook')
             print(webhook_data)
             handle_ov_response(webhook_data)
         except Exception as e:
