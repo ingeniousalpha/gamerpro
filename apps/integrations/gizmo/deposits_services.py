@@ -14,7 +14,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             "type": 0,
             "amount": int(self.kwargs.get("amount")),
             "paymentMethodId": self.instance.gizmo_payment_method,
-            "receiptOverride": "true"
+            "receiptOverride": True
         })
 
     def finalize_response(self, response):

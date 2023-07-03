@@ -15,7 +15,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     if not from_balance:
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
+            user_gizmo_id=booking.club_user.gizmo_id,
             amount=booking.amount
         ).run()
     for booked_computer in booking.computers.all():

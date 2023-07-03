@@ -11,14 +11,14 @@ from requests.models import Response
 from rest_framework.exceptions import ValidationError
 
 from apps.integrations import ServiceStatuses
-from apps.integrations.models import ServiceHistory
+from apps.integrations.models import OuterServiceLog
 from apps.integrations.exceptions import (
     ServiceUnavailable,
     ServiceNotFound,
     UnauthorizedError,
 )
 
-logger = logging.getLogger("integrations")
+logger = logging.getLogger("api_services")
 
 
 class BaseService(ABC):
@@ -29,7 +29,6 @@ class BaseService(ABC):
     log_headers: bool = False
     log_request: bool = False
     log_response: bool = False
-    log_url: bool = False
 
     headers: dict = None
     url: str = None
@@ -67,7 +66,6 @@ class BaseService(ABC):
     def history(self, response: Response, *args, **kwargs) -> None:
         self.last_request = response.request.body
         self.last_response = response.text
-        logger.info('url: %s' % self.url)
 
     def get_url(self, path_params) -> str:
         if path_params:
@@ -81,7 +79,7 @@ class BaseService(ABC):
     def get_auth(self):
         return self.auth
 
-    def fetch(self, params=None, path_params=None, data=None, json=None, files=None, **kwargs):
+    def fetch(self, query_params=None, path_params=None, data=None, json=None, files=None, **kwargs):
         _start = time.perf_counter()
 
         if self.url is None:
@@ -93,21 +91,12 @@ class BaseService(ABC):
         if self.auth is None:
             self.auth = self.get_auth()
 
-        if self.log_url:
-            logger.info('headers: %s' % self.url)
-        if self.log_headers:
-            logger.info('headers: %s' % self.headers)  # TODO log properly
-        if self.log_request:
-            logger.info('request: %s' % self.last_request)
-        if self.log_response:
-            logger.info('response: %s' % self.last_response)
-
         response_raw = self.session.request(
             method=self.method,
             url=self.url,
             auth=self.auth,
             headers=self.headers,
-            params=params,
+            params=query_params,
             data=data,
             json=json,
             files=files,
@@ -119,6 +108,14 @@ class BaseService(ABC):
 
         self.runtime = time.perf_counter() - _start
         self.code = str(response_raw.status_code)
+
+        logger.info('url: %s' % response_raw.request.url)
+        if self.log_headers:
+            logger.info('headers: %s' % response_raw.request.headers)  # TODO log properly
+        if self.log_request:
+            logger.info('request: %s' % response_raw.request.body)
+        if self.log_response:
+            logger.info('response: %s' % response_raw.content)
 
         if response_raw.status_code == 400:
             return self.handle_400(response_raw)
@@ -206,16 +203,18 @@ class BaseService(ABC):
         if not instance:
             instance = self.instance
 
-        if hasattr(instance, 'history'):
-            history = ServiceHistory.objects.create(  # noqa
+        # print("log_save: ", instance)
+        # print(instance.__dict__)
+        if hasattr(instance, 'log_history'):
+            # print('inside if')
+            history = OuterServiceLog.objects.create(  # noqa
                 content_object=instance,
                 service=self.__class__.__name__,
-                service_pretty=self.__class__.__doc__,
                 data=getattr(self, 'data', None),
                 status=getattr(self, 'status', ServiceStatuses.NO_REQUEST),
                 runtime=getattr(self, 'runtime', 0),
             )
-
+            # print('history created')
             try:
                 history.set_response(
                     url=getattr(self, 'url', None),
@@ -224,6 +223,7 @@ class BaseService(ABC):
                     request=self.last_request,
                     response=self.last_response,
                 )
+                # print('set_response')
             except Exception as exc:
                 logger.exception(exc)
 
@@ -255,7 +255,6 @@ class BaseService(ABC):
 
 
 class ServiceLoggingMixin:
-    log_url = True
-    log_headers = True
-    log_request = True
     log_response = True
+    log_request = True
+    log_headers = True

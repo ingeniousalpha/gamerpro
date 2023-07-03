@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.db.models import Model
 from django.http import HttpResponse
 from django.urls import reverse, path
@@ -9,11 +10,11 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.common.admin import ReadOnlyMixin
 
-from .models import ServiceHistory, ServiceResponse
+from .models import OuterServiceLog, OuterServiceResponse
 
 
 class ServiceResponseInline(ReadOnlyMixin, admin.StackedInline):
-    model = ServiceResponse
+    model = OuterServiceResponse
     extra = 0
     fields = [
         'url',
@@ -27,33 +28,34 @@ class ServiceResponseInline(ReadOnlyMixin, admin.StackedInline):
         'get_response',
     ]
 
-    def get_request(self, obj: ServiceResponse):
+    def get_request(self, obj: OuterServiceResponse):
         if obj is None or obj.request is None:
             return 'no content'
 
         if len(obj.request) > 4096:
             return format_html(
                 '<a href="{}">Скачать запрос</a>',
-                reverse('admin:integrations_servicehistory_request_log', args=[obj.id, 'request'])
+                reverse('admin:pipeline_servicehistory_request_log', args=[obj.id, 'request'])
             )
 
         return obj.request or '-'
 
-    def get_response(self, obj: ServiceResponse):
+    def get_response(self, obj: OuterServiceResponse):
         if obj is None or obj.response is None:
             return 'no content'
 
         if len(obj.response) > 4096:
             return format_html(
                 '<a href="{}">Скачать ответ</a>',
-                reverse('admin:integrations_servicehistory_request_log', args=[obj.id, 'response'])
+                reverse('admin:pipeline_servicehistory_request_log', args=[obj.id, 'response'])
             )
 
         return obj.response or '-'
 
 
+@admin.register(OuterServiceLog)
 class ServiceHistoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "link_content_object", "service", "service_pretty", "status", "created_at", "runtime")
+    list_display = ("id", "link_content_object", "service", "status", "created_at", "runtime")
     list_filter = ("service", "status")
 
     readonly_fields = ("link_content_object", "service", "status", "data", "runtime")
@@ -74,8 +76,8 @@ class ServiceHistoryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('content_object')
 
-    def link_content_object(self, instance: ServiceHistory):
-        obj: Model = instance.content_object
+    def link_content_object(self, instance: OuterServiceLog):
+        obj = instance.content_object
         if not obj:
             return "-"
 
@@ -99,11 +101,36 @@ class ServiceHistoryAdmin(admin.ModelAdmin):
     # add custom view function that downloads the file
     def service_log(self, request, pk: int, direct: str = 'request'):
         timestamp = dateformat.format(timezone.now(), 'Y-m-d-H-i-s')
-        log = ServiceResponse.objects.get(pk=pk)
-        response = HttpResponse(content_type='applications/force-download')
+        log = OuterServiceResponse.objects.get(pk=pk)
+        response = HttpResponse(content_type='application/force-download')
         response['Content-Disposition'] = f'attachment; filename="request-log-{timestamp}.txt"'
         response.write(getattr(log, direct, ''))
         return response
 
+    def has_change_permission(self, request, obj=None):
+        return False
 
-admin.site.register(ServiceHistory, ServiceHistoryAdmin)
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class LogHistoryInline(ReadOnlyMixin, GenericTabularInline):
+    model = OuterServiceLog
+    fields = ["service", "runtime", "created_at", "show"]
+    readonly_fields = ["show", "created_at"]
+    classes = ("collapse",)
+
+    def show(self, obj):
+        url = reverse("admin:common_outerservicelog_change", args=(obj.pk,))  # noqa
+        return mark_safe(f"<a href='{url}'>Посмотреть</a>")
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    show.short_description = _("Лог сервиса")

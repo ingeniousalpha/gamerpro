@@ -58,13 +58,6 @@ class TimestampModel(MainModel):
         return self.updated_at.strftime("%d/%m/%Y %H:%M:%S")  # noqa
 
 
-class ServiceHistoryModel(MainModel):
-    history = GenericRelation('integrations.ServiceHistory')
-
-    class Meta:
-        abstract = True
-
-
 class MultipleModelFK(MainModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True)

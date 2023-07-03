@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.admin import GenericTabularInline, GenericStackedInline
 
 from apps.common.models import HandledException, Document
-from apps.integrations.models import ServiceHistory
 
 admin.site.site_header = "Gamer Pro Project"
 admin.site.site_title = "Gamer Pro Project"
@@ -44,19 +43,6 @@ class ReadChangeOnlyTabularInline(ReadChangeOnlyMixin, admin.TabularInline):
 
 class ReadChangeOnlyStackedInline(ReadChangeOnlyTabularInline, admin.StackedInline):
     ...
-
-
-class HistoryInline(ReadOnlyMixin, GenericTabularInline):
-    model = ServiceHistory
-    fields = ["service", "service_pretty", "runtime", "created_at", "show"]
-    readonly_fields = ["show", "created_at"]
-    classes = ("collapse",)
-
-    def show(self, obj):
-        url = reverse("admin:pipeline_servicehistory_change", args=(obj.pk,))  # noqa
-        return mark_safe(f"<a href='{url}'>Посмотреть</a>")
-
-    show.short_description = _("Лог сервиса")
 
 
 class AbstractNameModelForm(forms.ModelForm):

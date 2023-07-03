@@ -66,7 +66,7 @@ CONSTANCE_CONFIG = {
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
     "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
-    "FREE_SECONDS_BEFORE_START_TARIFFING": (600, "Бесплатное время перед началом тарификации (сек)", int),
+    "FREE_SECONDS_BEFORE_START_TARIFFING": (0, "Бесплатное время перед началом тарификации (сек)", int),
     "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
     "INTEGRATIONS_TURNED_ON": (False, "Включить интеграции с Gizmo", bool),
 }

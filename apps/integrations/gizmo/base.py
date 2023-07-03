@@ -2,11 +2,12 @@ import logging
 
 from apps.clubs.models import ClubBranch
 from apps.integrations.services import BaseService
+from apps.integrations.services.base import ServiceLoggingMixin
 
 logger = logging.getLogger("gizmo")
 
 
-class BaseGizmoService(BaseService):
+class BaseGizmoService(ServiceLoggingMixin, BaseService):
     headers = {
         "Content-Type": "application/json",
     }
