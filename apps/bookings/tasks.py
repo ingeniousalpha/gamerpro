@@ -54,8 +54,11 @@ def gizmo_cancel_booking(booking_uuid):
     ).run()
     booking.is_cancelled = True
     booking.save(update_fields=['is_cancelled'])
-    gizmo_unlock_computers.apply_async((booking.uuid,), countdown=0)
-
+    gizmo_unlock_computers(booking.uuid)
+    cel_app.send_task(
+        name="apps.bookings.tasks.gizmo_unlock_computers",
+        args=[booking.uuid],
+    )
 
 @cel_app.task
 def gizmo_unlock_computers(booking_uuid):
