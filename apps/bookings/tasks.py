@@ -60,6 +60,7 @@ def gizmo_cancel_booking(booking_uuid):
         args=[booking.uuid],
     )
 
+
 @cel_app.task
 def gizmo_unlock_computers(booking_uuid):
     booking = Booking.objects.filter(uuid=booking_uuid).first()

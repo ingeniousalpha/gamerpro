@@ -23,8 +23,8 @@ class OVInitPaymentService(BaseOneVisionService):
             "currency": "KZT",
             "description": "Оплата брони",
             "reference": str(self.instance.uuid),
-            "success_url": f"http://127.0.0.1:8008/api/payments/success?booking_uuid={str(self.instance.uuid)}",
-            "failure_url": f"http://127.0.0.1:8008/api/payments/fail?booking_uuid={str(self.instance.uuid)}",
+            "success_url": f"{settings.SITE_DOMAIN}/api/payments/success?booking_uuid={str(self.instance.uuid)}",
+            "failure_url": f"{settings.SITE_DOMAIN}/api/payments/fail?booking_uuid={str(self.instance.uuid)}",
             "lang": "ru",
             "params": {
                 "user_id": self.instance.club_user.user.outer_payer_id,
