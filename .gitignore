@@ -321,6 +321,8 @@ coverage.xml
 *.log
 .static_storage/
 .media/
+static/admin
+static/rest_framework
 local_settings.py
 media
 
