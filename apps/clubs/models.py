@@ -32,6 +32,7 @@ class ClubBranch(models.Model):
     api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
     gizmo_payment_method = models.IntegerField(default=2)
     is_active = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='images', null=True, blank=True)
 
     class Meta:
         verbose_name = "Филиал Клуба"

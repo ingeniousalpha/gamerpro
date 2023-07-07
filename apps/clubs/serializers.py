@@ -195,6 +195,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
             'id',
             'name',
             'description',
+            'image',
             'address',
             'is_favorite',
             'user',

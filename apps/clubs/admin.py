@@ -68,6 +68,7 @@ class ClubBranchAdmin(admin.ModelAdmin):
         'api_password',
         'gizmo_payment_method',
         'is_active',
+        'image',
     )
     inlines = [
         ClubComputerGroupInline,
