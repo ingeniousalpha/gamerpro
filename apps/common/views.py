@@ -17,7 +17,7 @@ class DocumentListView(PublicJSONRendererMixin, ListAPIView):
 
 
 def dashboard_view(request):
-    queryset = Booking.objects.filter(is_cancelled=False, payment__isnull=False)
+    queryset = Booking.objects.filter(is_cancelled=False, payments__isnull=False)
     bookings_count_total = queryset.count()
     today_bookings = queryset.filter(created_at__date=timezone.now().date())
     bookings_count_today = today_bookings.count()
