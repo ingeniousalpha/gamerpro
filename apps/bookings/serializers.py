@@ -10,6 +10,7 @@ from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsA
 from apps.clubs.models import ClubComputer
 from apps.clubs.serializers import ClubBranchSerializer, ClubComputerListSerializer
 from apps.common.serializers import RequestUserPropertyMixin
+from apps.payments import PAYMENT_STATUSES_MAPPER
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
 from apps.integrations.onevision.payment_services import OVInitPaymentService, OVRecurrentPaymentService
@@ -30,7 +31,7 @@ class BaseCreateBookingSerializer(
 
     def validate(self, attrs):
         print(attrs)
-        club_user = self.user.get_club_accont(attrs['club_branch'])
+        club_user = self.user.get_club_account(attrs['club_branch'])
         if not club_user:
             raise UserNotFound
         attrs['club_user'] = club_user
@@ -107,12 +108,12 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
     def extra_task(self, instance, validated_data):
         if not instance.club_user.user.outer_payer_id:
             OVCreatePayerService(instance=instance.club_user.user).run()
-        status, error = OVRecurrentPaymentService(instance=instance).run()
+        payment, error = OVRecurrentPaymentService(instance=instance).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_book_computers(str(instance.uuid))
-        self.context['status'] = status
+        self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
 
     def to_representation(self, instance):
         return {

@@ -76,10 +76,17 @@ class Payment(UUIDModel, TimestampModel):
         null=True, blank=True
     )
     currency = models.CharField("Валюта", max_length=3)
-    booking = models.OneToOneField(
+    booking = models.ForeignKey(
         "bookings.Booking",
         on_delete=models.CASCADE,
-        related_name="payment"
+        related_name="payments",
+        null=True, blank=True
+    )
+    replenishment = models.ForeignKey(
+        "bookings.DepositReplenishment",
+        on_delete=models.SET_NULL,
+        related_name="payments",  #TODO: check related name
+        null=True, blank=True
     )
     user = models.ForeignKey(
         "users.User",

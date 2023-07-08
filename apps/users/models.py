@@ -89,5 +89,5 @@ class User(PermissionsMixin, AbstractBaseUser):
             return True
         return self.is_active
 
-    def get_club_accont(self, club_branch):
+    def get_club_account(self, club_branch):
         return self.club_accounts.filter(club_branch=club_branch).first()

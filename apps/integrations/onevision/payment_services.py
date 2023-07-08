@@ -1,9 +1,12 @@
-import uuid
+import json
+from uuid import uuid4
 from django.conf import settings
+from django.utils import timezone
 
 from apps.common.services import date_format
 from apps.payments import PAYMENT_STATUSES_MAPPER
-from apps.payments.services import b64_decode, handle_ov_response
+from apps.payments.services import handle_ov_response
+from apps.common.utils import b64_decode
 from apps.integrations.onevision.base import BaseOneVisionService
 
 
@@ -50,19 +53,29 @@ class OVRecurrentPaymentService(BaseOneVisionService):
     instance: 'Booking'
 
     def run_service(self):
+        is_repl = self.kwargs.get('is_replenishment', False)
+        repl_ref = str(self.kwargs.get('replenishment_reference', ""))
+        self.kwargs['reference'] = str(uuid4())
+
+        if is_repl and repl_ref:
+            self.kwargs['description'] = "REPLENISHMENT" + f"_{repl_ref}"
+        elif is_repl and not repl_ref:
+            self.kwargs['description'] = "REPLENISHMENT"
+        else:
+            self.kwargs['description'] = "Оплата сохр картой"
+            self.kwargs['reference'] = str(self.instance.uuid)
+
         return self.fetch(data=self.form_encoded_data({
             "api_key": settings.ONE_VISION_API_KEY,
-            "expiration": date_format(self.instance.expiration_date),
-            "amount": str(self.instance.amount),
+            "amount": str(self.kwargs.get('amount', '')) or str(self.instance.amount),
+            "expiration": date_format(timezone.now()),
             "currency": "KZT",
-            "description": "Оплата брони",
-            "reference": str(self.instance.uuid),
-            "success_url": "http://127.0.0.1:8008/admin",
-            "failure_url": "http://127.0.0.1:8008/admin",
+            "description": self.kwargs['description'],
+            "reference": self.kwargs['reference'],
             "lang": "ru",
-            "pay_token": self.instance.payment_card.pay_token,
+            "pay_token": self.kwargs.get('pay_token', '') or self.instance.payment_card.pay_token,
             "params": {
-                "user_id": self.instance.club_user.user.outer_payer_id,
+                "user_id": self.kwargs.get('outer_payer_id', '') or self.instance.club_user.user.outer_payer_id,
                 "flag_get_url": 1,
                 "pay_token_flag": 1,
                 "verification_flag": 0,
@@ -70,8 +83,16 @@ class OVRecurrentPaymentService(BaseOneVisionService):
         }))
 
     def finalize_response(self, response):
-        if response and response.get('success') and response.get('data'):
-            resp_data = b64_decode(response['data'])
-            print(resp_data)
-            handle_ov_response(resp_data, is_webhook=False)
-            return PAYMENT_STATUSES_MAPPER.get(resp_data['status']), resp_data['processing_error_msg']
+        resp_data = b64_decode(response.get('data'))
+        print(resp_data)
+        if resp_data and response.get('success'):
+            resp_data['description'] = self.kwargs.get('description')
+            if 'params' not in resp_data:
+                resp_data['params'] = {'user_id': self.kwargs.get('outer_payer_id') or self.instance.club_user.user.outer_payer_id}
+            payment = handle_ov_response(resp_data, is_webhook=False)
+            return payment, resp_data['processing_error_msg']
+        else:
+            error_msg = resp_data['error_msg']
+            if resp_data.get('error_data'):
+                error_msg = f"{error_msg}: {str(resp_data['error_data'])}"
+            return None, error_msg

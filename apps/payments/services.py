@@ -1,22 +1,13 @@
-import base64
 import json
 
+from django.contrib.auth import get_user_model
+
 from apps.payments import PaymentStatuses
-from apps.payments.serializers import SavePaymentSerializer
+from apps.integrations.onevision.serializers import SavePaymentSerializer
 from apps.bookings.models import Booking
 from apps.payments.models import PaymentWebhook
 
-
-def b64_encode(raw_data: dict) -> str:
-    return base64.b64encode(
-        json.dumps(raw_data).encode('utf-8')
-    ).decode('ascii')
-
-
-def b64_decode(encoded_data: str) -> dict:
-    return json.loads(
-        base64.b64decode(encoded_data.encode('utf-8')).decode('utf-8')
-    )
+User = get_user_model()
 
 
 def split_card_numbers(card_number):
@@ -35,28 +26,43 @@ def handle_ov_response(webhook_data, is_webhook=True):
         if not created and webhook.payment:
             return
 
-    booking = Booking.objects.filter(uuid=webhook_data['reference']).first()
-    if not booking:
-        return
+    if isinstance(webhook_data['params'], str):
+        outer_payer_id = json.loads(webhook_data['params'].replace('=>', ':'))['user_id']
+    else:
+        outer_payer_id = webhook_data['params']['user_id']
 
-    payment_card = {}
-    if not booking.payment_card:
+    booking_uuid = None
+    user = User.objects.filter(outer_payer_id=outer_payer_id).first()
+    payment_data = {
+        'outer_id': webhook_data['transaction_id'],
+        'amount': webhook_data['amount'],
+        'user': user.id,
+        'payment_card': {}
+    }
+    if "REPLENISHMENT" in webhook_data['description']:
+        payment_data['uuid'] = webhook_data['reference']
+        if len(reference := webhook_data['description'].split("_")) > 1:
+            booking_uuid = reference[-1]
+    else:
+        booking_uuid = webhook_data['reference']
+
+    if booking_uuid:
+        booking = Booking.objects.filter(uuid=booking_uuid).first()
+        if not booking:
+            return
+        payment_data['booking'] = booking.id
+
+    if webhook_data.get('card_number'):
         first_numbers, last_numbers = split_card_numbers(webhook_data.get('card_number'))
-        payment_card = {
+        payment_data['payment_card'] = {
             'pay_token': webhook_data.get('pay_token'),
             'card_type': webhook_data.get('card_type'),
-            'user': booking.club_user.user.id,
+            'user': user.id,
             'first_numbers': first_numbers,
             'last_numbers': webhook_data.get('card_pan4'),
         }
-    serializer = SavePaymentSerializer(data={
-        'outer_id': webhook_data['transaction_id'],
-        'amount': webhook_data['amount'],
-        'booking': booking.id,
-        'user': booking.club_user.user.id,
-        'payment_card': payment_card
-    })
-    serializer.is_valid(raise_exception=True)
+    serializer = SavePaymentSerializer(data=payment_data)
+    serializer.is_valid()
     payment = serializer.save()
 
     if str(webhook_data['status']) == PaymentStatuses.CREATED:
@@ -77,10 +83,12 @@ def handle_ov_response(webhook_data, is_webhook=True):
 
     elif str(webhook_data['status']) == PaymentStatuses.FAILED:
         payment.move_to_failed(
-            f"{webhook_data.get('internal_error_reference')}|{webhook_data['processing_error_msg']}"
+            f"{webhook_data.get('internal_error_reference')}|{webhook_data.get('processing_error_msg')}"
         )
         # booking.cancel()
 
     if is_webhook:
         webhook.payment = payment
         webhook.save()
+
+    return payment

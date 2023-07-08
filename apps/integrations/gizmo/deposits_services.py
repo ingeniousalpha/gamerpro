@@ -12,8 +12,8 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
     def run_service(self):
         return self.fetch(json={
             "userId": self.kwargs.get("user_gizmo_id"),
-            "type": 0,
             "amount": int(self.kwargs.get("amount")),
+            "type": 0,
             "paymentMethodId": self.instance.gizmo_payment_method,
             "receiptOverride": True
         })
@@ -24,9 +24,11 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             self.log_error(str(response['errors']))
             raise GizmoRequestError
 
-        DepositReplenishment.objects.create(
+        return DepositReplenishment.objects.create(
             gizmo_id=response['result']['id'],
             club_branch=self.instance,
             club_user=ClubBranchUser.objects.filter(gizmo_id=self.kwargs.get('user_gizmo_id')).first(),
-            amount=self.kwargs.get('amount')
+            amount=self.kwargs.get('amount'),
+            booking=self.kwargs.get('booking'),
+            payment_card=self.kwargs.get('payment_card'),
         )

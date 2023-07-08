@@ -39,5 +39,5 @@ def str_to_datetime(string_dt):
     return datetime.datetime.strptime(string_dt, '%Y-%m-%d %H:%M:%S')
 
 
-def date_format(string_dt):
-    return datetime.datetime.strftime(string_dt.astimezone(pytz.timezone(settings.TIME_ZONE)), '%Y-%m-%d %H:%M')
+def date_format(dt):
+    return datetime.datetime.strftime(dt.astimezone(pytz.timezone(settings.TIME_ZONE)), '%Y-%m-%d %H:%M')

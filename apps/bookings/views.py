@@ -13,6 +13,8 @@ from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
 from constance import config
 
+from ..payments.serializers import BookingProlongSerializer
+
 
 class CreateBookingByBalanceView(PublicJSONRendererMixin, CreateAPIView):
     queryset = Booking.objects.all()
@@ -58,6 +60,24 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
         booking = self.get_object()
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_unlock_computers.delay(booking.uuid)
+        return Response({})
+
+
+class BookingProlongView(JSONRendererMixin, GenericAPIView):
+    serializer_class = BookingProlongSerializer
+    queryset = Booking.objects.all()
+
+    def get_object(self):
+        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
+        if not obj:
+            raise BookingNotFound
+        return obj
+
+    def post(self, request, booking_uuid):
+        booking = self.get_object()
+        serializer = self.get_serializer(data={**request.data, 'booking': booking.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response({})
 
 

@@ -9,8 +9,10 @@ from rest_framework.response import Response
 
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from apps.payments.models import PaymentCard
-from apps.payments.services import b64_decode, handle_ov_response
-from .serializers import PaymentCardListSerializer, SavePaymentSerializer
+from apps.payments.services import handle_ov_response
+from apps.common.utils import b64_decode
+from .serializers import PaymentCardListSerializer, DepositReplenishmentSerializer
+from ..clubs.models import ClubBranch
 
 logger = logging.getLogger("onevision")
 
@@ -45,6 +47,16 @@ class PaymentCardDeleteView(JSONRendererMixin, GenericAPIView):
         card.is_deleted = True
         card.save()
         return Response({}, status=status.HTTP_200_OK)
+
+
+class DepositReplenishmentView(JSONRendererMixin, GenericAPIView):
+    serializer_class = DepositReplenishmentSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({})
 
 
 def ov_payment_succeed_view(request):

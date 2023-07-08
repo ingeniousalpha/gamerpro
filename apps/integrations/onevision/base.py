@@ -7,7 +7,7 @@ import uuid
 from django.conf import settings
 from django.utils import timezone
 
-from apps.payments.services import b64_encode, b64_decode
+from apps.common.utils import b64_encode, b64_decode
 from apps.integrations.services import BaseService
 from apps.integrations.services.base import ServiceLoggingMixin
 

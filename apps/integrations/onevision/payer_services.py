@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from apps.payments.services import b64_decode
+from apps.common.utils import b64_decode
 from apps.integrations.onevision.base import BaseOneVisionService
 from apps.integrations.onevision.serializers import OVSavePayerIDSerializer
 

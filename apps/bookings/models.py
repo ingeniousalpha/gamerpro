@@ -66,3 +66,15 @@ class DepositReplenishment(TimestampModel):
         decimal_places=2,
         default=0.0
     )
+    booking = models.ForeignKey(
+        "bookings.Booking",
+        on_delete=models.CASCADE,
+        related_name="replenishments",
+        null=True, blank=True
+    )
+    payment_card = models.ForeignKey(
+        "payments.PaymentCard",
+        on_delete=models.CASCADE,
+        related_name="replenishments",
+        null=True, blank=True
+    )
