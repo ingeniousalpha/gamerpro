@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from constance import config
@@ -59,6 +60,7 @@ class BaseCreateBookingSerializer(
             booking = super().create(validated_data)
             for computer in computers:
                 BookedComputer.objects.create(booking=booking, computer=computer)
+                cache.set(f'BOOKING_STATUS_COMP_{computer.id}', True, config.PAYMENT_EXPIRY_TIME*60)
             self.extra_task(booking, validated_data)
 
         return booking

@@ -1,3 +1,5 @@
+from django.core.cache import cache
+
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
@@ -55,10 +57,10 @@ def gizmo_cancel_booking(booking_uuid):
     booking.is_cancelled = True
     booking.save(update_fields=['is_cancelled'])
     gizmo_unlock_computers(booking.uuid)
-    cel_app.send_task(
-        name="apps.bookings.tasks.gizmo_unlock_computers",
-        args=[booking.uuid],
-    )
+    # cel_app.send_task(
+    #     name="apps.bookings.tasks.gizmo_unlock_computers",
+    #     args=[booking.uuid],
+    # )
 
 
 @cel_app.task
@@ -73,3 +75,4 @@ def gizmo_unlock_computers(booking_uuid):
             instance=club_branch,
             computer_id=booked_computer.computer.gizmo_id
         ).run()
+        cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
