@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from apps.authentication.exceptions import UserNotFound
 from apps.bookings.models import Booking, BookedComputer
-from apps.bookings.tasks import gizmo_book_computers
+from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.models import ClubComputer
 from apps.clubs.serializers import ClubBranchSerializer, ClubComputerListSerializer
@@ -42,7 +42,7 @@ class BaseCreateBookingSerializer(
             computer = attrs['club_branch'].computers.filter(id=computer_id).first()
             if not computer:
                 raise ComputerDoesNotBelongToClubBranch
-            if computer.is_booked:
+            if computer.is_booked or cache.get(f'BOOKING_STATUS_COMP_{computer_id}', False):
                 raise ComputerIsAlreadyBooked
             computers.append(computer)
 
@@ -88,7 +88,7 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
         payment_url = OVInitPaymentService(instance=instance).run()
         if payment_url:
             if config.INTEGRATIONS_TURNED_ON:
-                gizmo_book_computers(str(instance.uuid))
+                gizmo_lock_computers(str(instance.uuid))
             self.context['payment_url'] = payment_url
         else:
             raise Exception

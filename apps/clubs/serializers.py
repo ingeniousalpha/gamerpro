@@ -81,7 +81,7 @@ class ClubComputerSerializer(serializers.ModelSerializer):
 
     def get_is_booked(self, obj):
         is_booked = cache.get(f'BOOKING_STATUS_COMP_{obj.id}')
-        if is_booked:
+        if is_booked is not None:
             return is_booked
         return obj.is_booked
 

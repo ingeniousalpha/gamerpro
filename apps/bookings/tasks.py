@@ -2,6 +2,7 @@ from django.core.cache import cache
 
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
+from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
@@ -49,6 +50,7 @@ def gizmo_cancel_booking(booking_uuid):
     if not booking:
         return
 
+    gizmo_unlock_computers(booking.uuid)
     club_branch = ClubBranch.objects.filter(id=booking.club_branch_id).first()
     GizmoEndUserSessionService(
         instance=club_branch,
@@ -56,7 +58,6 @@ def gizmo_cancel_booking(booking_uuid):
     ).run()
     booking.is_cancelled = True
     booking.save(update_fields=['is_cancelled'])
-    gizmo_unlock_computers(booking.uuid)
     # cel_app.send_task(
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
     #     args=[booking.uuid],
@@ -64,15 +65,36 @@ def gizmo_cancel_booking(booking_uuid):
 
 
 @cel_app.task
-def gizmo_unlock_computers(booking_uuid):
+def gizmo_unlock_computers(booking_uuid, check_payment=False):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
 
-    club_branch = ClubBranch.objects.filter(id=booking.club_branch_id).first()
+    if check_payment and booking.payments.exists():
+        return
+
     for booked_computer in booking.computers.all():
         GizmoUnlockComputerService(
-            instance=club_branch,
+            instance=booking.club_branch,
             computer_id=booked_computer.computer.gizmo_id
         ).run()
         cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+
+    _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
+
+
+def gizmo_lock_computers(booking_uuid):
+    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    if not booking:
+        return
+
+    for booked_computer in booking.computers.all():
+        GizmoLockComputerService(
+            instance=booking.club_branch,
+            computer_id=booked_computer.computer.gizmo_id
+        ).run()
+
+    gizmo_unlock_computers.apply_async(
+        (str(booking.uuid), True),
+        countdown=config.PAYMENT_EXPIRY_TIME*60
+    )
