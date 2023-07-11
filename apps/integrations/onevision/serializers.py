@@ -42,7 +42,7 @@ class SavePaymentSerializer(serializers.ModelSerializer):
             if not payment:
                 payment = super().create(validated_data)
 
-            if card := PaymentCard.objects.filter(pay_token=payment_card['pay_token']).first():
+            if card := PaymentCard.objects.filter(pay_token=payment_card.get('pay_token') or "no_card").first():
                 payment.card = card
                 payment.save(update_fields=['card'])
 
