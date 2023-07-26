@@ -11,7 +11,7 @@ from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsA
 from apps.clubs.models import ClubComputer
 from apps.clubs.serializers import ClubBranchSerializer, ClubComputerListSerializer
 from apps.common.serializers import RequestUserPropertyMixin
-from apps.payments import PAYMENT_STATUSES_MAPPER
+from apps.payments import PAYMENT_STATUSES_MAPPER, PaymentStatuses
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
 from apps.integrations.onevision.payment_services import OVInitPaymentService, OVRecurrentPaymentService
@@ -138,9 +138,11 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
         )
 
 
-class BookingListSerializer(serializers.ModelSerializer):
+class BookingSerializer(serializers.ModelSerializer):
     club_branch = ClubBranchSerializer()
     computers = BookedComputerListSerializer(many=True)
+    is_active = serializers.SerializerMethodField()
+    payment_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -149,5 +151,21 @@ class BookingListSerializer(serializers.ModelSerializer):
             'created_at',
             'club_branch',
             'amount',
+            'is_active',
+            'payment_status',
             'computers'
         )
+
+    def get_is_active(self, obj):
+        if obj.is_cancelled:
+            return False
+
+        if obj.payments.exists() and obj.payments.last().status == PaymentStatuses.PAYMENT_APPROVED and \
+                obj.created_at >= timezone.now() - timezone.timedelta(hours=1):
+            return True
+        return False
+
+    def get_payment_status(self, obj):
+        if obj.payments.exists():
+            return PAYMENT_STATUSES_MAPPER.get(int(obj.payments.last().status))
+        return "NOT_PAID"

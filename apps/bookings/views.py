@@ -1,4 +1,4 @@
-from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
 from apps.bookings.exceptions import BookingNotFound
@@ -7,7 +7,7 @@ from apps.bookings.serializers import (
     CreateBookingByBalanceSerializer,
     CreateBookingByPaymentSerializer,
     CreateBookingByCardPaymentSerializer,
-    BookingListSerializer
+    BookingSerializer
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
@@ -82,7 +82,18 @@ class BookingProlongView(JSONRendererMixin, GenericAPIView):
 
 
 class BookingHistoryView(JSONRendererMixin, ListAPIView):
-    serializer_class = BookingListSerializer
+    serializer_class = BookingSerializer
 
     def get_queryset(self):
         return Booking.objects.filter(club_user__user=self.request.user).order_by('-created_at')
+
+
+class BookingDetailView(JSONRendererMixin, RetrieveAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+
+    def get_object(self):
+        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
+        if not obj:
+            raise BookingNotFound
+        return obj
