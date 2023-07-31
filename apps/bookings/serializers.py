@@ -157,15 +157,17 @@ class BookingSerializer(serializers.ModelSerializer):
         )
 
     def get_is_active(self, obj):
-        if obj.is_cancelled:
-            return False
+        if not obj.is_cancelled and obj.created_at >= timezone.now() - timezone.timedelta(hours=1):
+            if obj.payments.exists() and obj.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
+                return True
+            elif obj.use_balance:
+                return True
 
-        if obj.payments.exists() and obj.payments.last().status == PaymentStatuses.PAYMENT_APPROVED and \
-                obj.created_at >= timezone.now() - timezone.timedelta(hours=1):
-            return True
         return False
 
     def get_payment_status(self, obj):
         if obj.payments.exists():
             return PAYMENT_STATUSES_MAPPER.get(int(obj.payments.last().status))
+        elif obj.use_balance:
+            return "BALANCE_APPROVED"
         return "NOT_PAID"
