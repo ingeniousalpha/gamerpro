@@ -56,8 +56,6 @@ def gizmo_cancel_booking(booking_uuid):
         instance=club_branch,
         user_id=booking.club_user.gizmo_id
     ).run()
-    booking.is_cancelled = True
-    booking.save(update_fields=['is_cancelled'])
     # cel_app.send_task(
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
     #     args=[booking.uuid],

@@ -42,6 +42,8 @@ class CancelBookingView(JSONRendererMixin, GenericAPIView):
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
+        booking.is_cancelled = True
+        booking.save(update_fields=['is_cancelled'])
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_cancel_booking.delay(booking.uuid)
         return Response({})
