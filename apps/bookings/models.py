@@ -19,7 +19,7 @@ class Booking(UUIDModel, TimestampModel):
     status = models.CharField(
         max_length=20,
         choices=BookingStatuses.choices,
-        default=BookingStatuses.IN_PROCESS
+        default=BookingStatuses.ACCEPTED
     )
     use_balance = models.BooleanField(default=True)
     amount = models.DecimalField(

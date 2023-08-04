@@ -152,6 +152,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'club_branch',
             'amount',
             'is_active',
+            'status',
             'payment_status',
             'computers'
         )

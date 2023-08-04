@@ -4,7 +4,6 @@ default_app_config = 'apps.bookings.apps.BookingsConfig'
 
 
 class BookingStatuses(TextChoices):
-    IN_PROCESS = "IN_PROCESS", "В обработке"
-    DECLINED = "DECLINED", "Отклонено"
+    ACCEPTED = "ACCEPTED", "Бронь принята"
+    PLAYING = "PLAYING", "Юзер играет"
     CANCELLED = "CANCELLED", "Отменено"
-    ACCEPTED = "ACCEPTED", "Принято"
