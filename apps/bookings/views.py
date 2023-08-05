@@ -10,6 +10,7 @@ from apps.bookings.serializers import (
     BookingSerializer
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
+from . import BookingStatuses
 from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
 from constance import config
 
@@ -60,6 +61,8 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
+        booking.status = BookingStatuses.PLAYING
+        booking.save(update_fields=['status'])
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_unlock_computers.delay(booking.uuid)
         return Response({})
