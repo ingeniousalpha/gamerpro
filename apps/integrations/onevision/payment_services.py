@@ -1,10 +1,8 @@
-import json
 from uuid import uuid4
 from django.conf import settings
 from django.utils import timezone
 
 from apps.common.services import date_format
-from apps.payments import PAYMENT_STATUSES_MAPPER
 from apps.payments.services import handle_ov_response
 from apps.common.utils import b64_decode
 from apps.integrations.onevision.base import BaseOneVisionService

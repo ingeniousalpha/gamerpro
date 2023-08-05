@@ -78,7 +78,7 @@ def handle_ov_response(webhook_data, is_webhook=True):
     elif str(webhook_data['status']) == PaymentStatuses.PAYMENT_APPROVED:
         payment.move_to_approved()
         payment.user.set_current_card(payment.card)
-        if booking_uuid and not booking.payment_card:
+        if booking_uuid and not booking.payment_card and not booking.use_balance:
             gizmo_book_computers(booking_uuid)
 
     elif str(webhook_data['status']) == PaymentStatuses.IN_PROGRESS:
