@@ -14,6 +14,7 @@ from . import BookingStatuses
 from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
 from constance import config
 
+from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService
 from ..payments.serializers import BookingProlongSerializer
 
 
@@ -92,6 +93,21 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
 
     def get_queryset(self):
         return Booking.objects.filter(club_user__user=self.request.user).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if queryset.first().is_active:
+            GizmoUpdateComputerStateByUserSessionsService(instance=queryset.first().club_branch).run()
+            queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class BookingDetailView(JSONRendererMixin, RetrieveAPIView):

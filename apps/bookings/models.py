@@ -3,6 +3,8 @@ from django.db import models
 from apps.bookings import BookingStatuses
 from apps.clubs.models import ClubComputer
 from apps.common.models import UUIDModel, TimestampModel
+from django.utils import timezone
+from apps.payments import PaymentStatuses
 
 
 class Booking(UUIDModel, TimestampModel):
@@ -35,6 +37,15 @@ class Booking(UUIDModel, TimestampModel):
     )
     expiration_date = models.DateTimeField(auto_now=True)
     is_cancelled = models.BooleanField(default=False)
+
+    @property
+    def is_active(self):
+        if not self.is_cancelled and self.created_at >= timezone.now() - timezone.timedelta(hours=1):
+            if self.payments.exists() and self.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
+                return True
+            elif self.use_balance:
+                return True
+        return False
 
 
 class BookedComputer(models.Model):

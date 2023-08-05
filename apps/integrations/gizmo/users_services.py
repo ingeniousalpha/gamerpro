@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 
 from apps.authentication.exceptions import UserNotFound
+from apps.bookings import BookingStatuses
+from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranchUser, ClubComputer
 from apps.clubs.services import get_correct_phone
 from apps.integrations.gizmo.base import BaseGizmoService
@@ -107,6 +109,10 @@ class GizmoGetUserBalanceService(BaseGizmoService):
 
 
 class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
+    """
+    Updates computers state and
+    returns user gizmo ids with active sessions
+    """
     endpoint = "/api/usersessions/activeinfo"
     save_serializer = None
     method = "GET"
@@ -115,7 +121,9 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
         print(response)
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
+            active_users = []
             for user_session in resp_data:
+                active_users.append(user_session['userId'])
                 computer = ClubComputer.objects.filter(
                     gizmo_id=user_session['hostId'],
                     club_branch_id=self.instance.id
@@ -123,6 +131,14 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                 if computer:
                     computer.is_booked = True
                     computer.save()
+
+            uncompleted_bookings = Booking.objects.filter(status=BookingStatuses.PLAYING)
+            for booking in uncompleted_bookings:
+                if booking.club_user.gizmo_id not in active_users:
+                    booking.status = BookingStatuses.COMPLETED
+                    booking.save(update_fields=['status'])
+
+            return active_users
 
 
 class GizmoStartUserSessionService(BaseGizmoService):

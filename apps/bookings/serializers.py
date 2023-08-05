@@ -141,7 +141,6 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     club_branch = ClubBranchSerializer()
     computers = BookedComputerListSerializer(many=True)
-    is_active = serializers.SerializerMethodField()
     payment_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -156,15 +155,6 @@ class BookingSerializer(serializers.ModelSerializer):
             'payment_status',
             'computers'
         )
-
-    def get_is_active(self, obj):
-        if not obj.is_cancelled and obj.created_at >= timezone.now() - timezone.timedelta(hours=1):
-            if obj.payments.exists() and obj.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
-                return True
-            elif obj.use_balance:
-                return True
-
-        return False
 
     def get_payment_status(self, obj):
         if obj.payments.exists():
