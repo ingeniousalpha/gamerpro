@@ -43,6 +43,8 @@ class SavePaymentSerializer(serializers.ModelSerializer):
                 payment = super().create(validated_data)
 
             if card := PaymentCard.objects.filter(pay_token=payment_card.get('pay_token') or "no_card").first():
+                payment.booking.payment_card = card
+                payment.booking.save(update_fields=['card'])
                 payment.card = card
                 payment.save(update_fields=['card'])
 
