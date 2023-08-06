@@ -53,7 +53,9 @@ class SavePaymentSerializer(serializers.ModelSerializer):
                 serializer.is_valid(raise_exception=True)
                 card = serializer.save()
                 payment.card = card
-                payment.save()
+                payment.save(update_fields=['card'])
+                payment.booking.payment_card = card
+                payment.booking.save(update_fields=['payment_card'])
             return payment
 
 
