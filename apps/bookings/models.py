@@ -23,7 +23,7 @@ class Booking(UUIDModel, TimestampModel):
         choices=BookingStatuses.choices,
         default=BookingStatuses.ACCEPTED
     )
-    use_balance = models.BooleanField(default=True)
+    use_balance = models.BooleanField(default=False)
     amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,

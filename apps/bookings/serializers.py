@@ -62,6 +62,7 @@ class BaseCreateBookingSerializer(
                 BookedComputer.objects.create(booking=booking, computer=computer)
                 cache.set(f'BOOKING_STATUS_COMP_{computer.id}', True, config.PAYMENT_EXPIRY_TIME*60)
             self.extra_task(booking, validated_data)
+            booking.refresh_from_db()
 
         return booking
 
@@ -69,6 +70,8 @@ class BaseCreateBookingSerializer(
 class CreateBookingByBalanceSerializer(BaseCreateBookingSerializer):
 
     def extra_task(self, instance, validated_data):
+        instance.use_balance = True
+        instance.save()
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_book_computers(str(instance.uuid), from_balance=True)
 
