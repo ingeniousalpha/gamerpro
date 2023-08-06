@@ -40,7 +40,7 @@ class Booking(UUIDModel, TimestampModel):
 
     @property
     def is_active(self):
-        if not self.is_cancelled and self.created_at >= timezone.now() - timezone.timedelta(hours=1):
+        if self.status in [BookingStatuses.ACCEPTED, BookingStatuses.PLAYING] and self.created_at >= timezone.now() - timezone.timedelta(hours=1):
             if self.payments.exists() and self.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
                 return True
             elif self.use_balance:
