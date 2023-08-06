@@ -63,6 +63,7 @@ def handle_ov_response(webhook_data, is_webhook=True):
             'last_numbers': webhook_data.get('card_pan4'),
         }
     serializer = SavePaymentSerializer(data=payment_data)
+    booking.refresh_from_db()
     serializer.is_valid()
     payment = serializer.save()
 
