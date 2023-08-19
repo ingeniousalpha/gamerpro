@@ -29,6 +29,8 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             club_branch=self.instance,
             club_user=ClubBranchUser.objects.filter(gizmo_id=self.kwargs.get('user_gizmo_id')).first(),
             amount=self.kwargs.get('amount'),
+            commission_amount=self.kwargs.get('commission_amount'),
+            total_amount=self.kwargs.get('total_amount'),
             booking=self.kwargs.get('booking'),
             payment_card=self.kwargs.get('payment_card'),
         )

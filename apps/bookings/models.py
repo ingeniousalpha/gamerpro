@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 
 from apps.bookings import BookingStatuses
@@ -24,7 +25,17 @@ class Booking(UUIDModel, TimestampModel):
         default=BookingStatuses.ACCEPTED
     )
     use_balance = models.BooleanField(default=False)
-    amount = models.DecimalField(
+    amount = models.DecimalField(  # amount sent to balance
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )
+    commission_amount = models.DecimalField(  # our commission
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )
+    total_amount = models.DecimalField(  # amount user paid
         max_digits=8,
         decimal_places=2,
         default=0.0
@@ -46,6 +57,11 @@ class Booking(UUIDModel, TimestampModel):
             elif self.use_balance:
                 return True
         return False
+
+    @staticmethod
+    def get_commission_amount(amount):
+        # here will be calculations based on amount
+        return Decimal(100)
 
 
 class BookedComputer(models.Model):
@@ -72,7 +88,17 @@ class DepositReplenishment(TimestampModel):
         on_delete=models.CASCADE,
         related_name="replenishments"
     )
-    amount = models.DecimalField(
+    amount = models.DecimalField(  # amount sent to balance
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )
+    commission_amount = models.DecimalField(  # our commission
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )
+    total_amount = models.DecimalField(  # amount user paid
         max_digits=8,
         decimal_places=2,
         default=0.0

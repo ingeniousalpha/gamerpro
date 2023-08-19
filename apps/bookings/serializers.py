@@ -47,6 +47,8 @@ class BaseCreateBookingSerializer(
             computers.append(computer)
 
         attrs['computers'] = computers
+        attrs['commission_amount'] = Booking.get_commission_amount(attrs['amount'])
+        attrs['total_amount'] = attrs['commission_amount'] + attrs['amount']
         return attrs
 
     def extra_task(self, instance, validated_data):

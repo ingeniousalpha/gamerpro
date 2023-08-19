@@ -31,9 +31,11 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
         )
 
     def create(self, validated_data):
+        commission_amount = Booking.get_commission_amount(validated_data['amount'])
+        total_amount = commission_amount + validated_data['amount']
         payment, error = OVRecurrentPaymentService(
             is_replenishment=True,
-            amount=validated_data['amount'],
+            total_amount=total_amount,
             pay_token=validated_data['payment_card'].pay_token,
             outer_payer_id=self.user.outer_payer_id,
         ).run()
@@ -42,6 +44,8 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
         replenishment = GizmoCreateDepositTransactionService(
             instance=validated_data['club_branch'],
             amount=validated_data['amount'],
+            commission_amount=commission_amount,
+            total_amount=total_amount,
             user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
             payment_card=validated_data['payment_card']
         ).run()
@@ -62,10 +66,12 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
         )
 
     def create(self, validated_data):
+        commission_amount = Booking.get_commission_amount(validated_data['amount'])
+        total_amount = commission_amount + validated_data['amount']
         payment, error = OVRecurrentPaymentService(
             is_replenishment=True,
             replenishment_reference=validated_data.get('booking').uuid,
-            amount=validated_data['amount'],
+            total_amount=total_amount,
             pay_token=validated_data['payment_card'].pay_token,
             outer_payer_id=self.user.outer_payer_id,
         ).run()
@@ -74,6 +80,8 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
         replenishment = GizmoCreateDepositTransactionService(
             instance=validated_data['club_branch'],
             amount=validated_data['amount'],
+            commission_amount=commission_amount,
+            total_amount=total_amount,
             user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
             payment_card=validated_data['payment_card'],
             booking=validated_data.get('booking')

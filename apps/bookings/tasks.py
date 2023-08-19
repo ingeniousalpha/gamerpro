@@ -19,7 +19,10 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
             user_gizmo_id=booking.club_user.gizmo_id,
-            amount=booking.amount
+            booking=booking,
+            amount=booking.amount,
+            commission_amount=booking.commission_amount,
+            total_amount=booking.total_amount
         ).run()
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
