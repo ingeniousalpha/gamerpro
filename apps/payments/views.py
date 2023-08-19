@@ -36,7 +36,11 @@ class PaymentCardListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return PaymentCard.objects.filter(is_deleted=False, user=self.request.user).order_by('created_at')
+        return PaymentCard.objects.filter(
+            is_deleted=False,
+            user=self.request.user,
+            pay_token__isnull=False,
+        ).order_by('created_at')
 
 
 class PaymentCardDeleteView(JSONRendererMixin, GenericAPIView):
