@@ -43,10 +43,11 @@ class SavePaymentSerializer(serializers.ModelSerializer):
                 payment = super().create(validated_data)
 
             if card := PaymentCard.objects.filter(pay_token=payment_card.get('pay_token') or "no_card").first():
-                payment.booking.payment_card = card
-                payment.booking.save(update_fields=['payment_card'])
                 payment.card = card
                 payment.save(update_fields=['card'])
+                if payment.booking:
+                    payment.booking.payment_card = card
+                    payment.booking.save(update_fields=['payment_card'])
 
             if not payment.card and payment_card and payment_card.get('last_numbers'):
                 serializer = SavePaymentCardSerializer(data=payment_card)
@@ -54,8 +55,9 @@ class SavePaymentSerializer(serializers.ModelSerializer):
                 card = serializer.save()
                 payment.card = card
                 payment.save(update_fields=['card'])
-                payment.booking.payment_card = card
-                payment.booking.save(update_fields=['payment_card'])
+                if payment.booking:
+                    payment.booking.payment_card = card
+                    payment.booking.save(update_fields=['payment_card'])
             return payment
 
 
