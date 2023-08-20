@@ -27,5 +27,5 @@ def check_user_session(club_user):
             )
             BookedComputer.objects.create(
                 booking=booking,
-                computer=ClubComputer.objects.filter(gizmo_id=active_session['computer_gizmo_id'].first())
+                computer=ClubComputer.objects.filter(gizmo_id=active_session['computer_gizmo_id']).first()
             )
