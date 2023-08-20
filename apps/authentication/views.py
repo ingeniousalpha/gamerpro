@@ -65,7 +65,7 @@ class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
             club_user.user = user
             club_user.save()
 
-        check_user_session(club_user)
+        # check_user_session(club_user)
 
         return Response(generate_access_and_refresh_tokens_for_user(club_user.user))
 
