@@ -67,8 +67,10 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
             return Response({})
 
         booking = self.get_object()
-        if booking.status == BookingStatuses.CANCELLED or \
-                not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+        if not booking.use_balance and not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+            return Response({})
+
+        elif booking.status == BookingStatuses.CANCELLED:
             return Response({})
 
         elif booking.status == BookingStatuses.ACCEPTED:
