@@ -138,6 +138,8 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
             uncompleted_bookings = Booking.objects.filter(status=BookingStatuses.PLAYING)
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
             for booking in uncompleted_bookings:
+                if booking.uuid == self.kwargs.get('skip_booking'):
+                    continue
                 if booking.club_user.gizmo_id not in active_users_ids:
                     booking.status = BookingStatuses.COMPLETED
                     booking.save(update_fields=['status'])

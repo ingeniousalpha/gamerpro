@@ -111,7 +111,7 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
             computer_id=booked_computer.computer.gizmo_id
         ).run()
 
-    _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
+    _sync_gizmo_computers_state_of_club_branch(booking.club_branch, skip_booking=booking.uuid)
 
 
 def gizmo_lock_computers(booking_uuid):
