@@ -11,10 +11,11 @@ from apps.bookings.serializers import (
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
-from .tasks import gizmo_cancel_booking, gizmo_unlock_computers
+from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_computers_and_start_user_session
 from constance import config
 
 from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService
+from ..payments import PaymentStatuses
 from ..payments.serializers import BookingProlongSerializer
 
 
@@ -62,11 +63,22 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
         return obj
 
     def post(self, request, booking_uuid):
+        if not config.INTEGRATIONS_TURNED_ON:
+            return Response({})
+
         booking = self.get_object()
-        booking.status = BookingStatuses.PLAYING
-        booking.save(update_fields=['status'])
-        if config.INTEGRATIONS_TURNED_ON:
+        if booking.status == BookingStatuses.CANCELLED or \
+                not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+            return Response({})
+
+        elif booking.status == BookingStatuses.ACCEPTED:
+            booking.status = BookingStatuses.PLAYING
+            booking.save(update_fields=['status'])
+            gizmo_unlock_computers_and_start_user_session.delay(booking.uuid)
+
+        elif booking.status == BookingStatuses.SESSION_STARTED:
             gizmo_unlock_computers.delay(booking.uuid)
+
         return Response({})
 
 

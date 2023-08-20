@@ -1,5 +1,6 @@
 from django.core.cache import cache
 
+from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
@@ -31,18 +32,24 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
         booked_computer.computer.is_booked = True
         booked_computer.computer.save()
-        start_user_session.apply_async(
-            (booking.club_branch.id, booking.club_user.gizmo_id, booked_computer.computer.gizmo_id),
+        gizmo_start_user_session.apply_async(
+            (booking.uuid, booked_computer.computer.gizmo_id),
             countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
         )
 
 
 @cel_app.task
-def start_user_session(club_branch_id, user_gizmo_id, computer_gizmo_id):
-    club_branch = ClubBranch.objects.filter(id=club_branch_id).first()
+def gizmo_start_user_session(booking_uuid, computer_gizmo_id):
+    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    if not booking:
+        return
+
+    booking.status = BookingStatuses.SESSION_STARTED
+    booking.save(update_fields=['status'])
+    # todo: check is user session already started?
     GizmoStartUserSessionService(
-        instance=club_branch,
-        user_id=user_gizmo_id,
+        instance=booking.club_branch,
+        user_id=booking.club_user.gizmo_id,
         computer_id=computer_gizmo_id
     ).run()
 
@@ -80,6 +87,26 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
             computer_id=booked_computer.computer.gizmo_id
         ).run()
         cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+
+    _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
+
+
+def gizmo_unlock_computers_and_start_user_session(booking_uuid):
+    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    if not booking:
+        return
+
+    for booked_computer in booking.computers.all():
+        GizmoUnlockComputerService(
+            instance=booking.club_branch,
+            computer_id=booked_computer.computer.gizmo_id
+        ).run()
+        cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+        GizmoStartUserSessionService(
+            instance=booking.club_branch,
+            user_id=booking.club_user.gizmo_id,
+            computer_id=booked_computer.computer.gizmo_id
+        ).run()
 
     _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
 

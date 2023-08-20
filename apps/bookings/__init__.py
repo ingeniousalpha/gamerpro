@@ -5,6 +5,7 @@ default_app_config = 'apps.bookings.apps.BookingsConfig'
 
 class BookingStatuses(TextChoices):
     ACCEPTED = "ACCEPTED", "Бронь принята"
-    PLAYING = "PLAYING", "Юзер играет"
-    COMPLETED = "COMPLETED", ""
+    SESSION_STARTED = "SESSION_STARTED", "Тарификация началась"  # юзер еще не сел играть
+    PLAYING = "PLAYING", "Юзер играет"  # юзер сел играть
+    COMPLETED = "COMPLETED", "Зевершено"
     CANCELLED = "CANCELLED", "Отменено"
