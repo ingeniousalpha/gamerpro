@@ -1,8 +1,9 @@
+from decimal import Decimal
+from constance import config
+from rest_framework import serializers
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
-from constance import config
-from rest_framework import serializers
 
 from apps.authentication.exceptions import UserNotFound
 from apps.bookings.models import Booking, BookedComputer
@@ -47,8 +48,9 @@ class BaseCreateBookingSerializer(
             computers.append(computer)
 
         attrs['computers'] = computers
-        attrs['commission_amount'] = Booking.get_commission_amount(attrs['amount'])
-        attrs['total_amount'] = attrs['commission_amount'] + attrs['amount']
+        amount = attrs.get('amount', Decimal(0))
+        attrs['commission_amount'] = Booking.get_commission_amount(amount)
+        attrs['total_amount'] = attrs['commission_amount'] + amount
         return attrs
 
     def extra_task(self, instance, validated_data):
