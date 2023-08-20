@@ -76,7 +76,7 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
         elif booking.status == BookingStatuses.ACCEPTED:
             booking.status = BookingStatuses.PLAYING
             booking.save(update_fields=['status'])
-            gizmo_unlock_computers_and_start_user_session.delay(booking.uuid)
+            gizmo_unlock_computers_and_start_user_session(booking.uuid)
 
         elif booking.status == BookingStatuses.SESSION_STARTED:
             gizmo_unlock_computers.delay(booking.uuid)
