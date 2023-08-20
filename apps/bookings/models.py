@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.db import models
 
-from apps.bookings import BookingStatuses
+from apps.bookings import BookingStatuses, PlatformTypes
 from apps.clubs.models import ClubComputer
 from apps.common.models import UUIDModel, TimestampModel
 from django.utils import timezone
@@ -25,6 +25,11 @@ class Booking(UUIDModel, TimestampModel):
         default=BookingStatuses.ACCEPTED
     )
     use_balance = models.BooleanField(default=False)
+    platform = models.CharField(
+        max_length=256,
+        choices=PlatformTypes.choices,
+        default=PlatformTypes.WEB
+    )
     amount = models.DecimalField(  # amount sent to balance
         max_digits=8,
         decimal_places=2,

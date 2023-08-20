@@ -91,6 +91,7 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
     _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
 
 
+@cel_app.task
 def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:

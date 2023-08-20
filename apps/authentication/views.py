@@ -12,6 +12,7 @@ from .serializers import (
     SigninSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
 )
 from .services import generate_access_and_refresh_tokens_for_user
+from ..bookings.services import check_user_session
 from ..clubs.services import get_club_branch_user_by_username
 from ..notifications.services import send_otp
 from ..integrations.gizmo.users_services import GizmoGetUserByUsernameService
@@ -63,6 +64,8 @@ class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
             user, _ = get_or_create_user_by_phone(club_user.gizmo_phone)
             club_user.user = user
             club_user.save()
+
+        check_user_session(club_user)
 
         return Response(generate_access_and_refresh_tokens_for_user(club_user.user))
 
