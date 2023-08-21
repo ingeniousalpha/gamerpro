@@ -114,8 +114,8 @@ class BaseService(ABC):
             logger.info('headers: %s' % response_raw.request.headers)  # TODO log properly
         if self.log_request:
             logger.info('request: %s' % response_raw.request.body)
-        if self.log_response:
-            logger.info('response: %s' % response_raw.content)
+        # if self.log_response:
+            # logger.info('response: %s' % response_raw.content)
 
         if response_raw.status_code == 400:
             return self.handle_400(response_raw)

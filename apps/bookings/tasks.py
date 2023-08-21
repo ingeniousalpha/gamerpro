@@ -101,6 +101,10 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     if not booking:
         return
 
+    print("inside gizmo_unlock_computers_and_start_user_session")
+    print(booking.status)
+    print(booking.uuid)
+
     for booked_computer in booking.computers.all():
         GizmoUnlockComputerService(
             instance=booking.club_branch,
@@ -112,6 +116,7 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
             user_id=booking.club_user.gizmo_id,
             computer_id=booked_computer.computer.gizmo_id
         ).run()
+        print('dfddf')
 
     time.sleep(1)
     _sync_gizmo_computers_state_of_club_branch(booking.club_branch, skip_booking=booking.uuid)

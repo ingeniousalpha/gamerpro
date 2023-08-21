@@ -21,7 +21,7 @@ class JSONRendererMixin:
         else:
             try:
                 response = super().dispatch(request, *args, **kwargs)
-                print('response dispatched')
+                print(request)
                 return response
 
             except Exception as e:

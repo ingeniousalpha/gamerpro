@@ -118,7 +118,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
     method = "GET"
 
     def finalize_response(self, response):
-        print(response)
+        print("inside GizmoUpdateComputerStateByUserSessionsService")
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             active_users = []
@@ -136,13 +136,20 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                     computer.save()
 
             uncompleted_bookings = Booking.objects.filter(status=BookingStatuses.PLAYING)
+            print("uncompleted_bookings: ", uncompleted_bookings)
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
+            print("active_users_ids: ", active_users_ids)
+            print(self.kwargs.get('skip_booking'))
             for booking in uncompleted_bookings:
                 if booking.uuid == self.kwargs.get('skip_booking'):
+                    print("booking.uuid: ", booking.uuid)
+                    print('continued')
                     continue
                 if booking.club_user.gizmo_id not in active_users_ids:
+                    print("booking.uuid: ", booking.uuid)
                     booking.status = BookingStatuses.COMPLETED
                     booking.save(update_fields=['status'])
+                    print('booking.status: ', booking.status)
 
             return active_users
 
@@ -159,7 +166,7 @@ class GizmoStartUserSessionService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
+        # print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

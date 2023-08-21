@@ -62,6 +62,9 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
             raise BookingNotFound
         return obj
 
+    def options(self, request, *args, **kwargs):
+        return Response({})
+
     def post(self, request, booking_uuid):
         if not config.INTEGRATIONS_TURNED_ON:
             return Response({})
@@ -74,6 +77,7 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
             return Response({})
 
         elif booking.status == BookingStatuses.ACCEPTED:
+            print("booking.status is BookingStatuses.ACCEPTED")
             booking.status = BookingStatuses.PLAYING
             booking.save(update_fields=['status'])
             gizmo_unlock_computers_and_start_user_session(booking.uuid)
