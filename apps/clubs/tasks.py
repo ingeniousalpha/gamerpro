@@ -18,10 +18,6 @@ def synchronize_gizmo_computers_state():
         _sync_gizmo_computers_state_of_club_branch(club_branch)
 
 
-def _sync_gizmo_computers_state_of_club_branch(club_branch, skip_booking=None):
-    print('inside _sync_gizmo_computers_state_of_club_branch')
-    print(skip_booking)
+def _sync_gizmo_computers_state_of_club_branch(club_branch):
     GizmoGetComputersService(instance=club_branch).run()
-    print('GizmoGetComputersService ran')
-    GizmoUpdateComputerStateByUserSessionsService(instance=club_branch, skip_booking=skip_booking).run()
-    print('GizmoUpdateComputerStateByUserSessionsService ran')
+    GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()

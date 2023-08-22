@@ -53,10 +53,15 @@ class Booking(UUIDModel, TimestampModel):
     )
     expiration_date = models.DateTimeField(auto_now=True)
     is_cancelled = models.BooleanField(default=False)
+    is_starting_session = models.BooleanField(default=False)
 
     @property
     def is_active(self):
-        if self.status in [BookingStatuses.ACCEPTED, BookingStatuses.PLAYING] and self.created_at >= timezone.now() - timezone.timedelta(hours=1):
+        if self.status in [
+            BookingStatuses.ACCEPTED,
+            BookingStatuses.SESSION_STARTED,
+            BookingStatuses.PLAYING
+        ]:
             if self.payments.exists() and self.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
                 return True
             elif self.use_balance:

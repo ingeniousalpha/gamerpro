@@ -77,9 +77,9 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
             return Response({})
 
         elif booking.status == BookingStatuses.ACCEPTED:
-            print("booking.status is BookingStatuses.ACCEPTED")
             booking.status = BookingStatuses.PLAYING
-            booking.save(update_fields=['status'])
+            booking.is_starting_session = True
+            booking.save(update_fields=['status', 'is_starting_session'])
             gizmo_unlock_computers_and_start_user_session(booking.uuid)
 
         elif booking.status == BookingStatuses.SESSION_STARTED:
@@ -115,7 +115,7 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        if queryset.first().is_active:
+        if queryset.first().status == BookingStatuses.PLAYING and not queryset.first().is_starting_session:
             GizmoUpdateComputerStateByUserSessionsService(instance=queryset.first().club_branch).run()
             queryset = self.filter_queryset(self.get_queryset())
 
