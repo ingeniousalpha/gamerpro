@@ -136,7 +136,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
             uncompleted_bookings = Booking.objects.filter(
                 is_starting_session=False,
-                status__in=[BookingStatuses.ACCEPTED, BookingStatuses.PLAYING]
+                status__in=[BookingStatuses.PLAYING]
             )
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
             for booking in uncompleted_bookings:
