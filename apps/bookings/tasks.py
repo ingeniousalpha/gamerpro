@@ -45,7 +45,7 @@ def gizmo_start_user_session(booking_uuid, computer_gizmo_id):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
-    elif booking.status == BookingStatuses.CANCELLED:
+    elif booking.status != BookingStatuses.ACCEPTED:
         return
 
     booking.status = BookingStatuses.SESSION_STARTED
