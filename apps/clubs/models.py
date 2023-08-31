@@ -98,5 +98,9 @@ class ClubBranchUser(models.Model):
     login = models.CharField(max_length=50)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
 
-
-
+    @property
+    def has_active_booking(self):
+        for b in self.bookings.order_by('-created_at'):
+            if b.is_active:
+                return True
+        return False
