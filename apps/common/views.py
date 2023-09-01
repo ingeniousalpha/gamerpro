@@ -22,7 +22,7 @@ def dashboard_view(request):
     today_bookings = queryset.filter(created_at__date=timezone.now().date())
     bookings_count_today = today_bookings.count()
     today_amount = today_bookings.aggregate(Sum('amount'))['amount__sum'] if today_bookings.count() > 0 else 0
-    commission_amount = 0
+    commission_amount = today_bookings.aggregate(Sum('commission_amount'))['commission_amount__sum'] if today_bookings.count() > 0 else 0
     dates = queryset.filter(
         created_at__date__gte=timezone.now() - timezone.timedelta(days=10)
     ).values('created_at__date').annotate(bookings_count=Count('id')).order_by('created_at__date')
