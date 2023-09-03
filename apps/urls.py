@@ -8,6 +8,7 @@ urlpatterns = [
     path("clubs/", include("apps.clubs.urls")),
     path("bookings/", include("apps.bookings.urls")),
     path("payments/", include("apps.payments.urls")),
+    path("notifications/", include("apps.notifications.urls")),
     path("documents", DocumentListView.as_view()),
 ]
 

@@ -115,6 +115,7 @@ LOCAL_APPS = [
     'apps.integrations.apps.IntegrationsConfig',
     'apps.clubs.apps.ClubsConfig',
     'apps.bookings.apps.BookingsConfig',
+    'apps.notifications.apps.NotificationsConfig',
     'apps.payments.apps.PaymentsConfig',
 ]
 
