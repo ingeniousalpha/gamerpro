@@ -8,6 +8,10 @@ User = get_user_model()
 
 class FirebaseToken(TimestampModel):
     token = models.TextField()
+    device_id = models.CharField(
+        max_length=255,
+        null=True, blank=True
+    )
     user = models.ForeignKey(
         User,
         related_name="fb_tokens",

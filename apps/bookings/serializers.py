@@ -6,8 +6,9 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking
+from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
-from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers
+from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.models import ClubComputer
 from apps.clubs.serializers import ClubBranchSerializer, ClubComputerListSerializer
@@ -80,6 +81,7 @@ class CreateBookingByBalanceSerializer(BaseCreateBookingSerializer):
         instance.save()
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_book_computers(str(instance.uuid), from_balance=True)
+        send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by balance accepted
 
     def to_representation(self, instance):
         return {
@@ -125,6 +127,7 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_book_computers(str(instance.uuid))
         self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
+        send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by card payment accepted
 
     def to_representation(self, instance):
         return {

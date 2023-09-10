@@ -2,7 +2,8 @@ import json
 
 from django.contrib.auth import get_user_model
 
-from apps.bookings.tasks import gizmo_book_computers
+from apps.bookings import BookingStatuses
+from apps.bookings.tasks import gizmo_book_computers, send_push_about_booking_status
 from apps.payments import PaymentStatuses
 from apps.integrations.onevision.serializers import SavePaymentSerializer
 from apps.bookings.models import Booking
@@ -82,6 +83,7 @@ def handle_ov_response(webhook_data, is_webhook=True):
         payment.user.set_current_card(payment.card)
         if booking_uuid and not booking.payment_card and not booking.use_balance:
             gizmo_book_computers(booking_uuid)
+            send_push_about_booking_status.delay(booking.uuid, BookingStatuses.ACCEPTED)  # booking by new payment accepted
 
     elif str(webhook_data['status']) == PaymentStatuses.IN_PROGRESS:
         payment.move_to_in_progress()

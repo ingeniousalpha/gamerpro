@@ -356,6 +356,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'notifications': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'gizmo': {
             'handlers': ['console'],
             'level': 'INFO',

@@ -11,7 +11,8 @@ from apps.bookings.serializers import (
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
-from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_computers_and_start_user_session
+from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_computers_and_start_user_session, \
+    send_push_about_booking_status
 from constance import config
 
 from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService
@@ -50,6 +51,7 @@ class CancelBookingView(JSONRendererMixin, GenericAPIView):
         booking.save(update_fields=['is_cancelled', 'status'])
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_cancel_booking.delay(booking.uuid)
+        send_push_about_booking_status.delay(booking.uuid, BookingStatuses.CANCELLED)
         return Response({})
 
 
@@ -81,6 +83,7 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
             booking.is_starting_session = True
             booking.save(update_fields=['status', 'is_starting_session'])
             gizmo_unlock_computers_and_start_user_session(booking.uuid)
+            send_push_about_booking_status.delay(booking.uuid, BookingStatuses.PLAYING)
 
         elif booking.status == BookingStatuses.SESSION_STARTED:
             gizmo_unlock_computers.delay(booking.uuid)

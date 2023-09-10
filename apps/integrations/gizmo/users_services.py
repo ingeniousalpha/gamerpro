@@ -118,6 +118,8 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
     method = "GET"
 
     def finalize_response(self, response):
+        from apps.bookings.tasks import send_push_about_booking_status
+
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             active_users = []
@@ -143,6 +145,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                 if booking.club_user.gizmo_id not in active_users_ids:
                     booking.status = BookingStatuses.COMPLETED
                     booking.save(update_fields=['status'])
+                    send_push_about_booking_status(booking.uuid, BookingStatuses.COMPLETED)
 
             starting_bookings = Booking.objects.filter(is_starting_session=True)
             for booking in starting_bookings:
