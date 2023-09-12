@@ -45,7 +45,7 @@ class GizmoGetComputersService(BaseGizmoService):
         # print(response.get('result'))
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            print("hosts= ", [{"id": r["gizmo_id"], "gizmo_hostname": r["hostname"], "is_booked": r["state"]} for r in resp_data])
+            print("hosts= ", [{"id": r["id"], "gizmo_hostname": r["hostname"], "is_booked": r["state"]} for r in resp_data])
             for gizmo_computer in resp_data:
                 computer = ClubComputer.objects.filter(
                     gizmo_id=gizmo_computer['id'],
