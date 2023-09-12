@@ -135,6 +135,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                 if computer:
                     computer.is_booked = True
                     computer.save()
+            print(f"{active_users=}")
 
             uncompleted_bookings = Booking.objects.filter(
                 is_starting_session=False,
