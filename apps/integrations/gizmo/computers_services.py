@@ -45,7 +45,6 @@ class GizmoGetComputersService(BaseGizmoService):
         # print(response.get('result'))
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            print("hosts= ", [{"id": r["id"], "gizmo_hostname": r["hostname"], "is_booked": r["state"]} for r in resp_data])
             for gizmo_computer in resp_data:
                 computer = ClubComputer.objects.filter(
                     gizmo_id=gizmo_computer['id'],
@@ -71,8 +70,13 @@ class GizmoGetComputersService(BaseGizmoService):
                     except Exception as e:
                         self.log_error(e)
                 else:
-                    computer.is_booked = self.get_booking_state(gizmo_computer['state'])
-                    computer.save()
+                    if computer.is_booked != self.get_booking_state(gizmo_computer['state']):
+                        print(computer.gizmo_id)
+                        print(computer.gizmo_hostname)
+                        print("old: ", computer.is_booked)
+                        computer.is_booked = self.get_booking_state(gizmo_computer['state'])
+                        computer.save()
+                        print("new: ", computer.is_booked)
 
 
 class GizmoLockComputerService(BaseGizmoService):
