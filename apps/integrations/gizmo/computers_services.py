@@ -71,12 +71,12 @@ class GizmoGetComputersService(BaseGizmoService):
                         self.log_error(e)
                 else:
                     if computer.is_booked != self.get_booking_state(gizmo_computer['state']):
-                        print(computer.gizmo_id)
-                        print(computer.gizmo_hostname)
-                        print("old: ", computer.is_booked)
+                        # print(computer.gizmo_id)
+                        # print(computer.gizmo_hostname)
+                        # print("old: ", computer.is_booked)
                         computer.is_booked = self.get_booking_state(gizmo_computer['state'])
                         computer.save()
-                        print("new: ", computer.is_booked)
+                        # print("new: ", computer.is_booked)
 
 
 class GizmoLockComputerService(BaseGizmoService):
