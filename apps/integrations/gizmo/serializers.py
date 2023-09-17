@@ -21,7 +21,7 @@ class GizmoComputersSaveSerializer(serializers.ModelSerializer):
             'gizmo_id',
             'number',
             'gizmo_hostname',
-            'is_booked',
+            'is_locked',
             'club_branch',
             'group',
         )

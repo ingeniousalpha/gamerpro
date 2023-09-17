@@ -56,7 +56,8 @@ class ClubComputer(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computers")
     number = models.IntegerField()
     group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
-    is_booked = models.BooleanField(default=False)
+    is_active_session = models.BooleanField(default=False)
+    is_locked = models. BooleanField(default=False)
     gizmo_id = models.IntegerField(null=True)
     gizmo_hostname = models.CharField(max_length=10, null=True)
 
@@ -69,6 +70,10 @@ class ClubComputer(models.Model):
         ordering = ['number']
         verbose_name = "Компьютер клуба"
         verbose_name_plural = "Компьютеры клуба"
+
+    @property
+    def is_booked(self):
+        return self.is_active_session or self.is_locked
 
 
 class ClubBranchProperty(models.Model):

@@ -123,19 +123,23 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             active_users = []
+
+            ClubComputer.objects.filter(
+                gizmo_id__in=[r['hostId'] for r in resp_data],
+                club_branch_id=self.instance.id,
+                is_active_session=False
+            ).update(is_active_session=True)
+
+            ClubComputer.objects.exclude(
+                club_branch_id=self.instance.id,
+                gizmo_id__in=[r['hostId'] for r in resp_data],
+            ).filter(is_active_session=True).update(is_active_session=False)
+
             for user_session in resp_data:
                 active_users.append({
                     "user_gizmo_id": user_session['userId'],
                     "computer_gizmo_id": user_session['hostId']
                 })
-                computer = ClubComputer.objects.filter(
-                    gizmo_id=user_session['hostId'],
-                    club_branch_id=self.instance.id
-                ).first()
-                if computer:
-                    computer.is_booked = True
-                    computer.save()
-                    print(f'active comp id: {computer.gizmo_id}, name: {computer.gizmo_hostname}')
 
             uncompleted_bookings = Booking.objects.filter(
                 is_starting_session=False,

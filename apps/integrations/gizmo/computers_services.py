@@ -38,7 +38,7 @@ class GizmoGetComputersService(BaseGizmoService):
     save_serializer = GizmoComputersSaveSerializer
     method = "GET"
 
-    def get_booking_state(self, state: int) -> bool:
+    def get_lock_state(self, state: int) -> bool:
         return True if state == 2 else False
 
     def save(self, response):
@@ -60,7 +60,7 @@ class GizmoGetComputersService(BaseGizmoService):
                             "number": gizmo_computer['number'],
                             "gizmo_hostname": gizmo_computer['hostname'],
                             "club_branch": self.instance.id,
-                            "is_booked": self.get_booking_state(gizmo_computer['state']),
+                            "is_locked": self.get_lock_state(gizmo_computer['state']),
                             "group": group_id,
                         }
                     )
@@ -70,13 +70,9 @@ class GizmoGetComputersService(BaseGizmoService):
                     except Exception as e:
                         self.log_error(e)
                 else:
-                    if computer.is_booked != self.get_booking_state(gizmo_computer['state']):
-                        # print(computer.gizmo_id)
-                        # print(computer.gizmo_hostname)
-                        # print("old: ", computer.is_booked)
-                        computer.is_booked = self.get_booking_state(gizmo_computer['state'])
-                        computer.save()
-                        # print("new: ", computer.is_booked)
+                    if computer.is_locked != self.get_lock_state(gizmo_computer['state']):
+                        computer.is_locked = self.get_lock_state(gizmo_computer['state'])
+                        computer.save(update_fields=['is_locked'])
 
 
 class GizmoLockComputerService(BaseGizmoService):

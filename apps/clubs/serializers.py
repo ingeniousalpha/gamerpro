@@ -80,10 +80,7 @@ class ClubComputerSerializer(serializers.ModelSerializer):
         fields = ('id', 'number', 'is_booked')
 
     def get_is_booked(self, obj):
-        is_booked = cache.get(f'BOOKING_STATUS_COMP_{obj.id}')
-        if is_booked is not None:
-            return is_booked
-        return obj.is_booked
+        return cache.get(f'BOOKING_STATUS_COMP_{obj.id}') or obj.is_booked
 
 
 class ClubBranchInfoSerializer(serializers.ModelSerializer):
@@ -116,21 +113,14 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
         return ClubBranchHardwareSerializer(queryset, many=True).data
 
     def get_computers(self, obj):
-        # latest_booking = Subquery(BookedComputer.objects.filter(
-        #     computer_id=OuterRef("id"),
-        # ).order_by("-booking__created_at").values('booking__is_cancelled', 'booking__expiration_date')[:1])
-        queryset = obj.club_branch.computers.filter(group_id=obj.id)#.values('id', 'number', 'is_booked').annotate(
-        #     is_cancelled=latest_booking['booking__is_cancelled'],
-        #     expiration_date=latest_booking['booking__expiration_date']
-        # )
-        # here is is_booked checking staff
-
-        return ClubComputerSerializer(queryset, many=True).data
+        return ClubComputerSerializer(
+            obj.club_branch.computers.filter(group_id=obj.id),
+            many=True
+        ).data
 
 
 class ClubComputerListSerializer(serializers.ModelSerializer):
     hall_name = serializers.CharField(source='group.name')
-    # is_booked = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubComputer
@@ -140,9 +130,6 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
             'is_booked',
             'hall_name',
         )
-
-    # def get_is_booked(self, obj):
-
 
 
 class ClubBranchDetailSerializer(ClubUserSerializer):
@@ -203,7 +190,7 @@ class ClubComputerGroupLanding(serializers.ModelSerializer):
         return obj.club_branch.computers.filter(group_id=obj.id).count()
 
     def get_computers_free(self, obj):
-        return obj.club_branch.computers.filter(group_id=obj.id, is_booked=False).count()
+        return obj.club_branch.computers.filter(group_id=obj.id, is_active_session=False, is_locked=False).count()
 
 
 class ClubBranchListSerializer(ClubUserSerializer):
