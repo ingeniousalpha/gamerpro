@@ -1,3 +1,4 @@
+import urllib
 from django.contrib.auth import get_user_model
 
 from apps.authentication.exceptions import UserNotFound
@@ -190,6 +191,24 @@ class GizmoEndUserSessionService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError
+
+
+class GizmoCreateUserService(BaseGizmoService):
+    endpoint = "/api/users?Username={login}&UserGroupId=1&Phone={mobile_phone}"
+    method = "PUT"
+    save_serializer = None
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "login": urllib.parse.quote_plus(self.kwargs.get('login')),
+            "mobile_phone": urllib.parse.quote_plus(self.kwargs.get('mobile_phone')),
+        })
+
+    def finalize_response(self, response):
+        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

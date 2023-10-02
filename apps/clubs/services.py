@@ -13,6 +13,9 @@ def get_correct_phone(*args):
         if phone and phone.startswith('7') and len(phone) == 10:
             correct_phone = "+7" + phone
 
+        if phone and phone.startswith('7') and len(phone) == 11:
+            correct_phone = "+" + phone
+
     return correct_phone
 
 

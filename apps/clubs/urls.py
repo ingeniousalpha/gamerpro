@@ -1,9 +1,15 @@
 from django.urls import path
 
-from apps.clubs.views import ClublistView, ClubBranchlistView, ClubBranchDetailView
+from apps.clubs.views import (
+    ClublistView,
+    ClubBranchlistView,
+    ClubBranchDetailView,
+    ClubBranchTimePacketListView
+)
 
 urlpatterns = [
     path('', ClublistView.as_view()),
     path('branches', ClubBranchlistView.as_view()),
     path('branches/<int:pk>', ClubBranchDetailView.as_view()),
+    path('branches/<int:pk>/time_packets/<int:hall_id>', ClubBranchTimePacketListView.as_view()),
 ]

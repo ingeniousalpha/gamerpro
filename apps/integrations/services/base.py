@@ -91,6 +91,7 @@ class BaseService(ABC):
         if self.auth is None:
             self.auth = self.get_auth()
 
+        print("self.url: ", self.url)
         response_raw = self.session.request(
             method=self.method,
             url=self.url,

@@ -9,7 +9,7 @@ from apps.common.mixins import PublicJSONRendererMixin
 
 # from apps.notifications.tasks import task_send_letter_for_email_confirmation
 from .serializers import (
-    SigninSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
+    SigninWithoutOTPSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
 )
 from .services import generate_access_and_refresh_tokens_for_user
 from ..bookings.services import check_user_session
@@ -25,15 +25,15 @@ class SigninView(PublicJSONRendererMixin, CreateAPIView):
     """ Регистрация/Вход в систему по номеру телефона """
 
     queryset = User.objects.all()
-    serializer_class = SigninSerializer
+    serializer_class = SigninWithoutOTPSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        mobile_phone = serializer.validated_data["mobile_phone"]
         serializer.save()
-        send_otp(mobile_phone)
-        return Response({}, status=status.HTTP_201_CREATED)
+        # mobile_phone = serializer.validated_data["mobile_phone"]
+        # send_otp(mobile_phone)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class VerifyOTPView(PublicJSONRendererMixin, GenericAPIView):

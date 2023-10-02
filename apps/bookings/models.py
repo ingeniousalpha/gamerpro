@@ -4,7 +4,7 @@ from django.db import models
 from apps.bookings import BookingStatuses, PlatformTypes
 from apps.clubs.models import ClubComputer
 from apps.common.models import UUIDModel, TimestampModel
-from django.utils import timezone
+from constance import config
 from apps.payments import PaymentStatuses
 
 
@@ -54,6 +54,12 @@ class Booking(UUIDModel, TimestampModel):
     expiration_date = models.DateTimeField(auto_now=True)
     is_cancelled = models.BooleanField(default=False)
     is_starting_session = models.BooleanField(default=False)
+    time_packet = models.ForeignKey(
+        "clubs.ClubTimePacket",
+        on_delete=models.SET_NULL,
+        related_name="bookings",
+        null=True, blank=True
+    )
 
     @property
     def is_active(self):
@@ -71,7 +77,7 @@ class Booking(UUIDModel, TimestampModel):
     @staticmethod
     def get_commission_amount(amount):
         # here will be calculations based on amount
-        return Decimal(100)
+        return Decimal(config.GAMER_PRO_COMMISSION)
 
 
 class BookedComputer(models.Model):

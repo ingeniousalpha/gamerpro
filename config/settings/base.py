@@ -69,11 +69,16 @@ CONSTANCE_CONFIG = {
     "FREE_SECONDS_BEFORE_START_TARIFFING": (0, "Бесплатное время перед началом тарификации (сек)", int),
     "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
     "INTEGRATIONS_TURNED_ON": (False, "Включить интеграции с Gizmo", bool),
+    "GAMER_PRO_COMMISSION": (100, "Наша комиссия в тенге", int)
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
     ("Settings", ("INTEGRATIONS_TURNED_ON",)),
-    ("Billing", ("FREE_SECONDS_BEFORE_START_TARIFFING", "PAYMENT_EXPIRY_TIME")),
+    ("Billing", (
+        "FREE_SECONDS_BEFORE_START_TARIFFING",
+        "PAYMENT_EXPIRY_TIME",
+        "GAMER_PRO_COMMISSION"
+    )),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),

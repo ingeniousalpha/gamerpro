@@ -48,7 +48,22 @@ class ClubBranchComputerInline(admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
-    fields = ('id', 'group', 'gizmo_hostname', 'is_booked')
+    fields = ('id', 'group', 'gizmo_hostname', 'is_locked', 'is_active_session')
+
+
+class ClubBranchTimePacketInline(admin.TabularInline):
+    model = ClubTimePacket
+    extra = 0
+    readonly_fields = ('gizmo_name',)
+    fields = ('gizmo_name', 'display_name', 'price', 'minutes')
+
+
+class ClubBranchTimePacketGroupInline(admin.TabularInline):
+    model = ClubTimePacketGroup
+    extra = 0
+    fields = ('name', 'is_active')
+    show_change_link = True
+    inlines = [ClubBranchTimePacketInline]
 
 
 @admin.register(Club)
@@ -72,10 +87,11 @@ class ClubBranchAdmin(admin.ModelAdmin):
     )
     inlines = [
         ClubComputerGroupInline,
+        ClubBranchTimePacketGroupInline,
         ClubBranchPropertyInline,
         ClubBranchHardwareInline,
         ClubBranchPriceInline,
-        ClubBranchComputerInline
+        ClubBranchComputerInline,
     ]
 
     def response_change(self, request, obj):
@@ -89,6 +105,37 @@ class ClubBranchAdmin(admin.ModelAdmin):
 
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(admin.ModelAdmin):
-    search_fields = ('gizmo_id', 'login',)
+    search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone')
     list_display = ('gizmo_id', 'login', 'club_branch')
     list_filter = ('club_branch',)
+
+
+@admin.register(ClubTimePacketGroup)
+class ClubTimePacketGroupAdmin(admin.ModelAdmin):
+    list_display = ('gizmo_id', 'name', 'is_active')
+    list_editable = ('is_active',)
+
+
+@admin.register(ClubTimePacket)
+class ClubTimePacketAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'gizmo_id',
+        'display_name',
+        'packet_group',
+        'minutes',
+        'price',
+        'priority',
+        'is_active',
+    )
+    list_filter = ('packet_group',)
+    list_editable = ('priority', 'is_active')
+    ordering = ['priority']
+
+
+@admin.register(DayModel)
+class DayModelAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'number',
+    )

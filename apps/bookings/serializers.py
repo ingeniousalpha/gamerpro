@@ -136,6 +136,16 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         }
 
 
+class CreateBookingByTimePacketPaymentSerializer(CreateBookingByPaymentSerializer):
+    class Meta(CreateBookingByPaymentSerializer.Meta):
+        fields = CreateBookingByPaymentSerializer.Meta.fields + ('time_packet',)
+
+
+class CreateBookingByTimePacketCardPaymentSerializer(CreateBookingByCardPaymentSerializer):
+    class Meta(CreateBookingByCardPaymentSerializer.Meta):
+        fields = CreateBookingByCardPaymentSerializer.Meta.fields + ('time_packet',)
+
+
 class BookedComputerListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='computer.id')
     number = serializers.IntegerField(source='computer.number')

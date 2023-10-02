@@ -1,11 +1,12 @@
 from django.core.cache import cache
 from django.db.models import Subquery, OuterRef
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.bookings.models import BookedComputer
 from apps.clubs import ClubHallTypes
 from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
-    ClubComputerGroup, ClubBranchUser
+    ClubComputerGroup, ClubBranchUser, ClubTimePacket
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
 
@@ -93,6 +94,7 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubComputerGroup
         fields = (
+            'id',
             'hall_name',
             'prices',
             'properties',
@@ -121,6 +123,7 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
 
 class ClubComputerListSerializer(serializers.ModelSerializer):
     hall_name = serializers.CharField(source='group.name')
+    hall_id = serializers.CharField(source='group.id')
 
     class Meta:
         model = ClubComputer
@@ -129,6 +132,7 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
             'number',
             'is_booked',
             'hall_name',
+            'hall_id',
         )
 
 
@@ -223,3 +227,21 @@ class ClubBranchListSerializer(ClubUserSerializer):
     #     for group in obj.computer_groups.all():
     #         halls.append(ClubComputerGroupLanding(obj, context={"group_name": group.name}).data)
     #     return halls
+
+
+class ClubTimePacketListSerializer(serializers.ModelSerializer):
+    is_available = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubTimePacket
+        fields = (
+            'id',
+            'name',
+            'price',
+            'is_available',
+        )
+
+    def get_is_available(self, obj):
+        if not obj.available_time_start:
+            return True
+        return obj.available_time_start <= timezone.now().astimezone().time() <= obj.available_time_end

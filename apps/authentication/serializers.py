@@ -5,22 +5,61 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseT
 
 from .services import verify_otp, generate_access_and_refresh_tokens_for_user
 from apps.users.services import get_or_create_user_by_phone
-from ..clubs.exceptions import ClubBranchNotFound
-from ..clubs.models import ClubBranch
+from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin
+from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
+from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService
 
 User = get_user_model()
 
 
-class SigninSerializer(serializers.ModelSerializer):
+class SigninWithoutOTPSerializer(serializers.ModelSerializer):
+    club_branch = serializers.IntegerField(write_only=True)
+    login = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = "mobile_phone",
+        fields = "mobile_phone", "login", "club_branch"
+        extra_kwargs = {
+            "mobile_phone": {"write_only": True}
+        }
+
+    def validate(self, attrs):
+        attrs['club_branch'] = ClubBranch.objects.filter(id=attrs['club_branch']).first()
+        if not attrs['club_branch']:
+            raise ClubBranchNotFound
+
+        GizmoGetUsersService(instance=attrs['club_branch']).run()
+
+        club_user = ClubBranchUser.objects.filter(gizmo_phone=attrs['mobile_phone']).first()
+        if not club_user and not attrs.get('login'):
+            raise NeedToInputUserLogin
+        elif not club_user and attrs.get('login'):
+            gizmo_user_id = GizmoCreateUserService(instance=attrs['club_branch'], **attrs).run()
+            attrs['gizmo_user_id'] = gizmo_user_id
+        else:
+            attrs['club_user'] = club_user
+        return attrs
 
     def create(self, validated_data):
         user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
+        if validated_data.get('gizmo_user_id'):
+            ClubBranchUser.objects.create(
+                club_branch=validated_data['club_branch'],
+                gizmo_id=validated_data['gizmo_user_id'],
+                gizmo_phone=validated_data['mobile_phone'],
+                login=validated_data['login'],
+                user=user,
+            )
+        elif validated_data.get('club_user'):
+            club_user = validated_data.get('club_user')
+            if not club_user.user:
+                club_user.user = user
+                club_user.save()
         return user
+
+    def to_representation(self, instance):
+        return generate_access_and_refresh_tokens_for_user(instance)
 
 
 class VerifyOTPSerializer(serializers.Serializer):

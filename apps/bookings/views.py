@@ -7,7 +7,9 @@ from apps.bookings.serializers import (
     CreateBookingByBalanceSerializer,
     CreateBookingByPaymentSerializer,
     CreateBookingByCardPaymentSerializer,
-    BookingSerializer
+    BookingSerializer,
+    CreateBookingByTimePacketPaymentSerializer,
+    CreateBookingByTimePacketCardPaymentSerializer
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
@@ -33,6 +35,16 @@ class CreateBookingByPaymentView(PublicJSONRendererMixin, CreateAPIView):
 class CreateBookingByCardPaymentView(PublicJSONRendererMixin, CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = CreateBookingByCardPaymentSerializer
+
+
+class CreateBookingByTimePacketPaymentView(JSONRendererMixin, CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = CreateBookingByTimePacketPaymentSerializer
+
+
+class CreateBookingByTimePacketCardPaymentView(JSONRendererMixin, CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = CreateBookingByTimePacketCardPaymentSerializer
 
 
 class CancelBookingView(JSONRendererMixin, GenericAPIView):
@@ -117,6 +129,9 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+
+        if not queryset.exists():
+            return Response([])
 
         if queryset.first().status == BookingStatuses.PLAYING and not queryset.first().is_starting_session:
             GizmoUpdateComputerStateByUserSessionsService(instance=queryset.first().club_branch).run()

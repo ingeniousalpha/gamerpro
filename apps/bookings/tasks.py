@@ -8,6 +8,7 @@ from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.notifications.tasks import fcm_push_notify_user
 from config.celery_app import cel_app
@@ -63,6 +64,13 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             (booking.uuid, booked_computer.computer.gizmo_id),
             countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
         )
+    if booking.time_packet:
+        GizmoAddPaidTimeToUser(
+            instance=booking,
+            user_id=booking.club_user.gizmo_id,
+            time=booking.time_packet.minutes,
+            price=booking.time_packet.price
+        ).run()
 
 
 @cel_app.task

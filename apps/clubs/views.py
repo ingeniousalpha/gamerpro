@@ -1,10 +1,13 @@
+from django.db.models import Q
 from django.shortcuts import render
+from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from apps.clubs.models import Club, ClubBranch
-from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket
+from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, \
+    ClubTimePacketListSerializer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
-from apps.common.mixins import PublicJSONRendererMixin
+from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from apps.integrations.gizmo.computers_services import GizmoGetComputersService
 
 
@@ -25,3 +28,15 @@ class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         _sync_gizmo_computers_state_of_club_branch(self.get_object())
         return super().retrieve(request, *args, **kwargs)
+
+
+class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
+    queryset = ClubTimePacket.objects.all()
+    serializer_class = ClubTimePacketListSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            packet_group__computer_group_id=self.kwargs.get('hall_id'),
+            is_active=True, available_days__number=timezone.now().weekday() + 1
+        ).order_by('priority')

@@ -1,5 +1,3 @@
-from typing import Any
-
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
