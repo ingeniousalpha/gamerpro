@@ -40,6 +40,7 @@ BOOKING_STATUS_TRANSITION_PUSH_TEXT = {
 
 
 def gizmo_book_computers(booking_uuid, from_balance=False):
+    print("inside gizmo_book_computers")
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
@@ -54,12 +55,14 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             total_amount=booking.total_amount
         ).run()
     if booking.time_packet:
+        print('booking time_packet activating...')
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
             minutes=booking.time_packet.minutes,
             price=booking.time_packet.price
         ).run()
+        print('booking time_packet activated')
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
             instance=booking.club_branch,
