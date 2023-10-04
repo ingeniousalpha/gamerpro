@@ -63,13 +63,13 @@ class GizmoGetTimePacketsService(BaseGizmoService):
 class GizmoAddPaidTimeToUser(BaseGizmoService):
     endpoint = "/api/users/{user_id}/order/time/{time}/price/{price}/invoice/payment/{payment_method}"
     save_serializer = None
-    method = "GET"
+    method = "POST"
 
     def run_service(self):
         return self.fetch(path_params={
             "user_id": self.kwargs.get('user_id'),
             "time": self.kwargs.get('minutes'),
-            "price": self.kwargs.get('price'),
+            "price": int(self.kwargs.get('price')),
             "payment_method": self.instance.gizmo_payment_method
         })
 

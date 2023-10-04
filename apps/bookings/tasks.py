@@ -68,7 +68,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
-            time=booking.time_packet.minutes,
+            minutes=booking.time_packet.minutes,
             price=booking.time_packet.price
         ).run()
 
