@@ -53,6 +53,13 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             commission_amount=booking.commission_amount,
             total_amount=booking.total_amount
         ).run()
+    if booking.time_packet:
+        GizmoAddPaidTimeToUser(
+            instance=booking.club_branch,
+            user_id=booking.club_user.gizmo_id,
+            minutes=booking.time_packet.minutes,
+            price=booking.time_packet.price
+        ).run()
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
             instance=booking.club_branch,
@@ -64,13 +71,6 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             (booking.uuid, booked_computer.computer.gizmo_id),
             countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
         )
-    if booking.time_packet:
-        GizmoAddPaidTimeToUser(
-            instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
-            minutes=booking.time_packet.minutes,
-            price=booking.time_packet.price
-        ).run()
 
 
 @cel_app.task
