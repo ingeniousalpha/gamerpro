@@ -1,14 +1,9 @@
 import uuid as uuid_lib
 from django.db import models
-from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _  # noqa
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.conf import settings
 from phonenumber_field.modelfields import PhoneNumberField
-from constance import config
-
-from apps.common.services import generate_random_string
 
 from .managers import UserManager
 
@@ -24,6 +19,12 @@ class User(PermissionsMixin, AbstractBaseUser):
     full_name = models.CharField("Имя", max_length=256, null=True, blank=True)
     mobile_phone = PhoneNumberField("Моб. телефон", blank=True, null=True)
     secret_key = models.UUIDField("Секретный ключ", default=uuid_lib.uuid4, unique=True)
+    club = models.ForeignKey(
+        "clubs.Club",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="admins",
+    )
     outer_payer_id = models.CharField(
         "ID юзера в платежной системе",
         null=True, blank=True,
@@ -41,13 +42,13 @@ class User(PermissionsMixin, AbstractBaseUser):
     objects = UserManager()
 
     def __str__(self):
-        return str(self.username)
+        return str(self.mobile_phone or self.email)
 
-    @property
-    def username(self):
-        if self.mobile_phone:
-            return str(self.mobile_phone)
-        return self.email
+    # @property
+    # def username(self):
+    #     if self.mobile_phone:
+    #         return str(self.mobile_phone)
+    #     return self.email
 
     def set_current_card(self, card: 'PaymentCard'):
         self.payment_cards.exclude(id=card.id).update(is_current=False)
@@ -67,8 +68,8 @@ class User(PermissionsMixin, AbstractBaseUser):
             perm[: perm.index(".")] == app_label for perm in self.get_all_permissions()
         )
 
-    def get_username(self):
-        return self.mobile_phone
+    # def get_username(self):
+    #     return self.mobile_phone
 
     def set_password(self, raw_password):
         super(User, self).set_password(raw_password)

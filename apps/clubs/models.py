@@ -1,10 +1,5 @@
-from django.contrib.auth import get_user_model
 from django.db import models
-
-from apps.clubs import ClubHallTypes
 from apps.clubs.managers import HallTypesManager
-
-User = get_user_model()
 
 
 class HallTypesManagerMixin:
@@ -166,7 +161,7 @@ class ClubBranchPrice(models.Model):
 
 class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
     gizmo_id = models.IntegerField(null=True)
     gizmo_phone = models.CharField(max_length=12, null=True)
     login = models.CharField(max_length=50)

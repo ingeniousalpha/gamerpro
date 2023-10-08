@@ -7,7 +7,7 @@ class PaymentStatuses(TextChoices):
     CREATED = "0", "Транзакция Создана"
     AUTH = "1", "Захолдированы средства"
     VOID = "2", "Разхолдированы средства"
-    PAYMENT_APPROVED = "3", "Оплчено"
+    PAYMENT_APPROVED = "3", "Оплачено"
     REFUND_APPROVED = "4", "Возвращено"
     IN_PROGRESS = "8", "В обработке"
     FAILED = "99", "Ошибка"

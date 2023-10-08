@@ -1,10 +1,10 @@
 from django.contrib import admin
-
+from apps.clubs.admin import FilterByClubMixin
 from .models import Booking
 
 
 @admin.register(Booking)
-class BookingAdmin(admin.ModelAdmin):
+class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = (
         'uuid',
     )

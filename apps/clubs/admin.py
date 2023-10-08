@@ -6,19 +6,34 @@ from .models import *
 admin.site.register(ClubComputerGroup)
 
 
+class FilterByClubMixin:
+    club_filter_field = "club_branch__club"
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        filter_data = {
+            self.club_filter_field: request.user.club
+        }
+
+        if request.user.club:
+            queryset = queryset.filter(**filter_data)
+        return queryset
+
+
 @admin.register(ClubComputer)
-class ClubComputerAdmin(admin.ModelAdmin):
+class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = ('id', 'number', 'gizmo_hostname', 'is_booked')
     ordering = ('number',)
 
 
-class ClubBranchInline(admin.StackedInline):
+class ClubBranchInline(FilterByClubMixin, admin.StackedInline):
     model = ClubBranch
     extra = 0
     fields = ('name',)
 
 
-class ClubComputerGroupInline(admin.TabularInline):
+class ClubComputerGroupInline(FilterByClubMixin, admin.TabularInline):
     model = ClubComputerGroup
     extra = 0
     fields = ('name',)
@@ -26,39 +41,39 @@ class ClubComputerGroupInline(admin.TabularInline):
     can_delete = False
 
 
-class ClubBranchPropertyInline(admin.TabularInline):
+class ClubBranchPropertyInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranchProperty
     extra = 0
     fields = ('group', 'name')
 
 
-class ClubBranchHardwareInline(admin.TabularInline):
+class ClubBranchHardwareInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranchHardware
     extra = 0
     fields = ('group', 'name')
 
 
-class ClubBranchPriceInline(admin.TabularInline):
+class ClubBranchPriceInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranchPrice
     extra = 0
     fields = ('group', 'name', 'price')
 
 
-class ClubBranchComputerInline(admin.TabularInline):
+class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
     fields = ('id', 'group', 'gizmo_hostname', 'is_locked', 'is_active_session')
 
 
-class ClubBranchTimePacketInline(admin.TabularInline):
+class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
     model = ClubTimePacket
     extra = 0
     readonly_fields = ('gizmo_name',)
     fields = ('gizmo_name', 'display_name', 'price', 'minutes')
 
 
-class ClubBranchTimePacketGroupInline(admin.TabularInline):
+class ClubBranchTimePacketGroupInline(FilterByClubMixin, admin.TabularInline):
     model = ClubTimePacketGroup
     extra = 0
     fields = ('name', 'is_active')
@@ -73,7 +88,7 @@ class ClubAdmin(admin.ModelAdmin):
 
 
 @admin.register(ClubBranch)
-class ClubBranchAdmin(admin.ModelAdmin):
+class ClubBranchAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'name',
         'address',
@@ -93,6 +108,7 @@ class ClubBranchAdmin(admin.ModelAdmin):
         ClubBranchPriceInline,
         ClubBranchComputerInline,
     ]
+    club_filter_field = "club"
 
     def response_change(self, request, obj):
         if "sync_gizmo" in request.POST:
@@ -104,20 +120,20 @@ class ClubBranchAdmin(admin.ModelAdmin):
 
 
 @admin.register(ClubBranchUser)
-class ClubBranchUserAdmin(admin.ModelAdmin):
+class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone')
     list_display = ('gizmo_id', 'login', 'club_branch')
     list_filter = ('club_branch',)
 
 
 @admin.register(ClubTimePacketGroup)
-class ClubTimePacketGroupAdmin(admin.ModelAdmin):
+class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = ('gizmo_id', 'name', 'is_active')
     list_editable = ('is_active',)
 
 
 @admin.register(ClubTimePacket)
-class ClubTimePacketAdmin(admin.ModelAdmin):
+class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'gizmo_id',
@@ -131,6 +147,7 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
     list_filter = ('packet_group',)
     list_editable = ('priority', 'is_active')
     ordering = ['priority']
+    club_filter_field = "packet_group__club_branch__club"
 
 
 @admin.register(DayModel)

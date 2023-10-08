@@ -27,7 +27,6 @@ class UserCreationForm(forms.ModelForm):
         return password2
 
     def save(self, commit=True):
-        # Save the provided password in hashed format
         user = super(UserCreationForm, self).save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         if commit:
@@ -37,9 +36,9 @@ class UserCreationForm(forms.ModelForm):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('id', 'username', 'is_email_confirmed',)
+    list_display = ('id', 'mobile_phone', 'email', 'is_email_confirmed', 'is_staff',)
     list_filter = ('is_staff',)
-    list_display_links = ('id', 'username',)
+    list_display_links = ('id', 'mobile_phone', 'email', 'is_staff',)
     search_fields = ('email', 'uuid',)
     filter_horizontal = ('groups', 'user_permissions',)
     add_form = UserCreationForm
@@ -52,6 +51,7 @@ class UserAdmin(BaseUserAdmin):
                 'mobile_phone',
                 'email',
                 'password',
+                'club',
                 'is_superuser',
                 'is_active',
                 'is_staff',
@@ -69,6 +69,7 @@ class UserAdmin(BaseUserAdmin):
                 'email',
                 'password1',
                 'password2',
+                'club',
                 'is_superuser',
                 'is_staff',
                 'groups',

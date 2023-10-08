@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from apps.payments.models import PaymentWebhook, Payment, PaymentCard
+from apps.clubs.admin import FilterByClubMixin
 
 
 @admin.register(PaymentWebhook)
@@ -23,12 +24,13 @@ class PaymentWebhookInline(admin.StackedInline):
 
 
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = (
         'uuid',
         'outer_id'
     )
     inlines = [PaymentWebhookInline]
+    club_filter_field = "booking__club_branch__club"
 
 
 @admin.register(PaymentCard)
