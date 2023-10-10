@@ -1,0 +1,84 @@
+version: '3.9'
+
+volumes:
+  media:
+  static:
+  redis_data:
+  portainer_data:
+
+networks:
+  gp-net:
+    driver: bridge
+
+services:
+  gp-rest-server:
+    container_name: gp-rest-server
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/gamerpro
+      - media:/media
+    env_file:
+      - ./.env.dev
+    ports:
+      - "8008:8000"
+    networks:
+      - gp-net
+#    command: sh -c "python manage.py collectstatic --noinput --clear"
+
+  redis:
+    container_name: redis
+    restart: always
+    image: redis
+    command: redis-server --appendonly yes --replica-read-only no
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gp-net
+
+  celery-beat:
+    container_name: celery-beat
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/gamerpro
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - celery-worker
+      - gp-rest-server
+    networks:
+      - gp-net
+    command: "celery -A config.celery_app beat --loglevel=INFO"
+
+  celery-worker:
+    container_name: celery-worker
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/gamerpro
+    env_file:
+      - ./.env.dev
+    networks:
+      - gp-net
+    command: "celery -A config.celery_app worker --loglevel=INFO"
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    environment:
+      - TZ=Asia/Almaty
+    ports:
+      - "9000:9000"
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always

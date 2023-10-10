@@ -170,9 +170,7 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "gamerprodb"),
         "USER": os.getenv("DB_USER", "gamerprodb"),
         "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
-        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-        # "HOST": os.getenv("DB_HOST", "gp-postgres"),
-        # "HOST": "185.4.180.249",
+        "HOST": os.getenv("DB_HOST", "gp-postgres"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
@@ -247,7 +245,7 @@ SITE_DOMAIN = "http://127.0.0.1:8008"
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 EMAIL_HOST = 'smtp.yandex.com'
-EMAIL_HOST_USER = 'info@bitswapltd.com'  # from which email letters will be sent
+EMAIL_HOST_USER = ''  # from which email letters will be sent
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_ADMIN_USER = 'usembaevsultan08@gmail.com'  # to which email clients' letters for support will be sent
 EMAIL_DEVELOPER = 'usembaevsultan08@gmail.com'
@@ -312,12 +310,8 @@ CELERY_TASK_PUBLISH_RETRY = False
 CELERY_DISABLE_RATE_LIMITS = False
 CELERY_TASK_TRACK_STARTED = True
 
-# ONE_VISION_API_KEY = "MmI4OGExYTAtZjBjYi0wMTNiLTA5ZDktMDY0NWRjZmQwNjE0"
-ONE_VISION_API_KEY = "2b88a1a0-f0cb-013b-09d9-0645dcfd0614"
-ONE_VISION_API_SECRET_KEY = "d84bbb92956b51282ef2cdf9e1c14e60c4a6484945e77497"
-
-# ONE_VISION_API_KEY = "123"
-# ONE_VISION_API_SECRET_KEY = "qwerty"
+ONE_VISION_API_KEY = os.getenv("ONE_VISION_API_KEY")
+ONE_VISION_API_SECRET_KEY = os.getenv("ONE_VISION_API_SECRET_KEY")
 
 # CKEDITOR_UPLOAD_PATH = "ncrm_helper"
 
