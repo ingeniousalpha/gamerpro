@@ -120,17 +120,19 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
     def finalize_response(self, response):
         from apps.bookings.tasks import send_push_about_booking_status
+        active_users = []
 
-        if response and response.get('result') and isinstance(response['result'], list):
+        if response and isinstance(response['result'], list):
             resp_data = response['result']
-            active_users = []
 
-            ClubComputer.objects.filter(
-                gizmo_id__in=[r['hostId'] for r in resp_data],
-                club_branch_id=self.instance.id,
-                is_active_session=False
-            ).update(is_active_session=True)
+            if len(resp_data) > 0:
+                ClubComputer.objects.filter(
+                    gizmo_id__in=[r['hostId'] for r in resp_data],
+                    club_branch_id=self.instance.id,
+                    is_active_session=False
+                ).update(is_active_session=True)
 
+            # when resp_data is [], then it updates all computers
             ClubComputer.objects.exclude(
                 club_branch_id=self.instance.id,
                 gizmo_id__in=[r['hostId'] for r in resp_data],
@@ -159,7 +161,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                     booking.is_starting_session = False
                     booking.save(update_fields=['is_starting_session'])
 
-            return active_users
+        return active_users
 
 
 class GizmoStartUserSessionService(BaseGizmoService):
