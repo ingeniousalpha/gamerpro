@@ -29,6 +29,21 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
         'uuid',
         'outer_id'
     )
+    list_display = (
+        'uuid',
+        'created_at',
+        'status',
+        'amount',
+        'card',
+        'booking',
+        'user',
+    )
+    list_filter = (
+        'created_at',
+        'user',
+        'status',
+    )
+    date_hierarchy = 'created_at'
     inlines = [PaymentWebhookInline]
     club_filter_field = "booking__club_branch__club"
 

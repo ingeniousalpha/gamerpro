@@ -61,6 +61,10 @@ class Booking(UUIDModel, TimestampModel):
         null=True, blank=True
     )
 
+    class Meta:
+        verbose_name = "Бронь"
+        verbose_name_plural = "Брони"
+
     @property
     def is_active(self):
         if self.status in [
@@ -104,7 +108,12 @@ class DepositReplenishment(TimestampModel):
         on_delete=models.CASCADE,
         related_name="replenishments"
     )
-    amount = models.DecimalField(  # amount sent to balance
+    amount = models.DecimalField(  # amount sent to balance including cashback_amount
+        max_digits=8,
+        decimal_places=2,
+        default=0.0
+    )
+    cashback_amount = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         default=0.0
