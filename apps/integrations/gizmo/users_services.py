@@ -214,3 +214,5 @@ class GizmoCreateUserService(BaseGizmoService):
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError
+
+        return response.get('result')  # new user gizmo id
