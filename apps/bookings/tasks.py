@@ -45,7 +45,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     if not booking:
         return
 
-    if not (from_balance and booking.time_packet):
+    if not from_balance and not booking.time_packet:
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
             user_gizmo_id=booking.club_user.gizmo_id,
@@ -54,7 +54,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             commission_amount=booking.commission_amount,
             total_amount=booking.total_amount
         ).run()
-    if booking.time_packet:
+    elif booking.time_packet:
         print('booking time_packet activating...')
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
