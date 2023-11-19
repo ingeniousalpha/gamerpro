@@ -13,12 +13,17 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
     method = "POST"
 
     def run_service(self):
-        if config.CASHBACK_TURNED_ON:
-            self.kwargs['cashback_amount'] = int((self.kwargs.get("amount") - self.kwargs.get("commission_amount")) * config.CASHBACK_PERCENT / 100)
+        replenishment_type = self.kwargs.get("replenishment_type") or "deposit"
+
+        self.kwargs["cashback_amount"] = int(self.kwargs.get("user_received_amount") * config.CASHBACK_PERCENT / 100)
+        if replenishment_type == "cashback":
+            self.kwargs["user_received_amount"] = self.kwargs["cashback_amount"]
+        else:
+            self.kwargs["user_received_amount"] += self.kwargs["cashback_amount"]
 
         return self.fetch(json={
-            "userId": self.kwargs.get("user_gizmo_id"),
-            "amount": int(self.kwargs.get("amount")) + self.kwargs.get('cashback_amount', Decimal(0)),
+            "userId": self.kwargs["user_gizmo_id"],
+            "amount": self.kwargs["user_received_amount"],
             "type": 0,
             "paymentMethodId": self.instance.gizmo_payment_method,
             "receiptOverride": True
@@ -34,7 +39,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             gizmo_id=response['result']['id'],
             club_branch=self.instance,
             club_user=ClubBranchUser.objects.filter(gizmo_id=self.kwargs.get('user_gizmo_id')).first(),
-            amount=self.kwargs.get('amount') + self.kwargs.get('cashback_amount', Decimal(0)),  # amount sent to user balance
+            user_received_amount=self.kwargs.get('user_received_amount', Decimal(0)),  # amount sent to user balance
             cashback_amount=self.kwargs.get('cashback_amount', Decimal(0)),
             commission_amount=self.kwargs.get('commission_amount'),
             total_amount=self.kwargs.get('total_amount'),

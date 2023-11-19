@@ -45,12 +45,12 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     if not booking:
         return
 
-    if not from_balance:
+    if not (from_balance and booking.time_packet):
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
             user_gizmo_id=booking.club_user.gizmo_id,
             booking=booking,
-            amount=booking.amount,
+            user_received_amount=booking.amount,
             commission_amount=booking.commission_amount,
             total_amount=booking.total_amount
         ).run()
@@ -62,6 +62,16 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             minutes=booking.time_packet.minutes,
             price=booking.time_packet.price
         ).run()
+        if config.CASHBACK_TURNED_ON:
+            GizmoCreateDepositTransactionService(
+                instance=booking.club_branch,
+                user_gizmo_id=booking.club_user.gizmo_id,
+                booking=booking,
+                user_received_amount=booking.amount,
+                commission_amount=booking.commission_amount,
+                total_amount=booking.total_amount,
+                replenishment_type="cashback",
+            ).run()
         print('booking time_packet activated')
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(

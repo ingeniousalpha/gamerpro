@@ -31,6 +31,9 @@ class SigninView(PublicJSONRendererMixin, CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        # TODO:
+        #   Rewrite gizmo gathering users
+        #   add handling exception from gizmo when username is not unique
         # mobile_phone = serializer.validated_data["mobile_phone"]
         # send_otp(mobile_phone)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

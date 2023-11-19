@@ -108,7 +108,7 @@ class DepositReplenishment(TimestampModel):
         on_delete=models.CASCADE,
         related_name="replenishments"
     )
-    amount = models.DecimalField(  # amount sent to balance including cashback_amount
+    user_received_amount = models.DecimalField(  # amount sent to balance including cashback_amount
         max_digits=8,
         decimal_places=2,
         default=0.0
