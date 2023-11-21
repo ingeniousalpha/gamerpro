@@ -48,12 +48,17 @@ class ClubComputerGroup(models.Model):
 
 
 class ClubComputer(models.Model):
-    club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computers")
+    club_branch = models.ForeignKey(
+        ClubBranch,
+        on_delete=models.CASCADE,
+        related_name="computers",
+        db_index=True
+    )
     number = models.IntegerField()
     group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
     is_active_session = models.BooleanField(default=False)
     is_locked = models. BooleanField(default=False)
-    gizmo_id = models.IntegerField(null=True)
+    gizmo_id = models.IntegerField(null=True, db_index=True)
     gizmo_hostname = models.CharField(max_length=10, null=True)
 
     def __str__(self):
@@ -162,8 +167,8 @@ class ClubBranchPrice(models.Model):
 class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
-    gizmo_id = models.IntegerField(null=True)
-    gizmo_phone = models.CharField(max_length=12, null=True)
+    gizmo_id = models.IntegerField(null=True, db_index=True)
+    gizmo_phone = models.CharField(max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
 

@@ -29,7 +29,13 @@ class CharIDModel(MainModel):
 
 
 class UUIDModel(MainModel):
-    uuid = models.UUIDField("Идентификатор", default=uuid4, unique=True, editable=False)
+    uuid = models.UUIDField(
+        "Идентификатор",
+        default=uuid4,
+        unique=True,
+        editable=False,
+        db_index=True
+    )
 
     class Meta:
         abstract = True

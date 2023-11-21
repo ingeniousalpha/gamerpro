@@ -21,26 +21,25 @@ class GizmoGetUsersService(BaseGizmoService):
     def save(self, response):
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            for gizmo_user in resp_data:
-                if not ClubBranchUser.objects.filter(
-                        gizmo_id=gizmo_user['id'],
-                        club_branch_id=self.instance.id
-                ).exists():
-                    try:
-                        gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
-                        if gizmo_phone:
-                            serializer = self.save_serializer(
-                                data={
-                                    "gizmo_id": gizmo_user['id'],
-                                    "gizmo_phone": gizmo_phone,
-                                    "login": gizmo_user['username'],
-                                    "club_branch": self.instance.id
-                                }
-                            )
-                            serializer.is_valid(raise_exception=True)
-                            serializer.save()
-                    except Exception as e:
-                        self.log_error(e)
+            existed_ids = list(ClubBranchUser.objects.values_list('gizmo_id', flat=True))
+            non_existent_users = list(filter(lambda i: i['id'] not in existed_ids, resp_data))
+
+            for gizmo_user in non_existent_users:
+                try:
+                    gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
+                    if gizmo_phone:
+                        serializer = self.save_serializer(
+                            data={
+                                "gizmo_id": gizmo_user['id'],
+                                "gizmo_phone": gizmo_phone,
+                                "login": gizmo_user['username'],
+                                "club_branch": self.instance.id
+                            }
+                        )
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save()
+                except Exception as e:
+                    self.log_error(e)
 
 
 class GizmoGetUserByUsernameService(BaseGizmoService):
