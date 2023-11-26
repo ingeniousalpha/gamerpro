@@ -37,8 +37,8 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
         )
 
     def create(self, validated_data):
-        commission_amount = Booking.get_commission_amount(validated_data['amount'])
-        total_amount = commission_amount + validated_data['amount']
+        commission_amount = Booking.get_commission_amount(validated_data['user_received_amount'])
+        total_amount = commission_amount + validated_data['user_received_amount']
         payment, error = OVRecurrentPaymentService(
             is_replenishment=True,
             total_amount=total_amount,
@@ -49,7 +49,7 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
             raise OVRecurrentPaymentFailed(error)
         replenishment = GizmoCreateDepositTransactionService(
             instance=validated_data['club_branch'],
-            user_received_amount=validated_data['amount'],
+            user_received_amount=validated_data['user_received_amount'],
             commission_amount=commission_amount,
             total_amount=total_amount,
             user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
