@@ -1,10 +1,8 @@
-import time
-
 from django.core.cache import cache
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
-from apps.clubs.models import ClubBranch, ClubBranchUser, ClubComputer
+from apps.clubs.models import ClubBranch
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
@@ -56,10 +54,13 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
     elif booking.time_packet:
         print('booking time_packet activating...')
+        minutes_to_add = booking.time_packet.minutes
+        if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
+            minutes_to_add += config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
-            minutes=booking.time_packet.minutes,
+            minutes=minutes_to_add,
             price=booking.time_packet.price
         ).run()
         if config.CASHBACK_TURNED_ON:

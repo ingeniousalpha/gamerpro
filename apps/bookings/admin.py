@@ -6,7 +6,7 @@ from .models import Booking
 @admin.register(Booking)
 class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = (
-        'uuid',
+        'uuid', 'club_user__user__mobile_phone'
     )
     list_display = (
         'uuid', 'created_at', 'computers', 'amount', 'is_cancelled'

@@ -12,11 +12,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import base64
 import os
 from collections import OrderedDict
-from datetime import timedelta, datetime
+from datetime import timedelta
 
-from config.constants.email_messages import EMAIL_MESSAGES
 from config.constants.error_messages import ERROR_MESSAGES
-# from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -72,6 +70,7 @@ CONSTANCE_CONFIG = {
     "GAMER_PRO_COMMISSION": (100, "Наша комиссия в тенге", int),
     "CASHBACK_TURNED_ON": (True, "Включить кэшбеки", bool),
     "CASHBACK_PERCENT": (5, "% кэшбека от суммы транзакции", int),
+    "EXTRA_MINUTES_TO_FIRST_TRANSACTION": (60, "Экстра минуты бесплатно для первой транзакции", int),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
@@ -82,6 +81,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
         "GAMER_PRO_COMMISSION",
         "CASHBACK_TURNED_ON",
         "CASHBACK_PERCENT",
+        "EXTRA_MINUTES_TO_FIRST_TRANSACTION",
     )),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),

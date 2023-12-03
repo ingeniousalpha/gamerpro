@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from phonenumber_field.modelfields import PhoneNumberField
 
 from .managers import UserManager
+from apps.bookings.models import Booking
 
 
 class User(PermissionsMixin, AbstractBaseUser):
@@ -43,6 +44,10 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     def __str__(self):
         return str(self.mobile_phone or self.email)
+
+    @property
+    def has_bookings(self):
+        return Booking.objects.filter(club_user__user=self).exists()
 
     # @property
     # def username(self):
