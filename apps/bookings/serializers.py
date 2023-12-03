@@ -10,10 +10,10 @@ from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
 from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
-from apps.clubs.models import ClubComputer
-from apps.clubs.serializers import ClubBranchSerializer, ClubComputerListSerializer
+from apps.clubs.serializers import ClubBranchSerializer
 from apps.common.serializers import RequestUserPropertyMixin
-from apps.payments import PAYMENT_STATUSES_MAPPER, PaymentStatuses
+from apps.common.services import date_format_with_t
+from apps.payments import PAYMENT_STATUSES_MAPPER
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
 from apps.integrations.onevision.payment_services import OVInitPaymentService, OVRecurrentPaymentService
@@ -164,12 +164,13 @@ class BookingSerializer(serializers.ModelSerializer):
     club_branch = ClubBranchSerializer()
     computers = BookedComputerListSerializer(many=True)
     payment_status = serializers.SerializerMethodField()
+    session_starting_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = (
             'uuid',
-            'created_at',
+            'session_starting_at',
             'club_branch',
             'amount',
             'is_active',
@@ -184,3 +185,8 @@ class BookingSerializer(serializers.ModelSerializer):
         elif obj.use_balance:
             return "BALANCE_APPROVED"
         return "NOT_PAID"
+
+    def get_session_starting_at(self, obj):
+        return date_format_with_t(
+            obj.created_at + timezone.timedelta(seconds=config.FREE_SECONDS_BEFORE_START_TARIFFING)
+        )
