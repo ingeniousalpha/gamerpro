@@ -1,5 +1,9 @@
 from apps.common.exceptions import BaseAPIException
-from config.constants.error_codes import USER_DOES_NOT_HAVE_PHONE_NUMBER, GIZMO_REQUEST_ERROR
+from config.constants.error_codes import (
+    USER_DOES_NOT_HAVE_PHONE_NUMBER,
+    GIZMO_REQUEST_ERROR,
+    GIZMO_LOGIN_ALREADY_EXISTS_ERROR
+)
 
 
 class UserDoesNotHavePhoneNumber(BaseAPIException):
@@ -10,3 +14,8 @@ class UserDoesNotHavePhoneNumber(BaseAPIException):
 class GizmoRequestError(BaseAPIException):
     status_code = 400
     default_code = GIZMO_REQUEST_ERROR
+
+
+class GizmoLoginAlreadyExistsError(BaseAPIException):
+    status_code = 400
+    default_code = GIZMO_LOGIN_ALREADY_EXISTS_ERROR

@@ -7,7 +7,8 @@ from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranchUser, ClubComputer
 from apps.clubs.services import get_correct_phone
 from apps.integrations.gizmo.base import BaseGizmoService
-from apps.integrations.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError
+from apps.integrations.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError, \
+    GizmoLoginAlreadyExistsError
 from apps.integrations.gizmo.serializers import GizmoUserSaveSerializer
 
 User = get_user_model()
@@ -212,6 +213,8 @@ class GizmoCreateUserService(BaseGizmoService):
         print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
+            if response.get('errorCodeTypeReadable') == "NonUniqueEntityValue":
+                raise GizmoLoginAlreadyExistsError
             raise GizmoRequestError
 
         return response.get('result')  # new user gizmo id
