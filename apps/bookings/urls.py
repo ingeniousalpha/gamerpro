@@ -10,7 +10,8 @@ from .views import (
     BookingProlongView,
     BookingDetailView,
     CreateBookingByTimePacketPaymentView,
-    CreateBookingByTimePacketCardPaymentView
+    CreateBookingByTimePacketCardPaymentView,
+    ComputerSessionFinishView
 )
 
 urlpatterns = [
@@ -24,4 +25,5 @@ urlpatterns = [
     path('<uuid:booking_uuid>/cancel', CancelBookingView.as_view()),
     path('<uuid:booking_uuid>/unlock', UnlockBookedComputersView.as_view()),
     path('<uuid:booking_uuid>/prolong', BookingProlongView.as_view()),
+    path('<uuid:booking_uuid>/finish', ComputerSessionFinishView.as_view()),
 ]

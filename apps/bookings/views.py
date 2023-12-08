@@ -1,7 +1,7 @@
 from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
-from apps.bookings.exceptions import BookingNotFound
+from apps.bookings.exceptions import BookingNotFound, BookingStatusIsNotAppropriate
 from apps.bookings.models import Booking
 from apps.bookings.serializers import (
     CreateBookingByBalanceSerializer,
@@ -17,7 +17,8 @@ from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_co
     send_push_about_booking_status
 from constance import config
 
-from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService
+from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService, \
+    GizmoEndUserSessionService
 from ..payments import PaymentStatuses
 from ..payments.serializers import BookingProlongSerializer
 
@@ -47,14 +48,16 @@ class CreateBookingByTimePacketCardPaymentView(JSONRendererMixin, CreateAPIView)
     serializer_class = CreateBookingByTimePacketCardPaymentSerializer
 
 
-class CancelBookingView(JSONRendererMixin, GenericAPIView):
-    queryset = Booking.objects.all()
-
+class BookingMixin:
     def get_object(self):
         obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
         if not obj:
             raise BookingNotFound
         return obj
+
+
+class CancelBookingView(JSONRendererMixin, BookingMixin, GenericAPIView):
+    queryset = Booking.objects.all()
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
@@ -67,14 +70,8 @@ class CancelBookingView(JSONRendererMixin, GenericAPIView):
         return Response({})
 
 
-class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
+class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView):
     queryset = Booking.objects.all()
-
-    def get_object(self):
-        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
-        if not obj:
-            raise BookingNotFound
-        return obj
 
     def options(self, request, *args, **kwargs):
         return Response({})
@@ -103,21 +100,35 @@ class UnlockBookedComputersView(JSONRendererMixin, GenericAPIView):
         return Response({})
 
 
-class BookingProlongView(JSONRendererMixin, GenericAPIView):
+class BookingProlongView(JSONRendererMixin, BookingMixin, GenericAPIView):
     serializer_class = BookingProlongSerializer
     queryset = Booking.objects.all()
-
-    def get_object(self):
-        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
-        if not obj:
-            raise BookingNotFound
-        return obj
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
         serializer = self.get_serializer(data={**request.data, 'booking': booking.id})
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response({})
+
+
+class ComputerSessionFinishView(JSONRendererMixin, BookingMixin, GenericAPIView):
+    queryset = Booking.objects.all()
+
+    def post(self, request, booking_uuid):
+        booking = self.get_object()
+        if booking.status not in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
+            raise BookingStatusIsNotAppropriate
+
+        booking.status = BookingStatuses.COMPLETED
+        booking.save(update_fields=['status'])
+        if config.INTEGRATIONS_TURNED_ON:
+            GizmoEndUserSessionService(
+                instance=booking.club_branch,
+                user_id=booking.club_user.gizmo_id
+            ).run()
+            if booking.status == BookingStatuses.SESSION_STARTED:
+                gizmo_unlock_computers.delay(booking.uuid)
         return Response({})
 
 
@@ -146,12 +157,6 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
         return Response(serializer.data)
 
 
-class BookingDetailView(JSONRendererMixin, RetrieveAPIView):
+class BookingDetailView(JSONRendererMixin, BookingMixin, RetrieveAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
-
-    def get_object(self):
-        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
-        if not obj:
-            raise BookingNotFound
-        return obj
