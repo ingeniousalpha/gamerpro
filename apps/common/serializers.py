@@ -78,9 +78,16 @@ class FilePathMethodMixin:
 
 
 class DocumentListSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
+
     class Meta:
         model = Document
         fields = (
             'code',
             'file'
         )
+
+    def get_file(self, obj):
+        if obj.code == "privacy_policy":
+            return "https://server.gamerpro.kz/api/documents/privacy_policy"
+        return self.context['request'].build_absolute_uri(obj.file.url)

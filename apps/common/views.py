@@ -1,6 +1,6 @@
 from django.db.models import Sum, Count
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, GenericAPIView
 from django.conf import settings
 from django.utils import timezone
 
@@ -14,6 +14,11 @@ class DocumentListView(PublicJSONRendererMixin, ListAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentListSerializer
     pagination_class = None
+
+
+class DocumentPrivacyPolicyView(PublicJSONRendererMixin, GenericAPIView):
+    def get(self, request):
+        return render(request, "privacy_policy.html")
 
 
 def dashboard_view(request):

@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from apps.common.views import DocumentListView
+from apps.common.views import DocumentListView, DocumentPrivacyPolicyView
 
 urlpatterns = [
     # path("common/", include("apps.common.urls")),
@@ -10,6 +10,7 @@ urlpatterns = [
     path("payments/", include("apps.payments.urls")),
     path("notifications/", include("apps.notifications.urls")),
     path("documents", DocumentListView.as_view()),
+    path("documents/privacy_policy", DocumentPrivacyPolicyView.as_view()),
 ]
 
 
