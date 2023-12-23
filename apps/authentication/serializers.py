@@ -16,10 +16,16 @@ User = get_user_model()
 class SigninWithoutOTPSerializer(serializers.ModelSerializer):
     club_branch = serializers.IntegerField(write_only=True)
     login = serializers.CharField(write_only=True, required=False)
+    first_name = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = "mobile_phone", "login", "club_branch"
+        fields = (
+            "mobile_phone",
+            "login",
+            "club_branch",
+            "first_name",
+        )
         extra_kwargs = {
             "mobile_phone": {"write_only": True}
         }

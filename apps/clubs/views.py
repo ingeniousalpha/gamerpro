@@ -17,7 +17,12 @@ class ClublistView(PublicJSONRendererMixin, ListAPIView):
 
 
 class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
-    queryset = ClubBranch.objects.all()
+    queryset = ClubBranch.objects.filter(club__is_bro_chain=False)
+    serializer_class = ClubBranchListSerializer
+
+
+class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
+    queryset = ClubBranch.objects.filter(club__is_bro_chain=True)
     serializer_class = ClubBranchListSerializer
 
 

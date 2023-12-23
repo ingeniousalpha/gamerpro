@@ -83,8 +83,12 @@ class ClubBranchTimePacketGroupInline(FilterByClubMixin, admin.TabularInline):
 
 @admin.register(Club)
 class ClubAdmin(admin.ModelAdmin):
-    fields = ('name', 'description')
     inlines = [ClubBranchInline]
+    fields = (
+        'name',
+        'description',
+        'is_bro_chain',
+    )
 
 
 @admin.register(ClubBranch)

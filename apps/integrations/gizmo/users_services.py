@@ -199,13 +199,14 @@ class GizmoEndUserSessionService(BaseGizmoService):
 
 
 class GizmoCreateUserService(BaseGizmoService):
-    endpoint = "/api/users?Username={login}&UserGroupId=1&Phone={mobile_phone}"
+    endpoint = "/api/users?Username={login}&UserGroupId=1&Phone={mobile_phone}&FirstName={first_name}"
     method = "PUT"
     save_serializer = None
 
     def run_service(self):
         return self.fetch(path_params={
             "login": urllib.parse.quote_plus(self.kwargs.get('login')),
+            "first_name": urllib.parse.quote_plus(self.kwargs.get('first_name', '')),
             "mobile_phone": urllib.parse.quote_plus(self.kwargs.get('mobile_phone')),
         })
 
