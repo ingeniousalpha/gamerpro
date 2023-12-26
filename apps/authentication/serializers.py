@@ -55,6 +55,7 @@ class SigninWithoutOTPSerializer(serializers.ModelSerializer):
                 gizmo_id=validated_data['gizmo_user_id'],
                 gizmo_phone=validated_data['mobile_phone'],
                 login=validated_data['login'],
+                first_name=validated_data['first_name'],
                 user=user,
             )
         elif validated_data.get('club_user'):

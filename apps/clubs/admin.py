@@ -125,7 +125,7 @@ class ClubBranchAdmin(FilterByClubMixin, admin.ModelAdmin):
 
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
-    search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone')
+    search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
     list_display = ('gizmo_id', 'login', 'club_branch')
     list_filter = ('club_branch',)
 

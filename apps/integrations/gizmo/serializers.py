@@ -10,6 +10,7 @@ class GizmoUserSaveSerializer(serializers.ModelSerializer):
             'gizmo_id',
             'gizmo_phone',
             'login',
+            'first_name',
             'club_branch',
         )
 

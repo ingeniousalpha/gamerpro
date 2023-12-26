@@ -171,6 +171,7 @@ class ClubBranchUser(models.Model):
     gizmo_id = models.IntegerField(null=True, db_index=True)
     gizmo_phone = models.CharField(max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
 
     @property

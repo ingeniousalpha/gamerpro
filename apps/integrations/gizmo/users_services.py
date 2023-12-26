@@ -34,6 +34,7 @@ class GizmoGetUsersService(BaseGizmoService):
                                 "gizmo_id": gizmo_user['id'],
                                 "gizmo_phone": gizmo_phone,
                                 "login": gizmo_user['username'],
+                                "first_name": gizmo_user['firstName'],
                                 "club_branch": self.instance.id
                             }
                         )
