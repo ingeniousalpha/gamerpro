@@ -45,7 +45,7 @@ class ClubComputerGroup(models.Model):
     gizmo_id = models.IntegerField(null=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.club_branch} {self.name}"
 
 
 class ClubComputer(models.Model):
@@ -124,6 +124,12 @@ class ClubTimePacket(models.Model):
         ClubTimePacketGroup,
         on_delete=models.CASCADE,
         related_name="packets"
+    )
+    club_computer_group = models.ForeignKey(
+        ClubComputerGroup,
+        related_name="time_packets_group",
+        null=True, blank=True,
+        on_delete=models.SET_NULL
     )
     priority = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)

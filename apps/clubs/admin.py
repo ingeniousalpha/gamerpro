@@ -8,6 +8,7 @@ admin.site.register(ClubComputerGroup)
 
 class FilterByClubMixin:
     club_filter_field = "club_branch__club"
+    list_filter = ('club_branch',)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -113,6 +114,7 @@ class ClubBranchAdmin(FilterByClubMixin, admin.ModelAdmin):
         ClubBranchComputerInline,
     ]
     club_filter_field = "club"
+    list_filter = ('club',)
 
     def response_change(self, request, obj):
         if "sync_gizmo" in request.POST:
@@ -127,12 +129,11 @@ class ClubBranchAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
     list_display = ('gizmo_id', 'login', 'club_branch')
-    list_filter = ('club_branch',)
 
 
 @admin.register(ClubTimePacketGroup)
 class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('gizmo_id', 'name', 'is_active')
+    list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
     list_editable = ('is_active',)
 
 
@@ -148,7 +149,7 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'priority',
         'is_active',
     )
-    list_filter = ('packet_group',)
+    list_filter = ('packet_group', 'club_computer_group__club_branch',)
     list_editable = ('priority', 'is_active')
     ordering = ['priority']
     club_filter_field = "packet_group__club_branch__club"
