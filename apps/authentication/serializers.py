@@ -2,14 +2,17 @@ from django.contrib.auth import get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from six import text_type
+import datetime
 
+from .exceptions import UserNotFound
 from .services import verify_otp, generate_access_and_refresh_tokens_for_user
 from apps.users.services import get_or_create_user_by_phone
 from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin
 from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
 from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService
-
 User = get_user_model()
 
 
@@ -107,3 +110,24 @@ class TokenRefreshSerializer(BaseTokenRefreshSerializer):
             "access_token": data['access'],
             "refresh_token": data['refresh'],
         }
+
+
+CUSTOM_LIFETIME = datetime.timedelta(seconds=30)
+
+
+class MyTokenObtainSerializer(serializers.Serializer):
+    mobile_phone = serializers.CharField()
+
+    def validate(self, attrs):
+        user = User.objects.filter(mobile_phone=attrs['mobile_phone']).first()
+        if not user:
+            raise UserNotFound
+
+        refresh = TokenObtainPairSerializer.get_token(user)
+        new_token = refresh.access_token
+        new_token.set_exp(lifetime=CUSTOM_LIFETIME)
+        return {
+            "refresh_token": text_type(refresh),
+            "access_token": text_type(new_token),
+        }
+

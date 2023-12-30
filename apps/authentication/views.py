@@ -1,22 +1,25 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenRefreshView as DRFTokenRefreshView
 from rest_framework.generics import CreateAPIView, GenericAPIView
+
 
 from apps.common.mixins import PublicJSONRendererMixin
 
 # from apps.notifications.tasks import task_send_letter_for_email_confirmation
 from .serializers import (
     SigninWithoutOTPSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
+    MyTokenObtainSerializer,
 )
 from .services import generate_access_and_refresh_tokens_for_user
 from ..bookings.services import check_user_session
 from ..clubs.services import get_club_branch_user_by_username
-from ..notifications.services import send_otp
 from ..integrations.gizmo.users_services import GizmoGetUserByUsernameService
 from ..users.services import get_or_create_user_by_phone
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 
 User = get_user_model()
 
@@ -75,3 +78,7 @@ class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
 
 class TokenRefreshView(PublicJSONRendererMixin, DRFTokenRefreshView):
     serializer_class = TokenRefreshSerializer
+
+
+class MyFastTokenView(TokenObtainPairView):
+    serializer_class = MyTokenObtainSerializer
