@@ -147,7 +147,8 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
             uncompleted_bookings = Booking.objects.filter(
                 is_starting_session=False,
-                status__in=[BookingStatuses.PLAYING]
+                status__in=[BookingStatuses.PLAYING],
+                club_branch_id=self.instance.id,
             )
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
             for booking in uncompleted_bookings:
@@ -156,7 +157,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                     booking.save(update_fields=['status'])
                     send_push_about_booking_status(booking.uuid, BookingStatuses.COMPLETED)
 
-            starting_bookings = Booking.objects.filter(is_starting_session=True)
+            starting_bookings = Booking.objects.filter(club_branch_id=self.instance.id, is_starting_session=True)
             for booking in starting_bookings:
                 if booking.club_user.gizmo_id in active_users_ids:
                     booking.is_starting_session = False
