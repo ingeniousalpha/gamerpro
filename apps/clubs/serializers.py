@@ -3,6 +3,7 @@ from django.db.models import Subquery, OuterRef
 from django.utils import timezone
 from rest_framework import serializers
 
+from apps.authentication.exceptions import UserNotFound
 from apps.bookings.models import BookedComputer
 from apps.clubs import ClubHallTypes
 from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
@@ -14,17 +15,24 @@ from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
     login = serializers.SerializerMethodField()
     balance = serializers.SerializerMethodField()
+    is_verified = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
             'login',
-            'balance'
+            'balance',
+            'is_verified',
         )
 
     def get_balance(self, obj):
         if self.user:
             club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
             if club_user:
+                if obj.club.name.lower() == "bro":
+                    try:
+                        return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
+                    except UserNotFound:
+                        return 0
                 return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
         return 0
 
@@ -34,6 +42,12 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
             if club_user:
                 return club_user.login
         return None
+
+    def get_is_verified(self, obj):
+        if self.user:
+            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
+            if club_user:
+                return bool(club_user.gizmo_id)
 
 
 class ClubUserSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):

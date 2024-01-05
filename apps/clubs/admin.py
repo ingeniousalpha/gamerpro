@@ -93,7 +93,7 @@ class ClubAdmin(admin.ModelAdmin):
 
 
 @admin.register(ClubBranch)
-class ClubBranchAdmin(FilterByClubMixin, admin.ModelAdmin):
+class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'name',
         'address',
@@ -160,4 +160,14 @@ class DayModelAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'number',
+    )
+
+
+@admin.register(ClubBranchAdmin)
+class ClubBranchAdminModelAdmin(admin.ModelAdmin):
+    list_display = (
+        'mobile_phone',
+        'tg_chat_id',
+        'tg_username',
+        'club_branch',
     )

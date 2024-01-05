@@ -235,7 +235,6 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(PROJECT_DIR, "..", 'static')
 # STATIC_DIR = os.path.join(BASE_DIR, 'static')
 # STATICFILES_DIRS = [STATIC_DIR]
-
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "..", "media")
 
@@ -244,6 +243,7 @@ MEDIA_ROOT = os.path.join(PROJECT_DIR, "..", "media")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_DOMAIN = "http://127.0.0.1:8008"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # smtp
 EMAIL_USE_TLS = False

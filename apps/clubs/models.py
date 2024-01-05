@@ -47,6 +47,10 @@ class ClubComputerGroup(models.Model):
     def __str__(self):
         return f"{self.club_branch} {self.name}"
 
+    class Meta:
+        verbose_name = "Зал клубов"
+        verbose_name_plural = "Залы клубов"
+
 
 class ClubComputer(models.Model):
     club_branch = models.ForeignKey(
@@ -186,3 +190,24 @@ class ClubBranchUser(models.Model):
             if b.is_active:
                 return True
         return False
+
+    class Meta:
+        verbose_name = "Юзер в гизмо"
+        verbose_name_plural = "Юзеры в гизмо"
+
+
+class ClubBranchAdmin(models.Model):
+    mobile_phone = models.CharField(max_length=12)
+    tg_chat_id = models.CharField(max_length=128, null=True, blank=True)
+    tg_username = models.CharField(max_length=128, null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    club_branch = models.ForeignKey(
+        ClubBranch,
+        on_delete=models.CASCADE,
+        related_name="admins",
+        null=True, blank=True
+    )
+
+    class Meta:
+        verbose_name = "Админ в телеге"
+        verbose_name_plural = "Админы в телеге"

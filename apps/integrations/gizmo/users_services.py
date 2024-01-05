@@ -98,7 +98,7 @@ class GizmoGetUserBalanceService(BaseGizmoService):
 
     def finalize_response(self, response):
         print(response)
-        gizmo_user = response.get('result')
+        gizmo_user = (response or {}).get('result')
         if not gizmo_user:
             raise UserNotFound
 
