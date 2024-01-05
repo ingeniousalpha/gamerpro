@@ -28,6 +28,22 @@ services:
       - gp-net
 #    command: sh -c "python manage.py collectstatic --noinput --clear"
 
+  gp-bot:
+    container_name: gp-bot
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    command: python apps/bot/launcher.py
+    volumes:
+      - .:/gamerpro
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - gp-postgres
+    networks:
+      - gp-net
+
   redis:
     container_name: redis
     restart: always
