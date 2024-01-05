@@ -39,8 +39,6 @@ services:
       - .:/gamerpro
     env_file:
       - ./.env.dev
-    depends_on:
-      - gp-postgres
     networks:
       - gp-net
 
