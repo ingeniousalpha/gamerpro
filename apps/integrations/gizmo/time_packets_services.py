@@ -68,7 +68,7 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
     def run_service(self):
         return self.fetch(path_params={
             "user_id": self.kwargs.get('user_id'),
-            "time": self.kwargs.get('minutes'),
+            "time": int(self.kwargs.get('minutes')),
             "price": int(self.kwargs.get('price')),
             "payment_method": self.instance.gizmo_payment_method
         })

@@ -8,7 +8,8 @@ from django.utils import timezone
 from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
-from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status
+from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status, \
+    gizmo_bro_book_computers
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.serializers import ClubBranchSerializer
 from apps.common.serializers import RequestUserPropertyMixin
@@ -125,7 +126,12 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         if error:
             raise OVRecurrentPaymentFailed(error)
         if config.INTEGRATIONS_TURNED_ON:
-            gizmo_book_computers(str(instance.uuid))
+            if instance.club_branch.club.name.lower() == "bro":
+                gizmo_lock_computers(str(instance.uuid))
+                if instance.club_user.is_verified:
+                    gizmo_bro_book_computers(str(instance.uuid))
+            else:
+                gizmo_book_computers(str(instance.uuid))
         self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
         send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by card payment accepted
 

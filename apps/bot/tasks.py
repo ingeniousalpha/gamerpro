@@ -5,6 +5,7 @@ from django.utils import timezone
 import telegram
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
+from apps.bookings.tasks import gizmo_bro_book_computers
 from apps.clubs.models import ClubBranchUser, ClubBranch
 from apps.integrations.gizmo.users_services import GizmoCreateUserService
 from config.celery_app import cel_app
@@ -20,7 +21,7 @@ def bot_notify_about_new_user_task(club_branch_id, login, first_name):
     full_text = f"Новый пользователь:\n" \
                 f"login: {login}\n" \
                 f"name: {first_name}\n"
-    admin = club_branch.admins.filter(is_active=True).first()
+    admin = club_branch.admins.filter(is_active=True).last()
     bot = telegram.Bot(token=settings.TELEGRAM_BOT_TOKEN)
     bot.send_message(
         chat_id=admin.tg_chat_id,
@@ -47,3 +48,6 @@ def bot_create_gizmo_user_task(club_branch_user_login):
     ).run()
     club_user.gizmo_id = gizmo_user_id
     club_user.save(update_fields=['gizmo_id'])
+
+    booking = club_user.bookings.last()
+    gizmo_bro_book_computers(booking.uuid, start_now=True)

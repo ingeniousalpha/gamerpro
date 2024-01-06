@@ -47,7 +47,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
         if self.user:
             club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
             if club_user:
-                return bool(club_user.gizmo_id)
+                return club_user.is_verified
 
 
 class ClubUserSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):

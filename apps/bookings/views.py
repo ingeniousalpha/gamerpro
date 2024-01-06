@@ -1,7 +1,7 @@
 from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
-from apps.bookings.exceptions import BookingNotFound, BookingStatusIsNotAppropriate
+from apps.bookings.exceptions import BookingNotFound, BookingStatusIsNotAppropriate, UserNeedToVerifyIIN
 from apps.bookings.models import Booking
 from apps.bookings.serializers import (
     CreateBookingByBalanceSerializer,
@@ -81,6 +81,9 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
             return Response({})
 
         booking = self.get_object()
+        if booking.club_branch.club.name.lower() == "bro" and not booking.club_user.is_verified:
+            raise UserNeedToVerifyIIN
+
         if not booking.use_balance and not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
             return Response({})
 

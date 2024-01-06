@@ -1,4 +1,6 @@
 from django.core.cache import cache
+from django.db.models import Sum
+from decimal import Decimal
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
@@ -87,8 +89,43 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         )
 
 
+def gizmo_bro_book_computers(booking_uuid, start_now=False):
+    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
+        return
+
+    print('BRO booking time_packet activating...')
+    minutes_to_add = booking.time_packet.minutes
+    # Add minutes for firstly cancelled bookings
+    if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
+        bookings = Booking.objects.filter(
+            status=BookingStatuses.CANCELLED,
+            club_user=booking.club_user
+        )
+        minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
+    GizmoAddPaidTimeToUser(
+        instance=booking.club_branch,
+        user_id=booking.club_user.gizmo_id,
+        minutes=minutes_to_add,
+        price=booking.time_packet.price
+    ).run()
+    print('BRO booking time_packet activated')
+
+    for booked_computer in booking.computers.all():
+        if start_now:
+            gizmo_start_user_session.delay(booking.uuid, booked_computer.computer.gizmo_id)
+        else:
+            gizmo_start_user_session.apply_async(
+                (booking.uuid, booked_computer.computer.gizmo_id),
+                countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
+            )
+
+
 @cel_app.task
 def gizmo_start_user_session(booking_uuid, computer_gizmo_id):
+    # TODO: Override function for several computers.
+    #  Now it fits only for 1 computer booked
+
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
@@ -114,10 +151,11 @@ def gizmo_cancel_booking(booking_uuid):
 
     gizmo_unlock_computers(booking.uuid)
     club_branch = ClubBranch.objects.filter(id=booking.club_branch_id).first()
-    GizmoEndUserSessionService(
-        instance=club_branch,
-        user_id=booking.club_user.gizmo_id
-    ).run()
+    if booking.club_user.is_verified:
+        GizmoEndUserSessionService(
+            instance=club_branch,
+            user_id=booking.club_user.gizmo_id
+        ).run()
     # cel_app.send_task(
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
     #     args=[booking.uuid],
@@ -175,10 +213,12 @@ def gizmo_lock_computers(booking_uuid):
             computer_id=booked_computer.computer.gizmo_id
         ).run()
 
-    gizmo_unlock_computers.apply_async(
-        (str(booking.uuid), True),
-        countdown=config.PAYMENT_EXPIRY_TIME*60
-    )
+    # Doesn't unlock for BRO unverified user
+    if booking.club_user.is_verified:
+        gizmo_unlock_computers.apply_async(
+            (str(booking.uuid), True),
+            countdown=config.PAYMENT_EXPIRY_TIME*60
+        )
 
 
 @cel_app.task

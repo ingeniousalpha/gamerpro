@@ -191,6 +191,10 @@ class ClubBranchUser(models.Model):
                 return True
         return False
 
+    @property
+    def is_verified(self):
+        return bool(self.gizmo_id)
+
     class Meta:
         verbose_name = "Юзер в гизмо"
         verbose_name_plural = "Юзеры в гизмо"
