@@ -41,7 +41,7 @@ class SigninWithoutOTPSerializer(serializers.ModelSerializer):
 
         GizmoGetUsersService(instance=attrs['club_branch']).run()
 
-        club_user = ClubBranchUser.objects.filter(gizmo_phone=attrs['mobile_phone']).first()
+        club_user = ClubBranchUser.objects.filter(gizmo_phone=attrs['mobile_phone'], club_branch=attrs['club_branch']).first()
         print(club_user)
         if not club_user and not attrs.get('login'):
             raise NeedToInputUserLogin
