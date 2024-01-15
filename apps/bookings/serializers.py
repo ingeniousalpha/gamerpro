@@ -156,6 +156,7 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='computer.id')
     number = serializers.IntegerField(source='computer.number')
     hall_name = serializers.CharField(source='computer.group.name')
+    hall_id = serializers.IntegerField(source='computer.group.id')
 
     class Meta:
         model = BookedComputer
@@ -163,6 +164,7 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
             'id',
             'number',
             'hall_name',
+            'hall_id',
         )
 
 
