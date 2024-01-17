@@ -19,8 +19,18 @@ from constance import config
 
 from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService, \
     GizmoEndUserSessionService
+from ..integrations.onevision.payment_services import OVInitPaymentService
 from ..payments import PaymentStatuses
+from ..payments.exceptions import OVGetPaymentURLFailed
 from ..payments.serializers import BookingProlongSerializer
+
+
+class BookingMixin:
+    def get_object(self):
+        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
+        if not obj:
+            raise BookingNotFound
+        return obj
 
 
 class CreateBookingByBalanceView(PublicJSONRendererMixin, CreateAPIView):
@@ -48,12 +58,18 @@ class CreateBookingByTimePacketCardPaymentView(JSONRendererMixin, CreateAPIView)
     serializer_class = CreateBookingByTimePacketCardPaymentSerializer
 
 
-class BookingMixin:
-    def get_object(self):
-        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
-        if not obj:
-            raise BookingNotFound
-        return obj
+class RetryPaymentForBookingByTimePacketView(JSONRendererMixin, BookingMixin, GenericAPIView):
+    queryset = Booking.objects.all()
+
+    def post(self, request, booking_uuid):
+        payment_url = OVInitPaymentService(instance=self.get_object()).run()
+        if payment_url:
+            return Response({
+                "booking_uuid": str(booking_uuid),
+                "payment_url": payment_url
+            })
+        else:
+            raise OVGetPaymentURLFailed
 
 
 class CancelBookingView(JSONRendererMixin, BookingMixin, GenericAPIView):

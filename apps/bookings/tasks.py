@@ -11,6 +11,7 @@ from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransact
 from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.notifications.tasks import fcm_push_notify_user
+from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
 from constance import config
 
@@ -168,7 +169,8 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
     if not booking:
         return
 
-    if check_payment and booking.payments.exists():
+    # TODO: rewrite this
+    if check_payment and booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
         return
 
     for booked_computer in booking.computers.all():
