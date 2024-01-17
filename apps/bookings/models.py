@@ -140,3 +140,9 @@ class DepositReplenishment(TimestampModel):
         related_name="replenishments",
         null=True, blank=True
     )
+    time_packet = models.ForeignKey(
+        "clubs.ClubTimePacket",
+        on_delete=models.SET_NULL,
+        related_name="replenishments",
+        null=True, blank=True
+    )

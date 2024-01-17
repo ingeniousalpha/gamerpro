@@ -8,6 +8,7 @@ from apps.integrations.onevision.payment_services import OVRecurrentPaymentServi
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.payments.models import Payment, PaymentCard
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser
 
 
 class PaymentCardListSerializer(serializers.ModelSerializer):
@@ -69,7 +70,11 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
             'amount',
             'payment_card',
             'booking',
+            'time_packet',
         )
+        extra_kwargs = {
+            "time_packet": {"required": False}
+        }
 
     def create(self, validated_data):
         commission_amount = Booking.get_commission_amount(validated_data['amount'])
@@ -91,6 +96,47 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
             user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
             payment_card=validated_data['payment_card'],
             booking=validated_data.get('booking')
+        ).run()
+        payment.replenishment = replenishment
+        payment.save()
+        return replenishment
+
+
+class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = DepositReplenishment
+        fields = (
+            'amount',
+            'payment_card',
+            'booking',
+            'time_packet',
+        )
+
+    def create(self, validated_data):
+        commission_amount = Booking.get_commission_amount(validated_data['amount'])
+        total_amount = commission_amount + validated_data['amount']
+        payment, error = OVRecurrentPaymentService(
+            is_replenishment=True,
+            replenishment_reference=validated_data.get('booking').uuid,
+            total_amount=total_amount,
+            pay_token=validated_data['payment_card'].pay_token,
+            outer_payer_id=self.user.outer_payer_id,
+        ).run()
+        if error:
+            raise OVRecurrentPaymentFailed(error)
+
+        validated_data['club_branch'] = validated_data['booking'].club_branch,
+        validated_data['club_user'] = validated_data['booking'].club_user,
+        validated_data['commission_amount'] = commission_amount,
+        validated_data['total_amount'] = total_amount
+        replenishment = super().create(validated_data)
+
+        GizmoAddPaidTimeToUser(
+            instance=validated_data['booking'].club_branch,
+            user_id=validated_data['booking'].club_user.gizmo_id,
+            minutes=validated_data['time_packet'].minutes,
+            price=validated_data['time_packet'].price
         ).run()
         payment.replenishment = replenishment
         payment.save()

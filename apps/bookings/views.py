@@ -22,7 +22,7 @@ from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSe
 from ..integrations.onevision.payment_services import OVInitPaymentService
 from ..payments import PaymentStatuses
 from ..payments.exceptions import OVGetPaymentURLFailed
-from ..payments.serializers import BookingProlongSerializer
+from ..payments.serializers import BookingProlongSerializer, BookingProlongByTimePacketSerializer
 
 
 class BookingMixin:
@@ -121,6 +121,18 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
 
 class BookingProlongView(JSONRendererMixin, BookingMixin, GenericAPIView):
     serializer_class = BookingProlongSerializer
+    queryset = Booking.objects.all()
+
+    def post(self, request, booking_uuid):
+        booking = self.get_object()
+        serializer = self.get_serializer(data={**request.data, 'booking': booking.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({})
+
+
+class BookingProlongByTimePacketView(JSONRendererMixin, BookingMixin, GenericAPIView):
+    serializer_class = BookingProlongByTimePacketSerializer
     queryset = Booking.objects.all()
 
     def post(self, request, booking_uuid):
