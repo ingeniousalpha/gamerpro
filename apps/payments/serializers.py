@@ -113,23 +113,26 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
             'time_packet',
         )
 
+    def validate(self, attrs):
+        commission_amount = Booking.get_commission_amount(attrs['time_packet'].price)
+        total_amount = commission_amount + Decimal(attrs['time_packet'].price)
+        attrs['club_branch'] = attrs['booking'].club_branch
+        attrs['club_user'] = attrs['booking'].club_user
+        attrs['commission_amount'] = commission_amount
+        attrs['total_amount'] = total_amount
+        return attrs
+
     def create(self, validated_data):
-        commission_amount = Booking.get_commission_amount(validated_data['time_packet'].price)
-        total_amount = commission_amount + Decimal(validated_data['time_packet'].price)
         payment, error = OVRecurrentPaymentService(
             is_replenishment=True,
             replenishment_reference=validated_data.get('booking').uuid,
-            total_amount=total_amount,
+            total_amount=validated_data['total_amount'],
             pay_token=validated_data['payment_card'].pay_token,
             outer_payer_id=self.user.outer_payer_id,
         ).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
 
-        validated_data['club_branch'] = validated_data['booking'].club_branch,
-        validated_data['club_user'] = validated_data['booking'].club_user,
-        validated_data['commission_amount'] = commission_amount,
-        validated_data['total_amount'] = total_amount
         replenishment = super().create(validated_data)
 
         GizmoAddPaidTimeToUser(
