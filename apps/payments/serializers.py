@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from decimal import Decimal
 
 from apps.bookings.exceptions import BookingNotFound
 from apps.bookings.models import DepositReplenishment, Booking
@@ -107,15 +108,14 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
     class Meta:
         model = DepositReplenishment
         fields = (
-            'amount',
             'payment_card',
             'booking',
             'time_packet',
         )
 
     def create(self, validated_data):
-        commission_amount = Booking.get_commission_amount(validated_data['amount'])
-        total_amount = commission_amount + validated_data['amount']
+        commission_amount = Booking.get_commission_amount(validated_data['time_packet'].price)
+        total_amount = commission_amount + Decimal(validated_data['time_packet'].price)
         payment, error = OVRecurrentPaymentService(
             is_replenishment=True,
             replenishment_reference=validated_data.get('booking').uuid,
