@@ -173,8 +173,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         "NAME": os.getenv("DB_NAME", "gamerprodb"),
         "USER": os.getenv("DB_USER", "gamerprodb"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
-        "HOST": os.getenv("DB_HOST", "gp-postgres"),
+        # "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
+        "PASSWORD": "6N6FvfsnjN4dgqE",
+        # "HOST": os.getenv("DB_HOST", "gp-postgres"),
+        "HOST": "195.49.210.250", # os.getenv("DB_HOST", "gp-postgres"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }

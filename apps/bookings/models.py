@@ -95,6 +95,14 @@ class BookedComputer(models.Model):
         on_delete=models.PROTECT,
     )
 
+    @property
+    def is_active_session(self):
+        return self.computer.is_active_session
+
+    @property
+    def is_locked(self):
+        return self.computer.is_locked
+
 
 class DepositReplenishment(TimestampModel):
     gizmo_id = models.IntegerField(null=True)

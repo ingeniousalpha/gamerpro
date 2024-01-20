@@ -1,6 +1,14 @@
 from django.contrib import admin
 from apps.clubs.admin import FilterByClubMixin
-from .models import Booking
+from .models import Booking, BookedComputer
+
+
+class BookedComputerInline(admin.TabularInline):
+    model = BookedComputer
+    fields = ('computer', 'is_active_session', 'is_locked',)
+    readonly_fields = ('is_active_session', 'is_locked',)
+    extra = 0
+    can_delete = False
 
 
 @admin.register(Booking)
@@ -14,3 +22,5 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
 
     def computers(self, obj):
         return ", ".join([str(comp.computer.number) for comp in obj.computers.all()])
+
+    inlines = [BookedComputerInline]
