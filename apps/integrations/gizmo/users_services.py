@@ -134,10 +134,10 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                 ).update(is_active_session=True)
 
             # when resp_data is [], then it updates all computers
-            ClubComputer.objects.exclude(
-                club_branch_id=self.instance.id,
-                gizmo_id__in=[r['hostId'] for r in resp_data],
-            ).filter(is_active_session=True).update(is_active_session=False)
+            ClubComputer.objects.filter(club_branch_id=self.instance.id)\
+                .exclude(gizmo_id__in=[r['hostId'] for r in resp_data],)\
+                .filter(is_active_session=True)\
+                .update(is_active_session=False)
 
             for user_session in resp_data:
                 active_users.append({
@@ -145,9 +145,12 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                     "computer_gizmo_id": user_session['hostId']
                 })
 
+            # Bookings where:
+            # 1 user played and logged out from computer
+            # 2 session started and user didn't cancel and admin logged out the user from admin panel
             uncompleted_bookings = Booking.objects.filter(
                 is_starting_session=False,
-                status__in=[BookingStatuses.PLAYING],
+                status__in=[BookingStatuses.PLAYING, BookingStatuses.SESSION_STARTED],
                 club_branch_id=self.instance.id,
             )
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
@@ -157,6 +160,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
                     booking.save(update_fields=['status'])
                     send_push_about_booking_status(booking.uuid, BookingStatuses.COMPLETED)
 
+            # Bookings where computer is turning on...
             starting_bookings = Booking.objects.filter(club_branch_id=self.instance.id, is_starting_session=True)
             for booking in starting_bookings:
                 if booking.club_user.gizmo_id in active_users_ids:
@@ -182,6 +186,9 @@ class GizmoStartUserSessionService(BaseGizmoService):
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError
+        else:
+            self.instance.is_starting_session = True
+            self.instance.save()
 
 
 class GizmoEndUserSessionService(BaseGizmoService):
