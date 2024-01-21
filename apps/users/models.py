@@ -97,3 +97,23 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     def get_club_account(self, club_branch):
         return self.club_accounts.filter(club_branch=club_branch).first()
+
+
+class UserOneVisionPayer(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="onevision_payers",
+        null=True, blank=True
+    )
+    club = models.ForeignKey(
+        "clubs.Club",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="onevision_payers",
+    )
+    payer_id = models.CharField(
+        "ID юзера в платежной системе",
+        null=True, blank=True,
+        max_length=255
+    )

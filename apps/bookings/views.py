@@ -62,7 +62,11 @@ class RetryPaymentForBookingByTimePacketView(JSONRendererMixin, BookingMixin, Ge
     queryset = Booking.objects.all()
 
     def post(self, request, booking_uuid):
-        payment_url = OVInitPaymentService(instance=self.get_object()).run()
+        booking = self.get_object()
+        payment_url = OVInitPaymentService(
+            instance=booking,
+            club_code=booking.club_branch.club.code,
+        ).run()
         if payment_url:
             return Response({
                 "booking_uuid": str(booking_uuid),

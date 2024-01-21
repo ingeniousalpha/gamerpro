@@ -95,9 +95,15 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
         fields = BaseCreateBookingSerializer.Meta.fields + ('amount',)
 
     def extra_task(self, instance, validated_data):
-        if not instance.club_user.user.outer_payer_id:
-            OVCreatePayerService(instance=instance.club_user.user).run()
-        payment_url = OVInitPaymentService(instance=instance).run()
+        if not instance.club_user.onevision_payer_id:
+            OVCreatePayerService(
+                instance=instance.club_user.user,
+                club_code=instance.club_branch.club.code,
+            ).run()
+        payment_url = OVInitPaymentService(
+            instance=instance,
+            club_code=instance.club_branch.club.code,
+        ).run()
         if payment_url:
             if config.INTEGRATIONS_TURNED_ON:
                 gizmo_lock_computers(str(instance.uuid))
@@ -120,9 +126,15 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         )
 
     def extra_task(self, instance, validated_data):
-        if not instance.club_user.user.outer_payer_id:
-            OVCreatePayerService(instance=instance.club_user.user).run()
-        payment, error = OVRecurrentPaymentService(instance=instance).run()
+        if not instance.club_user.onevision_payer_id:
+            OVCreatePayerService(
+                instance=instance.club_user.user,
+                club_code=instance.club_branch.club.code,
+            ).run()
+        payment, error = OVRecurrentPaymentService(
+            instance=instance,
+            club_code=instance.club_branch.club.code,
+        ).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
         if config.INTEGRATIONS_TURNED_ON:

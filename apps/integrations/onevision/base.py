@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.common.utils import b64_encode, b64_decode
+from apps.integrations.onevision.exceptions import OneVisionServiceInputDataInvalid
 from apps.integrations.services import BaseService
 from apps.integrations.services.base import ServiceLoggingMixin
 
@@ -20,13 +21,29 @@ class BaseOneVisionService(ServiceLoggingMixin, BaseService):
     }
     # instance = Payment
     host = "https://1vision.app"
+    club_api_key: str = None
+    club_api_secret_key: str = None
+
+    def __init__(self, instance=None, **kwargs):
+        super().__init__(instance, **kwargs)
+
+        if not kwargs.get('club_code'):
+            raise OneVisionServiceInputDataInvalid
+
+        club_api_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_KEY")
+        club_api_secret_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_SECRET_KEY")
+        if not club_api_key or club_api_secret_key:
+            raise OneVisionServiceInputDataInvalid
+
+        self.club_api_key = club_api_key
+        self.club_api_secret_key = club_api_secret_key
 
     def log_error(self, e):
         logger.info(f"{self.__class__.__name__} Error: {e}")
 
     def form_sign(self, data):
         return hmac.new(
-            settings.ONE_VISION_API_SECRET_KEY.encode('ascii'),
+            self.club_api_secret_key.encode('ascii'),
             data.encode('ascii'),
             'MD5'
         ).hexdigest()

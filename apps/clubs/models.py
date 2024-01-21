@@ -8,12 +8,13 @@ class HallTypesManagerMixin:
 
 class Club(models.Model):
     name = models.CharField(max_length=50)
+    code = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = "Компьютерный Клуб"
-        verbose_name_plural = "Компьютерные Клубы"
+        verbose_name = "Клуб"
+        verbose_name_plural = "Клубы"
 
     def __str__(self):
         return self.name
@@ -190,6 +191,11 @@ class ClubBranchUser(models.Model):
             if b.is_active:
                 return True
         return False
+
+    @property
+    def onevision_payer_id(self):
+        if payer := self.user.onevision_payers.filter(club=self.club_branch.club).first():
+            return payer.payer_id
 
     @property
     def is_verified(self):

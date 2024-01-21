@@ -13,7 +13,7 @@ class OVCreatePayerService(BaseOneVisionService):
 
     def run_service(self):
         return self.fetch(data=self.form_encoded_data({
-            "api_key": settings.ONE_VISION_API_KEY,
+            "api_key": self.club_api_key,
             "description": str(self.instance.secret_key)
         }))
 
@@ -22,6 +22,7 @@ class OVCreatePayerService(BaseOneVisionService):
         if response and response.get('success'):
             resp_data = b64_decode(response['data'])
             return {
-                "outer_payer_id": resp_data['payer_key']
+                "outer_payer_id": resp_data['payer_key'],
+                "club_code": self.kwargs.get('club_code')
             }
         return {}

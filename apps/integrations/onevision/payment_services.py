@@ -18,7 +18,7 @@ class OVInitPaymentService(BaseOneVisionService):
 
     def run_service(self):
         return self.fetch(data=self.form_encoded_data({
-            "api_key": settings.ONE_VISION_API_KEY,
+            "api_key": self.club_api_key,
             "expiration": date_format(self.instance.expiration_date),
             "amount": str(self.instance.total_amount),
             "currency": "KZT",
@@ -64,7 +64,7 @@ class OVRecurrentPaymentService(BaseOneVisionService):
             self.kwargs['reference'] = str(self.instance.uuid)
 
         return self.fetch(data=self.form_encoded_data({
-            "api_key": settings.ONE_VISION_API_KEY,
+            "api_key": self.club_api_key,
             "amount": str(self.kwargs.get('total_amount', '')) or str(self.instance.total_amount),
             "expiration": date_format(timezone.now()),
             "currency": "KZT",

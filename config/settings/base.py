@@ -173,10 +173,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         "NAME": os.getenv("DB_NAME", "gamerprodb"),
         "USER": os.getenv("DB_USER", "gamerprodb"),
-        # "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
-        "PASSWORD": "6N6FvfsnjN4dgqE",
-        # "HOST": os.getenv("DB_HOST", "gp-postgres"),
-        "HOST": "195.49.210.250", # os.getenv("DB_HOST", "gp-postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
+        # "PASSWORD": "6N6FvfsnjN4dgqE",
+        "HOST": os.getenv("DB_HOST", "gp-postgres"),
+        # "HOST": "195.49.210.250", # os.getenv("DB_HOST", "gp-postgres"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
@@ -316,8 +316,11 @@ CELERY_TASK_PUBLISH_RETRY = False
 CELERY_DISABLE_RATE_LIMITS = False
 CELERY_TASK_TRACK_STARTED = True
 
-ONE_VISION_API_KEY = os.getenv("ONE_VISION_API_KEY")
-ONE_VISION_API_SECRET_KEY = os.getenv("ONE_VISION_API_SECRET_KEY")
+ONE_VISION_LIBERTY_API_KEY = os.getenv("ONE_VISION_LIBERTY_API_KEY")
+ONE_VISION_LIBERTY_API_SECRET_KEY = os.getenv("ONE_VISION_LIBERTY_API_SECRET_KEY")
+
+ONE_VISION_BRO_API_KEY = os.getenv("ONE_VISION_BRO_API_KEY")
+ONE_VISION_BRO_API_SECRET_KEY = os.getenv("ONE_VISION_BRO_API_SECRET_KEY")
 
 # CKEDITOR_UPLOAD_PATH = "ncrm_helper"
 
