@@ -88,6 +88,7 @@ class ClubAdmin(admin.ModelAdmin):
     fields = (
         'name',
         'description',
+        'code',
         'is_bro_chain',
     )
 
