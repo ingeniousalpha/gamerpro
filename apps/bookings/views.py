@@ -118,6 +118,8 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
             send_push_about_booking_status.delay(booking.uuid, BookingStatuses.PLAYING)
 
         elif booking.status == BookingStatuses.SESSION_STARTED:
+            booking.status = BookingStatuses.PLAYING
+            booking.save(update_fields=['status'])
             gizmo_unlock_computers.delay(booking.uuid)
 
         return Response({})
