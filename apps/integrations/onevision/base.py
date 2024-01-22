@@ -32,7 +32,7 @@ class BaseOneVisionService(ServiceLoggingMixin, BaseService):
 
         club_api_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_KEY")
         club_api_secret_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_SECRET_KEY")
-        if not club_api_key or club_api_secret_key:
+        if not club_api_key or not club_api_secret_key:
             raise OneVisionServiceInputDataInvalid
 
         self.club_api_key = club_api_key
