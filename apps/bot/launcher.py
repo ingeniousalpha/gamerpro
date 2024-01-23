@@ -291,9 +291,9 @@ async def choose_plan(callback: types.CallbackQuery):
         args=[user_login]
     )
     await callback.message.edit_text(
-        text=callback.message.text + "\n\n<b>Верифицирован</b>",
-        reply_markup=types.ReplyKeyboardRemove()
+        text=callback.message.text + "\n\n<b>Верифицирован</b>"
     )
+    await callback.message.edit_reply_markup(reply_markup=types.ReplyKeyboardRemove())
     await callback.answer(text="Юзер верифицирован, его сессия запускается...", show_alert=True)
 
 
