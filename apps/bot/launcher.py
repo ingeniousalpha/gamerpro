@@ -10,7 +10,7 @@ from os import getenv
 from celery import Celery
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, InlineKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.utils.markdown import hbold
@@ -103,8 +103,57 @@ async def command_start_handler(message: Message) -> None:
         if not admin:
             await message.answer(hey_msg, reply_markup=get_phone_keyboard())
         else:
-            await message.answer("You already registered!")
+            await message.answer("Ты уже зарегистрированный админ!")
     await pool.close()
+
+
+@dp.message(F.text, Command("info"))
+async def command_info_handler(message: Message) -> None:
+    if message.from_user.is_bot:
+        return
+
+    pool = await create_db_pool()
+    async with pool.acquire() as connection:
+        admin = await connection.fetchrow(
+            f"SELECT a.id, a.tg_chat_id, a.is_active, cb.name FROM clubs_clubbranchadmin a "
+            f"JOIN clubs_clubbranch cb on a.club_branch_id=cb.id "
+            f"WHERE tg_chat_id = $1",
+            str(message.chat.id)
+        )
+        print(admin)
+        status = "На смене" if admin.get('is_active') else "Не на смене"
+
+    await pool.close()
+    await message.answer(
+        f"Ты админ в точке: {admin.get('name')}\n"
+        f"Статус: <b>{status}</b>"
+    )
+
+
+@dp.message(F.text, Command("onshift"))
+async def command_info_handler(message: Message) -> None:
+    if message.from_user.is_bot:
+        return
+
+    pool = await create_db_pool()
+    async with pool.acquire() as connection:
+        admin = await connection.fetchrow(
+            f"SELECT * FROM clubs_clubbranchadmin a "
+            f"WHERE tg_chat_id = $1",
+            str(message.chat.id)
+        )
+        print(admin)
+        async with connection.transaction():
+            await connection.execute(
+                "UPDATE clubs_clubbranchadmin SET is_active = $1 WHERE club_branch_id = $2",
+                False, admin.get('club_branch_id'),
+            )
+            await connection.execute(
+                "UPDATE clubs_clubbranchadmin SET is_active = $1 WHERE tg_chat_id = $2",
+                True, admin.get('tg_chat_id'),
+            )
+    await pool.close()
+    await message.answer("Ты теперь на смене")
 
 
 @dp.message(F.contact)
@@ -130,9 +179,9 @@ async def get_admin_mobile_phone(message: types.Message) -> None:
                     )
                 # TODO: fetch all BRO club branches
                 clubs = await connection.fetch(f"SELECT * FROM clubs_clubbranch WHERE club_id = 2")
-                await message.answer("OK, your phone verified 👍\n\nNow, choose your club branch", reply_markup=get_club_branches_keyboard(clubs))
+                await message.answer("OK, твой телефон подтвержден 👍\n\nТеперь выбери точку клуба:", reply_markup=get_club_branches_keyboard(clubs))
             else:
-                await message.answer("There is no such client")
+                await message.answer("Такого номера не найдено")
         await pool.close()
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
@@ -190,7 +239,6 @@ async def main() -> None:
 #         rclient.close()
 
 
-
 def get_subscription_plans_keyboard(db_plans, used_trial=False):
     buttons = [
         [types.InlineKeyboardButton(
@@ -229,7 +277,7 @@ async def choose_club_branch(callback: types.CallbackQuery):
             )
 
         await callback.message.answer(
-            "SAVED! Now you will get notifications about newly registered users",
+            "Сохранено! Теперь ты будешь получать уведомления о новых зарегистрированных юзерах",
             reply_markup=types.ReplyKeyboardRemove()
         )
     await pool.close()
@@ -242,7 +290,11 @@ async def choose_plan(callback: types.CallbackQuery):
         name="apps.bot.tasks.bot_create_gizmo_user_task",
         args=[user_login]
     )
-    await callback.answer(text="User is verified", show_alert=True)
+    await callback.message.edit_text(
+        text=callback.message.text + "\n\n<b>Верифицирован</b>",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
+    await callback.answer(text="Юзер верифицирован, его сессия запускается...", show_alert=True)
 
 
 if __name__ == "__main__":

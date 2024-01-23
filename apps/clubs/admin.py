@@ -170,5 +170,9 @@ class ClubBranchAdminModelAdmin(admin.ModelAdmin):
         'mobile_phone',
         'tg_chat_id',
         'tg_username',
+        'is_active',
+        'club_branch',
+    )
+    list_filter = (
         'club_branch',
     )
