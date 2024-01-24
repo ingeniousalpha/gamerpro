@@ -90,4 +90,6 @@ class DocumentListSerializer(serializers.ModelSerializer):
     def get_file(self, obj):
         if obj.code == "privacy_policy":
             return "https://server.gamerpro.kz/api/documents/privacy_policy"
+        if obj.code == "public_offer":
+            return "https://server.gamerpro.kz/api/documents/public_offer"
         return self.context['request'].build_absolute_uri(obj.file.url)

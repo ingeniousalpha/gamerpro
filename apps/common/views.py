@@ -21,6 +21,11 @@ class DocumentPrivacyPolicyView(PublicJSONRendererMixin, GenericAPIView):
         return render(request, "privacy_policy.html")
 
 
+class DocumentPublicOfferView(PublicJSONRendererMixin, GenericAPIView):
+    def get(self, request):
+        return render(request, "public_offer.html")
+
+
 def dashboard_view(request):
     queryset = Booking.objects.all()
     bookings_count_total = queryset.count()
