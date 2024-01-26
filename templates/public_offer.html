@@ -5,14 +5,34 @@
     <meta charset="UTF-8">
     <title>Политика Конфиденциальности GamerPro</title>
     <style>
+
+        body {
+            margin: 0;
+        }
         .logo {
             height: 100px;
             width: 100px;
         }
+        .header {
+            background: black;
+            padding: 25px;
+            margin: 0;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+        .namediv {
+            font-size: 50pt;
+            font-family: system-ui;
+            margin-left: 25px;
+        }
     </style>
 </head>
 <body>
-<img class="logo" src="{% static 'images/bro_logo.png' %}" alt="Logo BRO">
+<div class="header">
+    <img class="logo" src="{% static 'images/bro_logo.png' %}" alt="Logo BRO">
+    <div class="namediv">BRO</div>
+</div>
 <h1>Публичная Оферта</h1>
 <h2>1. Общие положения</h2>
 <p>1.1. Исполнитель публикует настоящую Оферту с предложением в адрес
