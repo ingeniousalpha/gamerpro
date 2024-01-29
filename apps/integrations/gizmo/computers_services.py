@@ -50,7 +50,7 @@ class GizmoGetComputersService(BaseGizmoService):
                 ).first()
                 if computer is None:
                     group_id = None
-                    if group := ClubComputerGroup.objects.filter(gizmo_id=gizmo_computer['hostGroupId']).first():
+                    if group := ClubComputerGroup.objects.filter(gizmo_id=gizmo_computer['hostGroupId'], club_branch=self.instance).first():
                         group_id = group.id
                     serializer = self.save_serializer(
                         data={
