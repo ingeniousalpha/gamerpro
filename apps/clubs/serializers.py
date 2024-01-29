@@ -54,7 +54,7 @@ class ClubUserSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
     def get_user(self, obj):
-        if self.user:
+        if self.user and ClubBranchUser.objects.filter(user=self.user, club_branch=obj).exists():
             return BaseClubUserSerializer(obj, context=self.context).data
 
 
