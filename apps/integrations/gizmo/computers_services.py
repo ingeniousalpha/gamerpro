@@ -46,7 +46,7 @@ class GizmoGetComputersService(BaseGizmoService):
             for gizmo_computer in resp_data:
                 computer = ClubComputer.objects.filter(
                     gizmo_id=gizmo_computer['id'],
-                    club_branch_id=self.instance.id
+                    # club_branch_id=self.instance.id
                 ).first()
                 if computer is None:
                     group_id = None
