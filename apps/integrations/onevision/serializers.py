@@ -10,7 +10,7 @@ User = get_user_model()
 
 
 class OVSavePayerIDSerializer(serializers.ModelSerializer):
-    code = serializers.CharField()
+    club_code = serializers.CharField()
 
     class Meta:
         model = User
