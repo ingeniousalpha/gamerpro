@@ -10,11 +10,76 @@ from .exceptions import UserNotFound
 from .services import verify_otp, generate_access_and_refresh_tokens_for_user
 from apps.users.services import get_or_create_user_by_phone
 from apps.bot.tasks import bot_notify_about_new_user_task
-from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin
+from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin, NeedToInputUserMobilePhone
 from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
 from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService
 User = get_user_model()
+
+
+class SigninByUsernameNewSerializer(serializers.ModelSerializer):
+    club_branch = serializers.IntegerField(write_only=True)
+    login = serializers.CharField(write_only=True)
+    mobile_phone = serializers.CharField(write_only=True, required=False)
+    first_name = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            "club_branch",
+            "login",
+            "mobile_phone",
+            "first_name",
+        )
+
+    def validate(self, attrs):
+        attrs['club_branch'] = ClubBranch.objects.filter(id=attrs['club_branch']).first()
+        if not attrs['club_branch']:
+            raise ClubBranchNotFound
+
+        GizmoGetUsersService(instance=attrs['club_branch']).run()
+
+        club_user = ClubBranchUser.objects.filter(login=attrs['login'], club_branch=attrs['club_branch']).first()
+        print(club_user)
+        if not club_user and not attrs.get('mobile_phone'):
+            raise NeedToInputUserMobilePhone
+        elif not club_user and attrs.get('mobile_phone'):
+            if attrs['club_branch'].club.name.lower() != "bro":
+                gizmo_user_id = GizmoCreateUserService(instance=attrs['club_branch'], **attrs).run()
+                attrs['gizmo_user_id'] = gizmo_user_id
+        else:
+            attrs['club_user'] = club_user
+        return attrs
+
+    def create(self, validated_data):
+        if validated_data.get('club_user'):
+            club_user = validated_data.get('club_user')
+            if not club_user.user:
+                user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
+                club_user.user = user
+                club_user.save()
+            else:
+                user = club_user.user
+        elif validated_data.get('gizmo_user_id') or validated_data['club_branch'].club.name.lower() == "bro":
+            user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
+            ClubBranchUser.objects.create(
+                club_branch=validated_data['club_branch'],
+                gizmo_id=validated_data.get('gizmo_user_id'),
+                gizmo_phone=validated_data['mobile_phone'],
+                login=validated_data['login'],
+                first_name=validated_data['first_name'],
+                user=user,
+            )
+            if validated_data['club_branch'].club.name.lower() == "bro":
+                bot_notify_about_new_user_task.delay(
+                    club_branch_id=validated_data['club_branch'].id,
+                    login=validated_data['login'],
+                    first_name=validated_data['first_name'],
+                )
+        return user
+
+    def to_representation(self, instance):
+        return generate_access_and_refresh_tokens_for_user(instance)
 
 
 class SigninWithoutOTPSerializer(serializers.ModelSerializer):
