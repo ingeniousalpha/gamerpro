@@ -23,6 +23,7 @@ class Club(models.Model):
 class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
+    trader_name = models.CharField(max_length=256, default="")
     address = models.CharField(max_length=255)
     api_host = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
     api_user = models.CharField("Логин для API филиала", max_length=20, null=True)

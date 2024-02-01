@@ -223,6 +223,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
             'id',
             'name',
             'description',
+            'trader_name',
             'image',
             'address',
             'is_favorite',
