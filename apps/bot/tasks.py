@@ -61,13 +61,13 @@ def bot_create_gizmo_user_task(club_branch_user_login):
         elif not branch_club_user:
             try:
                 gizmo_user_id = GizmoCreateUserService(
-                    instance=club_branch,
+                    instance=branch,
                     login=club_user.login,
                     first_name=club_user.first_name,
                     mobile_phone=club_user.gizmo_phone,
                 ).run()
                 ClubBranchUser.objects.create(
-                    club_branch=club_branch,
+                    club_branch=branch,
                     login=club_user.login,
                     user=club_user.user,
                     gizmo_id=gizmo_user_id,
@@ -76,21 +76,13 @@ def bot_create_gizmo_user_task(club_branch_user_login):
                 )
             except GizmoLoginAlreadyExistsError as e:
                 new_club_user = GizmoGetUserByUsernameService(
-                    instance=club_branch, username=club_user.login
+                    instance=branch, username=club_user.login
                 ).run()
                 new_club_user.user = club_user.user
+                new_club_user.save()
             except Exception:
                 continue
 
-        # TODO:
-        #   if clubbranchuser
-        #       branch.user = club_user.user
-        #   else
-        #       create gizmo user
-        #       if error:
-        #           get gizmo user and create clubbranchuser
-        #       else
-        #           create clubbranchuser
-
     booking = club_user.bookings.last()
-    gizmo_bro_book_computers(booking.uuid, start_now=True)
+    if booking:
+        gizmo_bro_book_computers(booking.uuid, start_now=True)
