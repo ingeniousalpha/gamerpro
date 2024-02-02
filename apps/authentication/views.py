@@ -10,7 +10,7 @@ from apps.common.mixins import PublicJSONRendererMixin
 # from apps.notifications.tasks import task_send_letter_for_email_confirmation
 from .serializers import (
     SigninWithoutOTPSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
-    MyTokenObtainSerializer,
+    MyTokenObtainSerializer, SigninByUsernameNewSerializer,
 )
 from .services import generate_access_and_refresh_tokens_for_user
 from ..bookings.services import check_user_session
@@ -39,6 +39,25 @@ class SigninView(PublicJSONRendererMixin, CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
+    serializer_class = SigninByUsernameNewSerializer
+    queryset = User.objects.all()
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # club_user = get_club_branch_user_by_username(serializer.data['username'])
+        #
+        # if not club_user:
+        #     club_user = GizmoGetUserByUsernameService(
+        #         instance=serializer.context['club_branch'], username=serializer.data['username']
+        #     ).run()
+        # check_user_session(club_user)
+
+        return Response(serializer.data)
+
+
 class VerifyOTPView(PublicJSONRendererMixin, GenericAPIView):
     serializer_class = VerifyOTPSerializer
     queryset = User.objects.all()
@@ -47,30 +66,6 @@ class VerifyOTPView(PublicJSONRendererMixin, GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(data=serializer.validated_data)
-
-
-class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
-    serializer_class = SigninByUsernameSerializer
-    queryset = User.objects.all()
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        club_user = get_club_branch_user_by_username(serializer.data['username'])
-
-        if not club_user:
-            club_user = GizmoGetUserByUsernameService(
-                instance=serializer.context['club_branch'], username=serializer.data['username']
-            ).run()
-
-        if not club_user.user:
-            user, _ = get_or_create_user_by_phone(club_user.gizmo_phone)
-            club_user.user = user
-            club_user.save()
-
-        check_user_session(club_user)
-
-        return Response(generate_access_and_refresh_tokens_for_user(club_user.user))
 
 
 class TokenRefreshView(PublicJSONRendererMixin, DRFTokenRefreshView):
