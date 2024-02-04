@@ -44,6 +44,8 @@ class GizmoGetComputersService(BaseGizmoService):
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
             for gizmo_computer in resp_data:
+                if gizmo_computer['isDeleted']:
+                    continue
                 computer = ClubComputer.objects.filter(
                     gizmo_id=gizmo_computer['id'],
                     club_branch_id=self.instance.id
