@@ -19,19 +19,27 @@ class DocumentListView(PublicJSONRendererMixin, ListAPIView):
 
 class DocumentPrivacyPolicyView(PublicJSONRendererMixin, GenericAPIView):
     def get(self, request):
-        club_branch_id = int(request.GET.get('club_branch'))
-        club_branch = ClubBranch.objects.get(id=club_branch_id)
+        trader_name = None
+        if request.GET.get('club_branch'):
+            club_branch_id = int(request.GET.get('club_branch'))
+            club_branch = ClubBranch.objects.filter(id=club_branch_id).first()
+            if club_branch:
+                trader_name = club_branch.trader_name
         return render(request, "privacy_policy.html", {
-            "trader_name": club_branch.trader_name
+            "trader_name": trader_name
         })
 
 
 class DocumentPublicOfferView(PublicJSONRendererMixin, GenericAPIView):
     def get(self, request):
-        club_branch_id = int(request.GET.get('club_branch'))
-        club_branch = ClubBranch.objects.get(id=club_branch_id)
+        trader_name = None
+        if request.GET.get('club_branch'):
+            club_branch_id = int(request.GET.get('club_branch'))
+            club_branch = ClubBranch.objects.filter(id=club_branch_id).first()
+            if club_branch:
+                trader_name = club_branch.trader_name
         return render(request, "public_offer.html", {
-            "trader_name": club_branch.trader_name
+            "trader_name": trader_name
         })
 
 
