@@ -8,6 +8,7 @@ from apps.common.mixins import PublicJSONRendererMixin
 from .models import Document
 from .serializers import DocumentListSerializer
 from ..bookings.models import Booking
+from ..clubs.models import ClubBranch
 
 
 class DocumentListView(PublicJSONRendererMixin, ListAPIView):
@@ -18,12 +19,20 @@ class DocumentListView(PublicJSONRendererMixin, ListAPIView):
 
 class DocumentPrivacyPolicyView(PublicJSONRendererMixin, GenericAPIView):
     def get(self, request):
-        return render(request, "privacy_policy.html")
+        club_branch_id = int(request.GET.get('club_branch'))
+        club_branch = ClubBranch.objects.get(id=club_branch_id)
+        return render(request, "privacy_policy.html", {
+            "trader_name": club_branch.trader_name
+        })
 
 
 class DocumentPublicOfferView(PublicJSONRendererMixin, GenericAPIView):
     def get(self, request):
-        return render(request, "public_offer.html")
+        club_branch_id = int(request.GET.get('club_branch'))
+        club_branch = ClubBranch.objects.get(id=club_branch_id)
+        return render(request, "public_offer.html", {
+            "trader_name": club_branch.trader_name
+        })
 
 
 def dashboard_view(request):
