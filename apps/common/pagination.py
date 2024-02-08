@@ -3,7 +3,7 @@ from rest_framework import pagination, status
 
 
 class CustomPagination(pagination.PageNumberPagination):
-    page_size = 5
+    page_size = 10
     page_size_query_param = 'count'
 
     def get_paginated_response(self, data):
