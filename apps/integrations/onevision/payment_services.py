@@ -73,7 +73,7 @@ class OVRecurrentPaymentService(BaseOneVisionService):
             "lang": "ru",
             "pay_token": self.kwargs.get('pay_token', '') or self.instance.payment_card.pay_token,
             "params": {
-                "user_id": self.kwargs.get('outer_payer_id', '') or self.instance.club_user.user.outer_payer_id,
+                "user_id": self.kwargs.get('outer_payer_id', '') or self.instance.club_user.onevision_payer_id,
                 "flag_get_url": 1,
                 "pay_token_flag": 1,
                 "verification_flag": 0,
@@ -86,7 +86,7 @@ class OVRecurrentPaymentService(BaseOneVisionService):
         if resp_data and response.get('success'):
             resp_data['description'] = self.kwargs.get('description')
             if 'params' not in resp_data:
-                resp_data['params'] = {'user_id': self.kwargs.get('outer_payer_id') or self.instance.club_user.user.outer_payer_id}
+                resp_data['params'] = {'user_id': self.kwargs.get('outer_payer_id') or self.instance.club_user.onevision_payer_id}
             payment = handle_ov_response(resp_data, is_webhook=False)
             return payment, resp_data['processing_error_msg']
         else:

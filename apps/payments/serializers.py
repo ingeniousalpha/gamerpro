@@ -131,7 +131,7 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
             replenishment_reference=validated_data.get('booking').uuid,
             total_amount=validated_data['total_amount'],
             pay_token=validated_data['payment_card'].pay_token,
-            outer_payer_id=self.user.outer_payer_id,
+            outer_payer_id=validated_data['club_user'].onevision_payer_id,
         ).run()
         if error:
             raise OVRecurrentPaymentFailed(error)
