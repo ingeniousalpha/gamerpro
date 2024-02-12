@@ -138,6 +138,7 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
 class ClubComputerListSerializer(serializers.ModelSerializer):
     hall_name = serializers.CharField(source='group.name')
     hall_id = serializers.CharField(source='group.id')
+    is_booked = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubComputer
@@ -148,6 +149,9 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
             'hall_name',
             'hall_id',
         )
+
+    def get_is_booked(self, obj):
+        return cache.get(f'BOOKING_STATUS_COMP_{obj.id}') or obj.is_booked
 
 
 class ClubBranchDetailSerializer(ClubUserSerializer):
