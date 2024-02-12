@@ -131,14 +131,14 @@ class SigninWithoutOTPSerializer(serializers.ModelSerializer):
                 gizmo_id=validated_data.get('gizmo_user_id'),
                 gizmo_phone=validated_data['mobile_phone'],
                 login=validated_data['login'],
-                first_name=validated_data['first_name'],
+                first_name=validated_data.get('first_name'),
                 user=user,
             )
             if validated_data['club_branch'].club.name.lower() == "bro":
                 bot_notify_about_new_user_task.delay(
                     club_branch_id=validated_data['club_branch'].id,
                     login=validated_data['login'],
-                    first_name=validated_data['first_name'],
+                    first_name=validated_data.get('first_name'),
                 )
         return user
 
