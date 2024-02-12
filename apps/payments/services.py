@@ -8,6 +8,7 @@ from apps.payments import PaymentStatuses
 from apps.integrations.onevision.serializers import SavePaymentSerializer
 from apps.bookings.models import Booking
 from apps.payments.models import PaymentWebhook
+from apps.users.models import UserOneVisionPayer
 
 User = get_user_model()
 
@@ -34,7 +35,11 @@ def handle_ov_response(webhook_data, is_webhook=True):
         outer_payer_id = webhook_data['params']['user_id']
 
     booking_uuid = None
-    user = User.objects.filter(outer_payer_id=outer_payer_id).first()
+    payer = UserOneVisionPayer.objects.filter(payer_id=outer_payer_id).first()
+    if not payer:
+        raise Exception("User not found by OneVision payer_id")
+
+    user = payer.user
     payment_data = {
         'outer_id': webhook_data['transaction_id'],
         'amount': webhook_data['amount'],
