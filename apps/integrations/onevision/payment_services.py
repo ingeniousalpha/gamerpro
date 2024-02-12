@@ -28,7 +28,7 @@ class OVInitPaymentService(BaseOneVisionService):
             # "failure_url": f"{settings.SITE_DOMAIN}/api/payments/fail?booking_uuid={str(self.instance.uuid)}",
             "lang": "ru",
             "params": {
-                "user_id": self.instance.club_user.user.outer_payer_id,
+                "user_id": self.instance.club_user.onevision_payer_id,
                 "flag_get_url": 1,
                 "pay_token_flag": 1,
                 "verification_flag": 0,
