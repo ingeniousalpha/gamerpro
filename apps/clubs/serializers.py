@@ -236,7 +236,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
         )
 
     def get_name(self, obj):
-        return obj.club.name
+        return obj.__str__()
 
     def get_description(self, obj):
         return obj.club.description
