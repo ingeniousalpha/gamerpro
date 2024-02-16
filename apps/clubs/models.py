@@ -39,6 +39,7 @@ class ClubBranch(models.Model):
     gizmo_payment_method = models.IntegerField(default=2)
     is_active = models.BooleanField(default=False)
     is_ready = models.BooleanField(default=False)
+    priority = models.IntegerField(default=0)
     image = models.ImageField(upload_to='images', null=True, blank=True)
     trader = models.ForeignKey(
         ClubBranchLegalEntity,

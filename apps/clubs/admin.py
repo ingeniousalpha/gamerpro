@@ -107,6 +107,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'gizmo_payment_method',
         'is_active',
         'is_ready',
+        'priority',
         'image',
     )
     inlines = [
