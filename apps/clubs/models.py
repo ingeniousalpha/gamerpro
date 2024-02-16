@@ -38,6 +38,7 @@ class ClubBranch(models.Model):
     api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
     gizmo_payment_method = models.IntegerField(default=2)
     is_active = models.BooleanField(default=False)
+    is_ready = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images', null=True, blank=True)
     trader = models.ForeignKey(
         ClubBranchLegalEntity,
@@ -79,6 +80,7 @@ class ClubComputer(models.Model):
     group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
     is_active_session = models.BooleanField(default=False)
     is_locked = models. BooleanField(default=False)
+    is_broken = models.BooleanField(default=False)
     gizmo_id = models.IntegerField(null=True, db_index=True)
     gizmo_hostname = models.CharField(max_length=10, null=True)
 
@@ -94,7 +96,7 @@ class ClubComputer(models.Model):
 
     @property
     def is_booked(self):
-        return self.is_active_session or self.is_locked
+        return self.is_active_session or self.is_locked or self.is_broken
 
 
 class DayModel(models.Model):

@@ -165,6 +165,7 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
         fields = (
             'id',
             'name',
+            'is_ready',
             'address',
             'is_favorite',
             'user',
@@ -231,6 +232,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
             'image',
             'address',
             'is_favorite',
+            'is_ready',
             'user',
             'landing',
         )
