@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
-from apps.clubs.models import Club
+from apps.clubs.models import Club, ClubBranchLegalEntity
 from apps.payments.models import PaymentCard, Payment
 from apps.users.models import UserOneVisionPayer
 
@@ -10,20 +10,22 @@ User = get_user_model()
 
 
 class OVSavePayerIDSerializer(serializers.ModelSerializer):
-    club_code = serializers.CharField()
+    trader_code = serializers.CharField()
 
     class Meta:
         model = User
         fields = (
             'outer_payer_id',
-            'club_code'
+            'trader_code'
         )
 
     def update(self, instance, validated_data):
-        UserOneVisionPayer.objects.create(
+        UserOneVisionPayer.objects.get_or_create(
             user=instance,
-            club=Club.objects.get(code=validated_data['club_code']),
-            payer_id=validated_data['outer_payer_id']
+            trader=ClubBranchLegalEntity.objects.get(code=validated_data['trader_code']),
+            defaults={
+                "payer_id": validated_data['outer_payer_id']
+            }
         )
         return instance
 

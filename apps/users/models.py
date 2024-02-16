@@ -26,11 +26,6 @@ class User(PermissionsMixin, AbstractBaseUser):
         on_delete=models.SET_NULL,
         related_name="admins",
     )
-    outer_payer_id = models.CharField(
-        "ID юзера в платежной системе",
-        null=True, blank=True,
-        max_length=255
-    )
 
     is_active = models.BooleanField("Активный", default=True)
     is_staff = models.BooleanField("Сотрудник", default=False)
@@ -106,8 +101,8 @@ class UserOneVisionPayer(models.Model):
         related_name="onevision_payers",
         null=True, blank=True
     )
-    club = models.ForeignKey(
-        "clubs.Club",
+    trader = models.ForeignKey(
+        "clubs.ClubBranchLegalEntity",
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name="onevision_payers",

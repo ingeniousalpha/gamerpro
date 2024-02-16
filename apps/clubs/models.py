@@ -20,6 +20,11 @@ class Club(models.Model):
         return self.name
 
 
+class ClubBranchLegalEntity(models.Model):
+    name = models.CharField(max_length=256, default="")
+    code = models.CharField(max_length=30, default="")
+
+
 class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
@@ -31,6 +36,12 @@ class ClubBranch(models.Model):
     gizmo_payment_method = models.IntegerField(default=2)
     is_active = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images', null=True, blank=True)
+    trader = models.ForeignKey(
+        ClubBranchLegalEntity,
+        on_delete=models.PROTECT,
+        related_name="club_branches",
+        null=True
+    )
 
     class Meta:
         verbose_name = "Филиал Клуба"
@@ -195,7 +206,7 @@ class ClubBranchUser(models.Model):
 
     @property
     def onevision_payer_id(self):
-        if payer := self.user.onevision_payers.filter(club=self.club_branch.club).first():
+        if payer := self.user.onevision_payers.filter(trader=self.club_branch.trader).first():
             return payer.payer_id
 
     @property

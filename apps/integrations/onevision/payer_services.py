@@ -23,6 +23,6 @@ class OVCreatePayerService(BaseOneVisionService):
             resp_data = b64_decode(response['data'])
             return {
                 "outer_payer_id": resp_data['payer_key'],
-                "club_code": self.kwargs.get('club_code')
+                "trader_code": self.kwargs.get('club_branch').trader.code
             }
         return {}

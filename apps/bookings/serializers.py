@@ -98,11 +98,11 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
         if not instance.club_user.onevision_payer_id:
             OVCreatePayerService(
                 instance=instance.club_user.user,
-                club_code=instance.club_branch.club.code,
+                club_branch=instance.club_branch,
             ).run()
         payment_url = OVInitPaymentService(
             instance=instance,
-            club_code=instance.club_branch.club.code,
+            club_branch=instance.club_branch,
         ).run()
         if payment_url:
             if config.INTEGRATIONS_TURNED_ON:
@@ -129,11 +129,11 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         if not instance.club_user.onevision_payer_id:
             OVCreatePayerService(
                 instance=instance.club_user.user,
-                club_code=instance.club_branch.club.code,
+                club_branch=instance.club_branch,
             ).run()
         payment, error = OVRecurrentPaymentService(
             instance=instance,
-            club_code=instance.club_branch.club.code,
+            club_branch=instance.club_branch,
         ).run()
         if error:
             raise OVRecurrentPaymentFailed(error)

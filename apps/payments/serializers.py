@@ -42,7 +42,7 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
         commission_amount = Booking.get_commission_amount(validated_data['user_received_amount'])
         total_amount = commission_amount + validated_data['user_received_amount']
         payment, error = OVRecurrentPaymentService(
-            club_code=validated_data['club_branch'].club.code,
+            club_branch=validated_data['club_branch'],
             is_replenishment=True,
             total_amount=total_amount,
             pay_token=validated_data['payment_card'].pay_token,
@@ -82,7 +82,7 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
         commission_amount = Booking.get_commission_amount(validated_data['amount'])
         total_amount = commission_amount + validated_data['amount']
         payment, error = OVRecurrentPaymentService(
-            club_code=validated_data['club_branch'].club.code,
+            club_branch=validated_data['club_branch'],
             is_replenishment=True,
             replenishment_reference=validated_data.get('booking').uuid,
             total_amount=total_amount,
@@ -126,7 +126,7 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
 
     def create(self, validated_data):
         payment, error = OVRecurrentPaymentService(
-            club_code=validated_data['club_branch'].club.code,
+            club_branch=validated_data['club_branch'],
             is_replenishment=True,
             replenishment_reference=validated_data.get('booking').uuid,
             total_amount=validated_data['total_amount'],

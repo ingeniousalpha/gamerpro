@@ -27,11 +27,13 @@ class BaseOneVisionService(ServiceLoggingMixin, BaseService):
     def __init__(self, instance=None, **kwargs):
         super().__init__(instance, **kwargs)
 
-        if not kwargs.get('club_code'):
+        if not kwargs.get('club_branch'):
             raise OneVisionServiceInputDataInvalid
 
-        club_api_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_KEY")
-        club_api_secret_key = getattr(settings, f"ONE_VISION_{kwargs['club_code'].upper()}_API_SECRET_KEY")
+        trader_code = kwargs['club_branch'].trader.code.upper()
+
+        club_api_key = getattr(settings, f"ONE_VISION_{trader_code}_API_KEY")
+        club_api_secret_key = getattr(settings, f"ONE_VISION_{trader_code}_API_SECRET_KEY")
         if not club_api_key or not club_api_secret_key:
             raise OneVisionServiceInputDataInvalid
 

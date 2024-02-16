@@ -65,7 +65,7 @@ class RetryPaymentForBookingByTimePacketView(JSONRendererMixin, BookingMixin, Ge
         booking = self.get_object()
         payment_url = OVInitPaymentService(
             instance=booking,
-            club_code=booking.club_branch.club.code,
+            club_branch=booking.club_branch,
         ).run()
         if payment_url:
             return Response({

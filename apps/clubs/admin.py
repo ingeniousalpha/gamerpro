@@ -177,3 +177,14 @@ class ClubBranchAdminModelAdmin(admin.ModelAdmin):
     list_filter = (
         'club_branch',
     )
+
+
+class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'code',
+    )
+    search_fields = (
+        'code',
+        'name',
+    )
