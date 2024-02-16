@@ -98,6 +98,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'name',
         'trader_name',
+        'trader',
         'address',
         'club',
         'api_host',
