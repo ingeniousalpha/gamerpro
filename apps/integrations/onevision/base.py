@@ -52,9 +52,11 @@ class BaseOneVisionService(ServiceLoggingMixin, BaseService):
         ).hexdigest()
 
     def form_encoded_data(self, raw_data):
-        print(raw_data)
+        print("raw_data: ", raw_data)
         raw_data_base64 = b64_encode(raw_data)
-        return {
+        signed_data = {
             "data": raw_data_base64,
             "sign": self.form_sign(raw_data_base64)
         }
+        print("signed_data: ", signed_data)
+        return signed_data
