@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from constance import config
 from rest_framework import serializers
@@ -18,6 +19,8 @@ from apps.payments import PAYMENT_STATUSES_MAPPER
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
 from apps.integrations.onevision.payment_services import OVInitPaymentService, OVRecurrentPaymentService
+
+logger = logging.getLogger("onevision")
 
 
 class BaseCreateBookingSerializer(
@@ -95,21 +98,24 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
         fields = BaseCreateBookingSerializer.Meta.fields + ('amount',)
 
     def extra_task(self, instance, validated_data):
-        if not instance.club_user.onevision_payer_id:
-            OVCreatePayerService(
-                instance=instance.club_user.user,
+        try:
+            if not instance.club_user.onevision_payer_id:
+                OVCreatePayerService(
+                    instance=instance.club_user.user,
+                    club_branch=instance.club_branch,
+                ).run()
+            payment_url = OVInitPaymentService(
+                instance=instance,
                 club_branch=instance.club_branch,
             ).run()
-        payment_url = OVInitPaymentService(
-            instance=instance,
-            club_branch=instance.club_branch,
-        ).run()
-        if payment_url:
-            if config.INTEGRATIONS_TURNED_ON:
-                gizmo_lock_computers(str(instance.uuid))
-            self.context['payment_url'] = payment_url
-        else:
-            raise Exception
+            if payment_url:
+                if config.INTEGRATIONS_TURNED_ON:
+                    gizmo_lock_computers(str(instance.uuid))
+                self.context['payment_url'] = payment_url
+            else:
+                raise Exception("There is no payment_url")
+        except Exception as e:
+            logger.error(f"CreateBookingByPaymentSerializer Error: {str(e)}")
 
     def to_representation(self, instance):
         return {
@@ -126,26 +132,29 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         )
 
     def extra_task(self, instance, validated_data):
-        if not instance.club_user.onevision_payer_id:
-            OVCreatePayerService(
-                instance=instance.club_user.user,
+        try:
+            if not instance.club_user.onevision_payer_id:
+                OVCreatePayerService(
+                    instance=instance.club_user.user,
+                    club_branch=instance.club_branch,
+                ).run()
+            payment, error = OVRecurrentPaymentService(
+                instance=instance,
                 club_branch=instance.club_branch,
             ).run()
-        payment, error = OVRecurrentPaymentService(
-            instance=instance,
-            club_branch=instance.club_branch,
-        ).run()
-        if error:
-            raise OVRecurrentPaymentFailed(error)
-        if config.INTEGRATIONS_TURNED_ON:
-            if instance.club_branch.club.name.lower() == "bro":
-                gizmo_lock_computers(str(instance.uuid))
-                if instance.club_user.is_verified:
-                    gizmo_bro_book_computers(str(instance.uuid))
-            else:
-                gizmo_book_computers(str(instance.uuid))
-        self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
-        send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by card payment accepted
+            if error:
+                raise OVRecurrentPaymentFailed(error)
+            if config.INTEGRATIONS_TURNED_ON:
+                if instance.club_branch.club.name.lower() == "bro":
+                    gizmo_lock_computers(str(instance.uuid))
+                    if instance.club_user.is_verified:
+                        gizmo_bro_book_computers(str(instance.uuid))
+                else:
+                    gizmo_book_computers(str(instance.uuid))
+            self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
+            send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by card payment accepted
+        except Exception as e:
+            logger.error(f"CreateBookingByPaymentSerializer Error: {str(e)}")
 
     def to_representation(self, instance):
         return {
