@@ -61,7 +61,7 @@ class GizmoGetComputersService(BaseGizmoService):
                             "gizmo_hostname": gizmo_computer['hostname'],
                             "club_branch": self.instance.id,
                             "is_locked": bool(gizmo_computer['state'] == 2),
-                            "is_broken": bool(gizmo_computer['state'] == 1),
+                            "is_broken": bool(gizmo_computer['state'] in [1, 3]),
                             "group": group_id,
                         }
                     )
@@ -72,7 +72,7 @@ class GizmoGetComputersService(BaseGizmoService):
                         self.log_error(e)
                 else:
                     computer.is_locked = bool(gizmo_computer['state'] == 2)
-                    computer.is_broken = bool(gizmo_computer['state'] == 1)
+                    computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
                     computer.save(update_fields=['is_locked', 'is_broken'])
 
 
