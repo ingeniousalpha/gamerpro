@@ -11,6 +11,7 @@ User = get_user_model()
 
 class OVSavePayerIDSerializer(serializers.ModelSerializer):
     trader_code = serializers.CharField()
+    outer_payer_id = serializers.CharField()
 
     class Meta:
         model = User

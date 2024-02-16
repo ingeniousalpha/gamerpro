@@ -24,6 +24,9 @@ class ClubBranchLegalEntity(models.Model):
     name = models.CharField(max_length=256, default="")
     code = models.CharField(max_length=30, default="")
 
+    def __str__(self):
+        return self.name
+
 
 class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")

@@ -2,6 +2,7 @@ import base64
 import hmac
 import json
 import logging
+import os
 import uuid
 
 from django.conf import settings
@@ -32,8 +33,8 @@ class BaseOneVisionService(ServiceLoggingMixin, BaseService):
 
         trader_code = kwargs['club_branch'].trader.code.upper()
 
-        club_api_key = getattr(settings, f"ONE_VISION_{trader_code}_API_KEY")
-        club_api_secret_key = getattr(settings, f"ONE_VISION_{trader_code}_API_SECRET_KEY")
+        club_api_key = os.getenv(f"ONE_VISION_{trader_code}_API_KEY")
+        club_api_secret_key = os.getenv(f"ONE_VISION_{trader_code}_API_SECRET_KEY")
         if not club_api_key or not club_api_secret_key:
             raise OneVisionServiceInputDataInvalid
 
