@@ -179,6 +179,7 @@ class ClubBranchAdminModelAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(ClubBranchLegalEntity)
 class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
     list_display = (
         'name',
