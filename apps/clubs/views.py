@@ -17,12 +17,12 @@ class ClublistView(PublicJSONRendererMixin, ListAPIView):
 
 
 class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
-    queryset = ClubBranch.objects.filter(club__is_bro_chain=False).order_by('priority')
+    queryset = ClubBranch.objects.filter(club__is_bro_chain=False).order_by('-priority')
     serializer_class = ClubBranchListSerializer
 
 
 class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
-    queryset = ClubBranch.objects.filter(club__is_bro_chain=True).order_by('priority')
+    queryset = ClubBranch.objects.filter(club__is_bro_chain=True).order_by('-priority')
     serializer_class = ClubBranchListSerializer
 
 
