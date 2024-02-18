@@ -120,8 +120,8 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     ]
     club_filter_field = "club"
     list_filter = ('club',)
-    list_editable = ('priority', 'is_active', 'is_ready')
-    list_display = ('__str__', 'priority',)
+    list_editable = ('priority', 'is_active', 'is_ready',)
+    list_display = ('__str__', 'priority', 'is_active', 'is_ready',)
 
     def response_change(self, request, obj):
         if "sync_gizmo" in request.POST:
