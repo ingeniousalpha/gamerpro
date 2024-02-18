@@ -120,7 +120,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     ]
     club_filter_field = "club"
     list_filter = ('club',)
-    list_editable = ('priority',)
+    list_editable = ('priority', 'is_active', 'is_ready')
     list_display = ('__str__', 'priority',)
 
     def response_change(self, request, obj):
