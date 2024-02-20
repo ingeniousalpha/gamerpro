@@ -43,5 +43,8 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     def get_queryset(self):
         return super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=timezone.now().weekday() + 1
+            is_active=True, available_days__number=timezone.now().weekday() + 1,
+        ).exclude(
+            available_time_end__gte=timezone.now().astimezone().time(),
+            available_time_start__lte=timezone.now().astimezone().time()
         ).order_by('priority')
