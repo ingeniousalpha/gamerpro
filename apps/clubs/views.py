@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, F
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -29,7 +29,6 @@ class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
 class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     queryset = ClubBranch.objects.all()
     serializer_class = ClubBranchDetailSerializer
-
     def retrieve(self, request, *args, **kwargs):
         _sync_gizmo_computers_state_of_club_branch(self.get_object())
         return super().retrieve(request, *args, **kwargs)
@@ -45,6 +44,6 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
             club_computer_group_id=self.kwargs.get('hall_id'),
             is_active=True, available_days__number=timezone.now().weekday() + 1,
         ).filter(
-            Q(available_time_end__gte=timezone.now().astimezone().time()) |
-            Q(available_time_start__lte=timezone.now().astimezone().time())
+            (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(available_time_end__gte=timezone.now().astimezone().time())) |
+            (Q(available_time_end__gte=timezone.now().astimezone().time()) & Q(available_time_start__gte=F('available_time_end')))
         ).order_by('priority')
