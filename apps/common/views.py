@@ -43,6 +43,19 @@ class DocumentPublicOfferView(PublicJSONRendererMixin, GenericAPIView):
         })
 
 
+class DocumentPaymentPolicyView(PublicJSONRendererMixin, GenericAPIView):
+    def get(self, request):
+        trader_name = None
+        if request.GET.get('club_branch'):
+            club_branch_id = int(request.GET.get('club_branch'))
+            club_branch = ClubBranch.objects.filter(id=club_branch_id).first()
+            if club_branch:
+                trader_name = club_branch.trader_name
+        return render(request, "payment_policy.html", {
+            "trader_name": trader_name
+        })
+
+
 def dashboard_view(request):
     queryset = Booking.objects.all()
     bookings_count_total = queryset.count()
