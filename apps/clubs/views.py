@@ -45,5 +45,7 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
             is_active=True, available_days__number=timezone.now().weekday() + 1,
         ).filter(
             (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(available_time_end__gte=timezone.now().astimezone().time())) |
-            (Q(available_time_end__gte=timezone.now().astimezone().time()) & Q(available_time_start__gte=F('available_time_end')))
+            (Q(available_time_start__gte=F('available_time_end')) & (
+                Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(available_time_start__lte=timezone.now().astimezone().time()))
+             )
         ).order_by('priority')
