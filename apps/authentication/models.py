@@ -32,3 +32,14 @@ class OTP(TimestampModel):
             instance.mobile_phone = mobile_phone
             instance.save()
         return code
+
+
+class TGAuthUser(models.Model):
+    mobile_phone = models.CharField(max_length=12)
+    chat_id = models.IntegerField(max_length=30)
+    club_user = models.OneToOneField(
+        "clubs.ClubBranchUser",
+        on_delete=models.CASCADE,
+        related_name="tg_user",
+        null=True, blank=True
+    )
