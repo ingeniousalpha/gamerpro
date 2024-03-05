@@ -138,6 +138,19 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch')
 
 
+class ClubBranchUserInline(admin.TabularInline):
+    model = ClubBranchUser
+    extra = 0
+    fields = (
+        "club_branch",
+        "gizmo_id",
+        "gizmo_phone",
+        "login",
+        "first_name",
+        "balance",
+    )
+
+
 @admin.register(ClubTimePacketGroup)
 class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')

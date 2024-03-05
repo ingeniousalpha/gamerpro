@@ -5,6 +5,7 @@ from django import forms
 from apps.authentication.services import validate_password_in_forms
 
 from .models import User
+from ..clubs.admin import ClubBranchUserInline
 
 
 class UserCreationForm(forms.ModelForm):
@@ -43,6 +44,7 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ('groups', 'user_permissions',)
     add_form = UserCreationForm
     ordering = ['-created_at']
+    inlines = [ClubBranchUserInline]
 
     fieldsets = (
         (None, {
