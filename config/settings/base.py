@@ -41,6 +41,9 @@ OTP_VALIDITY_PERIOD = 90  # in seconds
 SITE_URL = os.getenv('SITE_URL', '127.0.0.1:8000')
 DEV_MODE = bool(os.getenv('DEV_MODE', 1))
 
+TG_AUTH_BOT_USERNAME = os.getenv('TG_AUTH_BOT_USERNAME')
+TG_AUTH_BOT_HOST = os.getenv('TG_AUTH_BOT_HOST', 'http://gp-tgauth-bot:3113')
+
 # RABBITMQ_HOST_SERVER = 'localhost'
 # RABBITMQ_USER = 'user'
 # RABBITMQ_PASSWORD = 'user'

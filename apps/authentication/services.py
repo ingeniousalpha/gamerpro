@@ -1,7 +1,9 @@
 import logging
 
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from phonenumber_field.phonenumber import PhoneNumber
+from pip._vendor import requests
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from constance import config
 
@@ -58,6 +60,31 @@ def verify_otp(code: str, mobile_phone: PhoneNumber, save=False):
         otp.save(update_fields=["verified"])
 
     return True
+
+
+def tg_auth_send_otp_code(mobile_phone: str):
+    resp = requests.post(
+        url=settings.TG_AUTH_BOT_HOST,
+        json={"phoneNumber": mobile_phone}
+    )
+    logger_users.info(f"tg_auth_send_otp_code: {resp}")
+    logger_users.info(str(resp.request.body))
+    if resp.status_code == 201:
+        return True
+    return False
+
+
+def tg_auth_verify(mobile_phone: str, otp_code):
+    resp = requests.post(
+        url=settings.TG_AUTH_BOT_HOST + '/verify',
+        json={"phoneNumber": mobile_phone, "code": otp_code}
+    )
+    logger_users.info(f"tg_auth_verify: {resp}")
+    logger_users.info(str(resp.request.body))
+    if resp.json() == True:
+        return True
+    return False
+
 
 # def validate_email(email):
 #     """ Проверка почты при регистрации """

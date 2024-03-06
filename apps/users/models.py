@@ -30,6 +30,7 @@ class User(PermissionsMixin, AbstractBaseUser):
     is_active = models.BooleanField("Активный", default=True)
     is_staff = models.BooleanField("Сотрудник", default=False)
     is_email_confirmed = models.BooleanField("Почта подтверждена", default=False)
+    is_mobile_phone_verified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(_("Создан"), default=timezone.now)
     updated_at = models.DateTimeField(_("Обновлен"), auto_now=True)

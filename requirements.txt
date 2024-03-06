@@ -30,7 +30,7 @@ executing==1.2.0
 firebase-admin==6.2.0
 gunicorn==20.1.0
 idna==3.4
-ipython==8.13.2
+ipython
 jedi==0.18.2
 kombu==5.2.4
 matplotlib-inline==0.1.6

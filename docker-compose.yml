@@ -49,6 +49,23 @@ services:
     networks:
       - gp-net
 
+  gp-tgauth-bot:
+    container_name: gp-tgauth-bot
+    restart: always
+    build:
+      context: .
+      dockerfile: ./telegram_auth/dockerfile
+    volumes:
+      - ./telegram_auth:/tgauth_bot
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - gp-postgres
+    ports:
+      - "3113:3113"
+    networks:
+      - gp-net
+
   redis:
     container_name: redis
     restart: always
