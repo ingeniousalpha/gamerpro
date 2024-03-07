@@ -48,23 +48,23 @@ export class TelegramService {
         const phoneNumber = cleanPhoneNumber(message.contact.phone_number);
         const founded = await this.telegramRepository.findOne({
           where: {
-            mobile_phone: "+" + phoneNumber,
+            mobile_phone: phoneNumber,
           },
         });
         if (founded) {
           await this.telegramRepository.update(
             {
-              mobile_phone: "+" + phoneNumber,
+              mobile_phone: phoneNumber,
             },
             {
               chat_id: message.chat.id,
-              mobile_phone: "+" + phoneNumber,
+              mobile_phone: phoneNumber,
             },
           );
         } else {
           await this.telegramRepository.insert({
             chat_id: message.chat.id,
-            mobile_phone: "+" + phoneNumber,
+            mobile_phone: phoneNumber,
           });
         }
 
