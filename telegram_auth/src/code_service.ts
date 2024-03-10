@@ -3,7 +3,7 @@ import { Interval } from '@nestjs/schedule';
 // import { cleanPhoneNumber } from 'src/utils/clean_phone_number';
 
 export const cleanPhoneNumber = (phoneNumber: string): string => {
-   correct_number = phoneNumber
+   let correct_number = phoneNumber
     .replaceAll(' ', '')
     .replaceAll('(', '')
     .replaceAll(')', '')
@@ -12,10 +12,10 @@ export const cleanPhoneNumber = (phoneNumber: string): string => {
     .trim();
 
     if (!correct_number.startsWith("+")){
-        correct_number = "+" + correct_number
+        correct_number = "+" + correct_number;
     }
 
-    return correct_number
+    return correct_number;
 };
 
 function randomNumber(min, max): number {
