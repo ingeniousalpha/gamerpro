@@ -36,7 +36,7 @@ def bot_notify_about_new_user_task(club_branch_id, login, first_name):
 
 @cel_app.task
 def bot_create_gizmo_user_task(club_branch_user_login):
-    club_user = ClubBranchUser.objects.get(login=club_branch_user_login)
+    club_user = ClubBranchUser.objects.get(login=club_branch_user_login, gizmo_id__isnull=True)
     if not club_user:
         return
 

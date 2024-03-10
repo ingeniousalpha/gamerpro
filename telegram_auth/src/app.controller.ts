@@ -48,7 +48,7 @@ export class TelegramService {
         const phoneNumber = cleanPhoneNumber(message.contact.phone_number);
         const founded = await this.telegramRepository.findOne({
           where: {
-            mobile_phone: phoneNumber,
+             mobile_phone: phoneNumber,
           },
         });
         if (founded) {
