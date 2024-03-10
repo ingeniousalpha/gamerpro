@@ -5,7 +5,7 @@ from apps.integrations.gizmo.serializers import GizmoTimePacketGroupSaveSerializ
 
 
 class GizmoGetTimePacketGroupsService(BaseGizmoService):
-    endpoint = "/api/v2.0/productgroups"
+    endpoint = "/api/v2.0/productgroups?Pagination.Limit=100"
     save_serializer = GizmoTimePacketGroupSaveSerializer
     method = "GET"
 
