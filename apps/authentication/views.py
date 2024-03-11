@@ -71,7 +71,8 @@ class RegisterV2View(PublicJSONRendererMixin, GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(data=serializer.validated_data)
+        serializer.save()
+        return Response(data=serializer.data)
 
 
 class SigninByUsernameView(PublicJSONRendererMixin, GenericAPIView):
