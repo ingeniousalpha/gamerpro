@@ -43,3 +43,8 @@ class TGAuthUser(models.Model):
         related_name="tg_user",
         null=True, blank=True
     )
+
+
+class VerifiedOTP(TimestampModel):
+    mobile_phone = models.CharField(max_length=12)
+    otp_code = models.CharField(max_length=6)

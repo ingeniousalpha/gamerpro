@@ -12,7 +12,7 @@ from apps.common.mixins import PublicJSONRendererMixin
 from .serializers import (
     SigninWithoutOTPSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
     MyTokenObtainSerializer, SigninByUsernameNewSerializer,
-    SigninWithOTPSerializer)
+    SigninWithOTPSerializer, RegisterV2Serializer)
 from .services import generate_access_and_refresh_tokens_for_user
 from ..bookings.services import check_user_session
 from ..clubs.exceptions import NeedToInputUserLogin
@@ -58,6 +58,16 @@ class SigninV2View(PublicJSONRendererMixin, CreateAPIView):
 class VerifyOTPV2View(PublicJSONRendererMixin, GenericAPIView):
     queryset = User.objects.all()
     serializer_class = VerifyOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(data=serializer.validated_data)
+
+
+class RegisterV2View(PublicJSONRendererMixin, GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterV2Serializer
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)

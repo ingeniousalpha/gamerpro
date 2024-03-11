@@ -6,6 +6,7 @@ from .views import (
     VerifyOTPV2View,
     SigninByUsernameView,
     MyFastTokenView,
+    RegisterV2View
 )
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     # path("signin/bro", SigninBroView.as_view(), name="signin_bro_view"),
     path("v2/signin/", SigninV2View.as_view(), name="signin_view"),
     path("v2/verify/", VerifyOTPV2View.as_view(), name="verify_otp_view"),
+    path("v2/register/", RegisterV2View.as_view(), name="register_view"),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh_view"),
 ]
 
