@@ -213,13 +213,6 @@ class SigninWithOTPSerializer(serializers.Serializer):
     mobile_phone = serializers.CharField(write_only=True)
     club_branch = serializers.IntegerField(write_only=True)
 
-    class Meta:
-        model = User
-        fields = (
-            "mobile_phone",
-            "club_branch",
-        )
-
     def validate(self, attrs):
         attrs['club_branch'] = ClubBranch.objects.filter(id=attrs['club_branch']).first()
         if not attrs['club_branch']:
