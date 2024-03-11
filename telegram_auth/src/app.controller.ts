@@ -88,7 +88,7 @@ export class TelegramService {
     try {
       await telegramBot.sendMessage(
         message.chat.id,
-        'Как мы можем с вами связаться ?',
+        'Нажмите на кнопку "Поделиться номером" ?',
         {
           parse_mode: 'Markdown',
           reply_markup: {
@@ -96,7 +96,7 @@ export class TelegramService {
             keyboard: [
               [
                 {
-                  text: 'Номер телефона',
+                  text: 'Поделиться номером',
                   request_contact: true,
                 },
               ],
