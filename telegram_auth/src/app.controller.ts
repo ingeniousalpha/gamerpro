@@ -72,7 +72,8 @@ export class TelegramService {
         telegramBot
           .sendMessage(
             message.chat.id,
-            `Можете продолжить верификацию в приложении.\nВаш код верификации ${verifyCode} для номера +${phoneNumber}`,
+            `Можете продолжить верификацию в приложении.\n По номеру ${phoneNumber}, ваш код верификации: <b>${verifyCode}</b>`,
+            {"parse_mode": "HTML"}
           )
           .catch((e) => console.log(e));
       }
@@ -88,7 +89,7 @@ export class TelegramService {
     try {
       await telegramBot.sendMessage(
         message.chat.id,
-        'Нажмите на кнопку "Поделиться номером" ?',
+        'Нажмите на кнопку "Поделиться номером телефона"',
         {
           parse_mode: 'Markdown',
           reply_markup: {
@@ -96,7 +97,7 @@ export class TelegramService {
             keyboard: [
               [
                 {
-                  text: 'Поделиться номером',
+                  text: 'Поделиться номером телефона',
                   request_contact: true,
                 },
               ],
