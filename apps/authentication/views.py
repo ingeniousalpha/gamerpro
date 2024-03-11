@@ -35,7 +35,6 @@ class SigninView(PublicJSONRendererMixin, CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
         # mobile_phone = serializer.validated_data["mobile_phone"]
         # send_otp(mobile_phone)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
