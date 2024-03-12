@@ -27,7 +27,7 @@ export class SendCodeTelegramService {
     const verifyCode = this.codeSerivce.generateCode(phoneNumber);
     telegramBot.sendMessage(
       entity.chat_id,
-      `Можете продолжить верификацию в приложении.\nПо номеру ${phoneNumber}, ваш код верификации: <b>${verifyCode}</b>`,
+      `По номеру ${phoneNumber}, ваш код верификации: <b>${verifyCode}</b>\n\nМожете продолжить верификацию в приложении.`,
       {parse_mode : "HTML"}
     );
     return true;
