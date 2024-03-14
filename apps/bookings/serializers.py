@@ -154,7 +154,7 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
             self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
             send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)  # booking by card payment accepted
         except Exception as e:
-            logger.error(f"CreateBookingByPaymentSerializer Error: {str(e)}")
+            logger.error(f"CreateBookingByCardPaymentSerializer Error: {str(e)}")
 
     def to_representation(self, instance):
         return {
