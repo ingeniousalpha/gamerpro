@@ -59,10 +59,22 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
     # create in all other BRO branches
     for branch in ClubBranch.objects.filter(club=club_branch.club).exclude(id__in=[club_branch.id]):
         branch_club_user = ClubBranchUser.objects.filter(club_branch=branch, login=club_user.login).first()
+
+        if not branch_club_user:
+            branch_club_user = ClubBranchUser.objects.create(
+                club_branch=branch,
+                login=club_user.login,
+                user=club_user.user,
+                gizmo_id=None,
+                gizmo_phone=club_user.gizmo_phone,
+                first_name=club_user.first_name,
+            )
+
         if branch_club_user and not branch_club_user.user:
             branch_club_user.user = club_user.user
             branch_club_user.save()
-        elif not branch_club_user:
+
+        if branch_club_user and not branch_club_user.gizmo_id:
             try:
                 gizmo_user_id = GizmoCreateUserService(
                     instance=branch,
@@ -70,14 +82,8 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                     first_name=club_user.first_name,
                     mobile_phone=club_user.gizmo_phone,
                 ).run()
-                ClubBranchUser.objects.create(
-                    club_branch=branch,
-                    login=club_user.login,
-                    user=club_user.user,
-                    gizmo_id=gizmo_user_id,
-                    gizmo_phone=club_user.gizmo_phone,
-                    first_name=club_user.first_name,
-                )
+                branch_club_user.gizmo_id = gizmo_user_id
+                branch_club_user.save(update_fields=['gizmo_id'])
             except GizmoLoginAlreadyExistsError as e:
                 new_club_user = GizmoGetUserByUsernameService(
                     instance=branch, username=club_user.login

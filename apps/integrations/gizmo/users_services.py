@@ -69,7 +69,11 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
             user = User.objects.filter(mobile_phone=gizmo_phone).first()
             if user:
                 user = user.id
+            existing_club_user = ClubBranchUser.objects.filter(
+                club_branch_id=self.instance.id, login=gizmo_user['username']
+            ).first()
             serializer = GizmoUserSaveSerializer(
+                instance=existing_club_user,
                 data={
                     "gizmo_id": gizmo_user['id'],
                     "gizmo_phone": gizmo_phone,
