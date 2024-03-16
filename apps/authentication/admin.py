@@ -12,7 +12,7 @@ admin.site.unregister(OutstandingToken)
 
 @admin.register(TGAuthUser)
 class TGAuthUserAdmin(admin.ModelAdmin):
-    fields = (
+    list_display = (
         'mobile_phone',
         'chat_id',
     )
