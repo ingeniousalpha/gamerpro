@@ -283,12 +283,12 @@ async def choose_club_branch(callback: types.CallbackQuery):
     await pool.close()
 
 
-@dp.callback_query(F.data.startswith("user_verified="))
-async def choose_plan(callback: types.CallbackQuery):
-    user_login = str(callback.data.split('user_verified=')[1])
+@dp.callback_query(F.data.startswith("user_approved="))
+async def user_approved(callback: types.CallbackQuery):
+    user_login, club_branch_id = callback.data.split('user_approved=')[1].split("|")
     app.send_task(
         name="apps.bot.tasks.bot_create_gizmo_user_task",
-        args=[user_login]
+        args=[user_login, club_branch_id]
     )
     await callback.message.edit_text(text=callback.message.text + "\n\n<b>Верифицирован</b>")
     await callback.answer(text="Юзер верифицирован, его сессия запускается...", show_alert=True)

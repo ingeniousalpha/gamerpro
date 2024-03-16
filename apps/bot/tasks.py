@@ -29,14 +29,18 @@ def bot_notify_about_new_user_task(club_branch_id, login, first_name):
         text=full_text,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Проверено✅", callback_data=f"user_verified={login}")]]
+            [[InlineKeyboardButton("Показал удос ✅", callback_data=f"user_approved={login}|{club_branch_id}")]]
         ),
     )
 
 
 @cel_app.task
-def bot_create_gizmo_user_task(club_branch_user_login):
-    club_user = ClubBranchUser.objects.get(login=club_branch_user_login, gizmo_id__isnull=True)
+def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
+    club_user = ClubBranchUser.objects.get(
+        club_branch_id=club_branch_id,
+        login=club_branch_user_login,
+        gizmo_id__isnull=True,
+    )
     if not club_user:
         return
 
