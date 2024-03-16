@@ -9,3 +9,15 @@ from apps.authentication.models import TGAuthUser
 admin.site.unregister(BlacklistedToken)
 admin.site.unregister(OutstandingToken)
 admin.site.register(TGAuthUser)
+
+
+@admin.register(TGAuthUser)
+class TGAuthUserAdmin(admin.ModelAdmin):
+    fields = (
+        'mobile_phone',
+        'chat_id',
+    )
+    search_fields = (
+        'mobile_phone',
+        'chat_id',
+    )

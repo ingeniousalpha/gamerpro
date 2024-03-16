@@ -327,17 +327,18 @@ class RegisterV2Serializer(serializers.ModelSerializer):
             gizmo_phone=validated_data['mobile_phone'],
             club_branch=validated_data['club_branch']
         ).first()
-        if club_user:
+        if not club_user:
+            club_user = ClubBranchUser.objects.create(
+                gizmo_phone=validated_data['mobile_phone'],
+                club_branch=validated_data['club_branch'],
+                login=validated_data['login'],
+                first_name=validated_data.get('first_name'),
+                gizmo_id=None,
+                user=user,
+            )
+        elif club_user and club_user.is_verified:
             return user
 
-        club_user = ClubBranchUser.objects.create(
-            gizmo_phone=validated_data['mobile_phone'],
-            club_branch=validated_data['club_branch'],
-            login=validated_data['login'],
-            first_name=validated_data.get('first_name'),
-            gizmo_id=None,
-            user=user,
-        )
         if validated_data['club_branch'].club.name.lower() == "bro":
             bot_notify_about_new_user_task.delay(
                 club_branch_id=validated_data['club_branch'].id,
