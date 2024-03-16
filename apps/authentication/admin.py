@@ -8,7 +8,6 @@ from apps.authentication.models import TGAuthUser
 
 admin.site.unregister(BlacklistedToken)
 admin.site.unregister(OutstandingToken)
-admin.site.register(TGAuthUser)
 
 
 @admin.register(TGAuthUser)
