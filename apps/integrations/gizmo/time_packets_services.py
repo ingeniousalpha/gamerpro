@@ -1,13 +1,17 @@
 from apps.clubs.models import ClubTimePacketGroup
+from apps.integrations.gizmo import ParamKeyWords
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
 from apps.integrations.gizmo.serializers import GizmoTimePacketGroupSaveSerializer, GizmoTimePacketSaveSerializer
 
 
 class GizmoGetTimePacketGroupsService(BaseGizmoService):
-    endpoint = "/api/v2.0/productgroups?Pagination.Limit=100"
+    endpoint = "/api/v2.0/productgroups?{limit}=100"
     save_serializer = GizmoTimePacketGroupSaveSerializer
     method = "GET"
+
+    def run_service(self):
+        return self.fetch(path_params={"limit": ParamKeyWords["limit"].get(self.instance.api_host)})
 
     def save(self, response):
         resp = response.get('result')
@@ -31,9 +35,12 @@ class GizmoGetTimePacketGroupsService(BaseGizmoService):
 
 
 class GizmoGetTimePacketsService(BaseGizmoService):
-    endpoint = "/api/v2.0/products?ProductType=1&IsDeleted=false&Pagination.Limit=150"
+    endpoint = "/api/v2.0/products?ProductType=1&IsDeleted=false&{limit}=150"
     save_serializer = GizmoTimePacketSaveSerializer
     method = "GET"
+
+    def run_service(self):
+        return self.fetch(path_params={"limit": ParamKeyWords["limit"].get(self.instance.api_host)})
 
     def save(self, response):
         resp = response.get('result')
