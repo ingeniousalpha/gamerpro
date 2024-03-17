@@ -44,4 +44,4 @@ def date_format(dt):
 
 
 def date_format_with_t(dt):
-    return datetime.datetime.strftime(dt.astimezone(pytz.timezone(settings.TIME_ZONE)), '%Y-%m-%dT%H:%M')
+    return datetime.datetime.strftime(dt.astimezone(), '%Y-%m-%dT%H:%M')
