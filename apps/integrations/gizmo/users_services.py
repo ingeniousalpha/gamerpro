@@ -22,7 +22,7 @@ class GizmoGetUsersService(BaseGizmoService):
     def save(self, response):
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            existed_ids = list(ClubBranchUser.objects.values_list('gizmo_id', flat=True))
+            existed_ids = list(ClubBranchUser.objects.filter(club_branch=self.instance).values_list('gizmo_id', flat=True))
             non_existent_users = list(filter(lambda i: i['id'] not in existed_ids, resp_data))
 
             for gizmo_user in non_existent_users:
