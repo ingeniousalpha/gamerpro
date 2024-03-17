@@ -219,6 +219,9 @@ class ClubBranchUser(models.Model):
     def is_verified(self):
         return bool(self.gizmo_id)
 
+    def __str__(self):
+        return f"{self.login}({self.gizmo_phone})"
+
     class Meta:
         verbose_name = "Юзер в гизмо"
         verbose_name_plural = "Юзеры в гизмо"

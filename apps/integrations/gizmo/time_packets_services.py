@@ -31,7 +31,7 @@ class GizmoGetTimePacketGroupsService(BaseGizmoService):
 
 
 class GizmoGetTimePacketsService(BaseGizmoService):
-    endpoint = "/api/v2.0/products?ProductType=1&IsDeleted=false&Limit=150"
+    endpoint = "/api/v2.0/products?ProductType=1&IsDeleted=false&Pagination.Limit=150"
     save_serializer = GizmoTimePacketSaveSerializer
     method = "GET"
 

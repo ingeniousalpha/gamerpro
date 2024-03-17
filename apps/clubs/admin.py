@@ -77,7 +77,8 @@ class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
 class ClubBranchTimePacketGroupInline(FilterByClubMixin, admin.TabularInline):
     model = ClubTimePacketGroup
     extra = 0
-    fields = ('name', 'is_active')
+    fields = ('name', 'is_active', 'computer_group')
+    readonly_fields = ('name',)
     show_change_link = True
     inlines = [ClubBranchTimePacketInline]
 
@@ -121,7 +122,14 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     club_filter_field = "club"
     list_filter = ('club',)
     list_editable = ('priority', 'is_active', 'is_ready',)
-    list_display = ('__str__', 'priority', 'is_active', 'is_ready',)
+    list_display = (
+        '__str__',
+        'api_host',
+        'priority',
+        'is_active',
+        'is_ready',
+
+    )
 
     def response_change(self, request, obj):
         if "sync_gizmo" in request.POST:
