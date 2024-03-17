@@ -172,12 +172,13 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'gizmo_id',
         'display_name',
         'packet_group',
+        'club_computer_group',
         'minutes',
         'price',
         'priority',
         'is_active',
     )
-    list_filter = ('packet_group', 'club_computer_group__club_branch',)
+    list_filter = ('club_computer_group__club_branch',)
     list_editable = ('priority', 'is_active')
     ordering = ['priority']
     club_filter_field = "packet_group__club_branch__club"
