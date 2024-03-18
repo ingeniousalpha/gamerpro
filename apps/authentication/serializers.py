@@ -255,7 +255,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
 
-        GizmoGetUsersService(instance=club_branch).run()
+        GizmoGetUsersService(instance=club_branch, mobile_phone_to_save=attrs['mobile_phone']).run()
         club_user = ClubBranchUser.objects.filter(
             gizmo_phone=attrs['mobile_phone'],
             club_branch=club_branch

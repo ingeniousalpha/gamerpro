@@ -28,18 +28,20 @@ class GizmoGetUsersService(BaseGizmoService):
             for gizmo_user in non_existent_users:
                 try:
                     gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
-                    if gizmo_phone:
-                        serializer = self.save_serializer(
-                            data={
-                                "gizmo_id": gizmo_user['id'],
-                                "gizmo_phone": gizmo_phone,
-                                "login": gizmo_user['username'],
-                                "first_name": gizmo_user['firstName'],
-                                "club_branch": self.instance.id
-                            }
-                        )
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
+                    if not gizmo_phone:
+                        gizmo_phone = self.kwargs.get('mobile_phone_to_save')
+
+                    serializer = self.save_serializer(
+                        data={
+                            "gizmo_id": gizmo_user['id'],
+                            "gizmo_phone": gizmo_phone,
+                            "login": gizmo_user['username'],
+                            "first_name": gizmo_user['firstName'],
+                            "club_branch": self.instance.id
+                        }
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
                 except Exception as e:
                     self.log_error(e)
 
