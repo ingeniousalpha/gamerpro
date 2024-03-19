@@ -117,7 +117,7 @@ def gizmo_bro_book_computers(booking_uuid, start_now=False):
             gizmo_start_user_session.delay(str(booking.uuid), booked_computer.computer.gizmo_id)
         else:
             gizmo_unlock_computers_and_booking_expire.apply_async(
-                (str(booking.uuid)),
+                (str(booking.uuid),),
                 countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
             )
 
