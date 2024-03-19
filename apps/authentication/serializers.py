@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.db.models import Q
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
@@ -255,7 +256,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
 
-        GizmoGetUsersService(instance=club_branch, mobile_phone_to_save=attrs['mobile_phone']).run()
+        GizmoGetUsersService(instance=club_branch).run()
         club_user = ClubBranchUser.objects.filter(
             gizmo_phone=attrs['mobile_phone'],
             club_branch=club_branch
@@ -324,8 +325,9 @@ class RegisterV2Serializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
         club_user = ClubBranchUser.objects.filter(
-            gizmo_phone=validated_data['mobile_phone'],
-            club_branch=validated_data['club_branch']
+            Q(club_branch=validated_data['club_branch']) & (
+                    Q(gizmo_phone=validated_data['mobile_phone']) | Q(login=validated_data['login'])
+            )
         ).first()
         if not club_user:
             club_user = ClubBranchUser.objects.create(
@@ -336,8 +338,12 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 gizmo_id=None,
                 user=user,
             )
-        elif club_user and club_user.is_verified:
-            return user
+        else:
+            if not club_user.gizmo_phone:
+                club_user.gizmo_phone = validated_data['mobile_phone']
+                club_user.save(update_fields=['gizmo_phone'])
+            if club_user.is_verified:
+                return user
 
         if validated_data['club_branch'].club.name.lower() == "bro":
             bot_notify_about_new_user_task.delay(
