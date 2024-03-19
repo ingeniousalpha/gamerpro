@@ -114,11 +114,11 @@ def gizmo_bro_book_computers(booking_uuid, start_now=False):
 
     for booked_computer in booking.computers.all():
         if start_now:
-            gizmo_start_user_session.delay(booking.uuid, booked_computer.computer.gizmo_id)
+            gizmo_start_user_session.delay(str(booking.uuid), booked_computer.computer.gizmo_id)
         else:
-            gizmo_start_user_session.apply_async(
-                (booking.uuid, booked_computer.computer.gizmo_id),
-                countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
+            gizmo_unlock_computers_and_booking_expire.apply_async(
+                (str(booking.uuid)),
+                countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING * 60
             )
 
 
@@ -161,6 +161,17 @@ def gizmo_cancel_booking(booking_uuid):
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
     #     args=[booking.uuid],
     # )
+
+@cel_app.task
+def gizmo_unlock_computers_and_booking_expire(booking_uuid):
+    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    if not booking:
+        return
+
+    booking.status = BookingStatuses.EXPIRED
+    booking.save(update_fields=['status'])
+    gizmo_unlock_computers(str(booking.uuid), False)
+
 
 
 @cel_app.task

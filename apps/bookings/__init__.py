@@ -9,6 +9,7 @@ class BookingStatuses(TextChoices):
     PLAYING = "PLAYING", "Юзер играет"  # юзер сел играть
     COMPLETED = "COMPLETED", "Зевершено"
     CANCELLED = "CANCELLED", "Отменено"
+    EXPIRED = "EXPIRED", "Истекло"
 
 
 class PlatformTypes(TextChoices):
