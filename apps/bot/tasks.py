@@ -93,6 +93,6 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             except Exception:
                 continue
 
-    booking = club_user.bookings.last()
-    if booking:
-        gizmo_bro_book_computers(str(booking.uuid), start_now=True)
+    # booking = club_user.bookings.last()
+    # if booking:
+    #     gizmo_bro_book_computers(str(booking.uuid), start_now=True)
