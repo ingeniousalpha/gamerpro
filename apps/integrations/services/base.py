@@ -91,7 +91,8 @@ class BaseService(ABC):
         if self.auth is None:
             self.auth = self.get_auth()
 
-        print("self.url: ", self.url)
+        if self.log_request:
+            print("self.url: ", self.url)
         response_raw = self.session.request(
             method=self.method,
             url=self.url,
@@ -130,7 +131,11 @@ class BaseService(ABC):
         if response_raw.status_code >= 500:
             return self.handle_500(response_raw)
 
-        return self.get_response(response_raw)
+        response =  self.get_response(response_raw)
+        if self.log_response:
+            print("response: ", response)
+
+        return response
 
     def handle_400(self, response: Response):  # noqa
         return response.json()
@@ -256,6 +261,6 @@ class BaseService(ABC):
 
 
 class ServiceLoggingMixin:
-    log_response = True
-    log_request = True
-    log_headers = True
+    log_response = False
+    log_request = False
+    log_headers = False

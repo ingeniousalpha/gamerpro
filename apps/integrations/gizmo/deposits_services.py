@@ -11,6 +11,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
     endpoint = "/api/v2.0/deposittransactions"
     save_serializer = None
     method = "POST"
+    log_response = True
 
     def run_service(self):
         replenishment_type = self.kwargs.get("replenishment_type") or "deposit"
@@ -30,7 +31,6 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

@@ -87,7 +87,6 @@ class GizmoLockComputerService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError

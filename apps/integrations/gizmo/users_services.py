@@ -47,6 +47,7 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
     endpoint = "/api/users/{username}/username"
     save_serializer = None
     method = "GET"
+    log_response = True
 
     def run_service(self):
         # print("self.kwargs.get('username'): ", self.kwargs.get('username'))
@@ -55,7 +56,6 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        # print(response)
         gizmo_user = response.get('result')
         if not gizmo_user:
             raise UserNotFound
@@ -101,7 +101,6 @@ class GizmoGetUserBalanceService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
         gizmo_user = (response or {}).get('result')
         if not gizmo_user:
             raise UserNotFound
@@ -178,6 +177,7 @@ class GizmoStartUserSessionService(BaseGizmoService):
     endpoint = "/api/users/{user_id}/login/{computer_id}"
     save_serializer = None
     method = "POST"
+    log_response = True
 
     def run_service(self):
         return self.fetch(path_params={
@@ -186,7 +186,6 @@ class GizmoStartUserSessionService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        # print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError
@@ -215,6 +214,7 @@ class GizmoCreateUserService(BaseGizmoService):
     endpoint = "/api/users?Username={login}&UserGroupId=1&Phone={mobile_phone}&FirstName={first_name}"
     method = "PUT"
     save_serializer = None
+    log_response = True
 
     def run_service(self):
         return self.fetch(path_params={
@@ -224,7 +224,6 @@ class GizmoCreateUserService(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             if response.get('errorCodeTypeReadable') == "NonUniqueEntityValue":

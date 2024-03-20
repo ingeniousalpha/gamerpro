@@ -71,6 +71,7 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
     endpoint = "/api/users/{user_id}/order/time/{time}/price/{price}/invoice/payment/{payment_method}"
     save_serializer = None
     method = "POST"
+    log_response = True
 
     def run_service(self):
         return self.fetch(path_params={
@@ -81,7 +82,6 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
         })
 
     def finalize_response(self, response):
-        print(response)
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError
