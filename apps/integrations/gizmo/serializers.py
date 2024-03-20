@@ -4,6 +4,7 @@ from apps.clubs.models import ClubBranchUser, ClubComputer, ClubComputerGroup, C
 
 
 class GizmoUserSaveSerializer(serializers.ModelSerializer):
+    gizmo_phone = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = ClubBranchUser
         fields = (
