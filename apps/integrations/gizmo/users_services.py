@@ -178,6 +178,7 @@ class GizmoStartUserSessionService(BaseGizmoService):
     save_serializer = None
     method = "POST"
     log_response = True
+    log_request = True
 
     def run_service(self):
         return self.fetch(path_params={
