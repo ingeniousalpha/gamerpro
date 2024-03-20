@@ -165,7 +165,7 @@ def gizmo_cancel_booking(booking_uuid):
 @cel_app.task
 def gizmo_unlock_computers_and_booking_expire(booking_uuid):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
-    if not booking:
+    if not booking or booking.status != BookingStatuses.ACCEPTED:
         return
 
     booking.status = BookingStatuses.COMPLETED
