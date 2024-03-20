@@ -168,7 +168,7 @@ def gizmo_unlock_computers_and_booking_expire(booking_uuid):
     if not booking or booking.status != BookingStatuses.ACCEPTED:
         return
 
-    booking.status = BookingStatuses.COMPLETED
+    booking.status = BookingStatuses.EXPIRED
     booking.save(update_fields=['status'])
     gizmo_unlock_computers(str(booking.uuid), False)
 
