@@ -24,7 +24,7 @@ class FilterByClubMixin:
 
 @admin.register(ClubComputer)
 class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('id', 'number', 'gizmo_hostname', 'is_booked')
+    list_display = ('id', 'gizmo_id', 'number', 'gizmo_hostname', 'is_booked')
     ordering = ('number',)
 
 
