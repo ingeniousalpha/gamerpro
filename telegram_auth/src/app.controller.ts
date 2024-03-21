@@ -72,7 +72,7 @@ export class TelegramService {
         telegramBot
           .sendMessage(
             message.chat.id,
-            `По номеру ${phoneNumber}, ваш код верификации: <b>${verifyCode}</b>\n\nМожете продолжить верификацию в приложении.`,
+            `По номеру ${phoneNumber}, ваш код верификации: <b>${verifyCode}</b>\n\nВведите этот код в приложении.`,
             {"parse_mode": "HTML"}
           )
           .catch((e) => console.log(e));
