@@ -5,7 +5,7 @@ from django.utils import timezone
 import telegram
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
-from apps.bookings.tasks import gizmo_bro_book_computers
+from apps.bookings.tasks import gizmo_bro_add_time_and_set_booking_expiration
 from apps.clubs.models import ClubBranchUser, ClubBranch
 from apps.integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
 from apps.integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUserByUsernameService
@@ -93,6 +93,6 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             except Exception:
                 continue
 
-    # booking = club_user.bookings.last()
-    # if booking:
-    #     gizmo_bro_book_computers(str(booking.uuid), start_now=True)
+    booking = club_user.bookings.last()
+    if booking:
+        gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))

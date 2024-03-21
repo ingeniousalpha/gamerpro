@@ -90,7 +90,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         )
 
 
-def gizmo_bro_book_computers(booking_uuid, start_now=False):
+def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, start_now=False):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
         return
