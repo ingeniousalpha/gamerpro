@@ -226,12 +226,10 @@ def gizmo_lock_computers(booking_uuid):
             computer_id=booked_computer.computer.gizmo_id
         ).run()
 
-    # Doesn't unlock for BRO unverified user
-    if booking.club_user.is_verified:
-        gizmo_unlock_computers.apply_async(
-            (str(booking.uuid), True),
-            countdown=config.PAYMENT_EXPIRY_TIME*60
-        )
+    gizmo_unlock_computers.apply_async(
+        (str(booking.uuid), True),
+        countdown=config.PAYMENT_EXPIRY_TIME*60
+    )
 
 
 @cel_app.task
