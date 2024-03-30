@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 from decimal import Decimal
 
+from constance import config
 from apps.bookings.exceptions import BookingNotFound
 from apps.bookings.models import DepositReplenishment, Booking
 from apps.common.serializers import RequestUserPropertyMixin
@@ -146,4 +147,14 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
         ).run()
         payment.replenishment = replenishment
         payment.save()
+        if config.CASHBACK_TURNED_ON:
+            GizmoCreateDepositTransactionService(
+                instance=validated_data['booking'].club_branch,
+                user_gizmo_id=validated_data['booking'].club_user.gizmo_id,
+                booking=validated_data['booking'],
+                user_received_amount=validated_data['booking'].amount,
+                commission_amount=validated_data['booking'].commission_amount,
+                total_amount=validated_data['booking'].total_amount,
+                replenishment_type="cashback",
+            ).run()
         return replenishment
