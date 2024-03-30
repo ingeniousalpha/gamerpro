@@ -56,11 +56,11 @@ class OVRecurrentPaymentService(BaseOneVisionService):
         self.kwargs['reference'] = str(uuid4())
 
         if is_repl and repl_ref:
-            self.kwargs['description'] = f"{self.kwargs.get("club_branch")}: REPLENISHMENT" + f"_{repl_ref}"
+            self.kwargs['description'] = f"{self.kwargs.get('club_branch')}: REPLENISHMENT" + f"_{repl_ref}"
         elif is_repl and not repl_ref:
-            self.kwargs['description'] = f"{self.kwargs.get("club_branch")}: REPLENISHMENT"
+            self.kwargs['description'] = f"{self.kwargs.get('club_branch')}: REPLENISHMENT"
         else:
-            self.kwargs['description'] = f"{self.kwargs.get("club_branch")}:  Оплата сохр картой"
+            self.kwargs['description'] = f"{self.kwargs.get('club_branch')}:  Оплата сохр картой"
             self.kwargs['reference'] = str(self.instance.uuid)
 
         return self.fetch(data=self.form_encoded_data({
