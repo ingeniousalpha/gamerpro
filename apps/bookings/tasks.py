@@ -104,12 +104,24 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, start_now=False)
             club_user=booking.club_user
         )
         minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
+    if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
+        minutes_to_add += config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
     GizmoAddPaidTimeToUser(
         instance=booking.club_branch,
         user_id=booking.club_user.gizmo_id,
         minutes=minutes_to_add,
         price=booking.time_packet.price
     ).run()
+    if config.CASHBACK_TURNED_ON:
+        GizmoCreateDepositTransactionService(
+            instance=booking.club_branch,
+            user_gizmo_id=booking.club_user.gizmo_id,
+            booking=booking,
+            user_received_amount=booking.amount,
+            commission_amount=booking.commission_amount,
+            total_amount=booking.total_amount,
+            replenishment_type="cashback",
+        ).run()
     print('BRO booking time_packet activated')
 
     for booked_computer in booking.computers.all():

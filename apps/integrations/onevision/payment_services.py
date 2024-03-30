@@ -22,7 +22,7 @@ class OVInitPaymentService(BaseOneVisionService):
             "expiration": date_format(self.instance.expiration_date),
             "amount": str(self.instance.total_amount),
             "currency": "KZT",
-            "description": "Оплата брони",
+            "description": f"{self.instance.club_branch}: Оплата брони",
             "reference": str(self.instance.uuid),
             "success_url": f"{settings.SITE_DOMAIN}/api/payments/success?booking_uuid={str(self.instance.uuid)}",
             # "failure_url": f"{settings.SITE_DOMAIN}/api/payments/fail?booking_uuid={str(self.instance.uuid)}",
@@ -56,11 +56,11 @@ class OVRecurrentPaymentService(BaseOneVisionService):
         self.kwargs['reference'] = str(uuid4())
 
         if is_repl and repl_ref:
-            self.kwargs['description'] = "REPLENISHMENT" + f"_{repl_ref}"
+            self.kwargs['description'] = f"{self.instance.club_branch}: REPLENISHMENT" + f"_{repl_ref}"
         elif is_repl and not repl_ref:
-            self.kwargs['description'] = "REPLENISHMENT"
+            self.kwargs['description'] = f"{self.instance.club_branch}: REPLENISHMENT"
         else:
-            self.kwargs['description'] = "Оплата сохр картой"
+            self.kwargs['description'] = f"{self.instance.club_branch}:  Оплата сохр картой"
             self.kwargs['reference'] = str(self.instance.uuid)
 
         return self.fetch(data=self.form_encoded_data({
