@@ -14,10 +14,15 @@ class BookedComputerInline(admin.TabularInline):
 @admin.register(Booking)
 class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = (
-        'uuid', 'club_user__user__mobile_phone'
+        'uuid', 'club_user__user__mobile_phone', 'club_user__login',
     )
     list_display = (
         'uuid', 'created_at', 'computers', 'amount', 'is_cancelled'
+    )
+    readonly_fields = (
+        'club_branch',
+        'club_user',
+        'payment_card',
     )
 
     def computers(self, obj):
