@@ -14,7 +14,6 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, InlineKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.utils.markdown import hbold
-import os
 import sys
 
 # Add the parent directory of the current script to the Python path
@@ -41,20 +40,34 @@ DB_PASSWORD = getenv("DB_PASSWORD", "gamerprodb")
 
 REDIS_HOST = getenv("REDIS_HOST", "localhost")
 REDIS_PORT = getenv("REDIS_PORT", "6379")
+REDIS_PASSWORD = getenv("REDIS_PASSWORD")
 REDIS_DB_FOR_CELERY = getenv("REDIS_DB_FOR_CELERY", "0")
 REDIS_DB_FOR_CACHE = getenv("REDIS_DB_FOR_CACHE", "1")
-
-REDIS_BROKER_URL = "redis://{host}:{port}/{db_index}".format(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db_index=REDIS_DB_FOR_CELERY,
-)
-REDIS_CASHE_URL = "redis://{host}:{port}/{db_index}".format(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db_index=REDIS_DB_FOR_CACHE,
-)
-app = Celery("googlegram", broker=REDIS_BROKER_URL)
+if not REDIS_PASSWORD:
+    REDIS_AS_BROKER_URL = "redis://{host}:{port}/{db_index}".format(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db_index=REDIS_DB_FOR_CELERY,
+    )
+    REDIS_AS_CACHE_URL = "redis://{host}:{port}/{db_index}".format(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db_index=REDIS_DB_FOR_CACHE,
+    )
+else:
+    REDIS_AS_BROKER_URL = "redis://:{password}@{host}:{port}/{db_index}".format(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        password=REDIS_PASSWORD,
+        db_index=REDIS_DB_FOR_CELERY,
+    )
+    REDIS_AS_CACHE_URL = "redis://:{password}@{host}:{port}/{db_index}".format(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        password=REDIS_PASSWORD,
+        db_index=REDIS_DB_FOR_CACHE,
+    )
+app = Celery("googlegram", broker=REDIS_AS_BROKER_URL)
 
 
 async def create_db_pool():

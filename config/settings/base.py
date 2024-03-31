@@ -50,6 +50,22 @@ TG_AUTH_BOT_HOST = os.getenv('TG_AUTH_BOT_HOST', 'http://gp-tgauth-bot:3113')
 # RABBITMQ_PORT = '5672/%2F'
 # RABBITMQ_HOST_LOCAL = '185.100.67.155'
 
+# Redis settings
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB_FOR_CELERY = os.getenv("REDIS_DB_FOR_CELERY", "0")
+REDIS_DB_FOR_CACHE = os.getenv("REDIS_DB_FOR_CACHE", "1")
+REDIS_AS_CACHE_URL = "redis://{host}:{port}/{db_index}".format(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db_index=REDIS_DB_FOR_CACHE,
+)
+REDIS_AS_BROKER_URL = "redis://{host}:{port}/{db_index}".format(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db_index=REDIS_DB_FOR_CELERY,
+)
+
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'api_key': {
@@ -93,9 +109,9 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 
 CONSTANCE_REDIS_CONNECTION = {
-    'host': os.getenv("REDIS_HOST", "redis"),
-    'port': 6379,
-    'db': 0,
+    'host': REDIS_HOST,
+    'port': REDIS_PORT,
+    'db': REDIS_DB_FOR_CACHE,
 }
 
 THIRD_PARTY_APPS = [
@@ -177,9 +193,7 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "gamerprodb"),
         "USER": os.getenv("DB_USER", "gamerprodb"),
         "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
-        # "PASSWORD": "6N6FvfsnjN4dgqE",
         "HOST": os.getenv("DB_HOST", "gp-postgres"),
-        # "HOST": "195.49.210.250", # os.getenv("DB_HOST", "gp-postgres"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
@@ -295,7 +309,7 @@ SIMPLE_JWT = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.getenv('REDIS_HOST', 'redis')}:6379/1",
+        "LOCATION": REDIS_AS_CACHE_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -304,11 +318,7 @@ CACHES = {
 
 # Celery settings
 
-CELERY_BROKER_URL = "redis://{host}:{port}/{db_index}".format(
-    host=os.getenv("REDIS_HOST", "redis"),
-    port=os.getenv("REDIS_PORT", "6379"),
-    db_index=os.getenv("CELERY_REDIS_DB_INDEX", "0"),
-)
+CELERY_BROKER_URL = REDIS_AS_BROKER_URL
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
 
 CELERY_RESULT_EXTENDED = False
