@@ -54,8 +54,6 @@ services:
       - ./telegram_auth:/tgauth_bot
     env_file:
       - ./.env.dev
-    depends_on:
-      - gp-postgres
     ports:
       - "3113:3113"
     networks:
