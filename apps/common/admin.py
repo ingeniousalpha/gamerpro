@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.admin import GenericTabularInline, GenericStackedInline
 
-from apps.common.models import HandledException, Document
+from apps.common.models import HandledException, Document, AppVersion
 
 admin.site.site_header = "Gamer Pro Project"
 admin.site.site_title = "Gamer Pro Project"
@@ -266,3 +266,18 @@ class DocumentAdmin(admin.ModelAdmin):
         'name',
         'code'
     )
+
+
+@admin.register(AppVersion)
+class AppVersionAdmin(admin.ModelAdmin):
+    list_display = (
+        'number', 'app', 'platform', 'updated_at',
+    )
+    list_filter = (
+        'app',
+        'platform',
+    )
+    fields = (
+        'updated_at', 'app', 'platform', 'number',
+    )
+    readonly_fields = ('updated_at',)

@@ -84,3 +84,10 @@ class Document(models.Model):
     class Meta:
         verbose_name = "Документ"
         verbose_name_plural = "Документы"
+
+
+class AppVersion(TimestampModel):
+    number = models.IntegerField()
+    platform = models.CharField(max_length=10, choices=[("IOS", "IOS"), ("ANDROID", "ANDROID")])
+    app = models.CharField(max_length=10, choices=[("BRO", "BRO"), ("Lobby", "Lobby")])
+

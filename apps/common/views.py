@@ -5,7 +5,8 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.common.mixins import PublicJSONRendererMixin
-from .models import Document
+from rest_framework.response import Response
+from .models import Document, AppVersion
 from .serializers import DocumentListSerializer
 from ..bookings.models import Booking
 from ..clubs.models import ClubBranch
@@ -53,6 +54,24 @@ class DocumentPaymentPolicyView(PublicJSONRendererMixin, GenericAPIView):
                 trader_name = club_branch.trader_name
         return render(request, "payment_policy.html", {
             "trader_name": trader_name
+        })
+
+
+class BroAppVersionsView(PublicJSONRendererMixin, GenericAPIView):
+    def get(self, request):
+        app_versions = AppVersion.objects.filter(app="BRO")
+        return Response({
+            "IOS": app_versions.filter(platform="IOS").last().number,
+            "ANDROID": app_versions.filter(platform="ANDROID").last().number,
+        })
+
+
+class LobbyAppVersionsView(PublicJSONRendererMixin, GenericAPIView):
+    def get(self, request):
+        app_versions = AppVersion.objects.filter(app="Lobby")
+        return Response({
+            "IOS": app_versions.filter(platform="IOS").last().number,
+            "ANDROID": app_versions.filter(platform="ANDROID").last().number,
         })
 
 
