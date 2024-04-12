@@ -16,7 +16,8 @@ from apps.bot.tasks import bot_notify_about_new_user_task
 from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin, NeedToInputUserMobilePhone
 from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
-from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService
+from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService, GizmoUpdateUserByIDService
+
 User = get_user_model()
 
 
@@ -339,7 +340,20 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 user=user,
             )
         else:
-            if not club_user.gizmo_phone:
+            exact_club_users = ClubBranchUser.objects.filter(login=club_user.login, gizmo_phone=validated_data['mobile_phone'])
+            if exact_club_users:
+                for cu in ClubBranchUser.objects.filter(login=club_user.login):
+                    if cu.gizmo_phone != validated_data['mobile_phone']:
+                        success = GizmoUpdateUserByIDService(
+                            instance=cu.club_branch,
+                            user_id=cu.gizmo_id,
+                            mobile_phone=validated_data['mobile_phone'],
+                        ).run()
+                        if success:
+                            cu.gizmo_phone = validated_data['mobile_phone']
+                            cu.save(update_fields=['gizmo_phone'])
+
+            elif not club_user.gizmo_phone:
                 club_user.gizmo_phone = validated_data['mobile_phone']
                 club_user.save(update_fields=['gizmo_phone'])
             if club_user.is_verified:

@@ -47,6 +47,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
     club_branch = club_user.club_branch
     # TODO: create this user in every branch
 
+    # TODO: check if him already exist
     gizmo_user_id = GizmoCreateUserService(
         instance=club_branch,
         login=club_user.login,

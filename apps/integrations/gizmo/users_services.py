@@ -232,3 +232,24 @@ class GizmoCreateUserService(BaseGizmoService):
             raise GizmoRequestError
 
         return response.get('result')  # new user gizmo id
+
+
+class GizmoUpdateUserByIDService(BaseGizmoService):
+    endpoint = "/api/users?UserId={user_id}&Phone={phone}&MobilePhone={mobile_phone}"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        # print("self.kwargs.get('username'): ", self.kwargs.get('username'))
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id'),
+            "phone": self.kwargs.get('mobile_phone').replace("+", "%2B"),
+            "mobile_phone": self.kwargs.get('mobile_phone').replace("+", "%2B"),
+        })
+
+    def finalize_response(self, response):
+        if response.get('httpStatusCode') != 200:
+            error_msg = f"Can't update user by id: {self.kwargs.get('user_id')}"
+            self.log_error(error_msg)
+            return False
+        return True
