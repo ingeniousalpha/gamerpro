@@ -70,7 +70,7 @@ services:
     container_name: redis
     restart: unless-stopped
     image: redis
-    command: redis-server --appendonly yes --replica-read-only no --requirepass $REDIS_PASSWORD
+    command: redis-server --appendonly yes --replica-read-only no
     ports:
       - "6379:6379"
     volumes:

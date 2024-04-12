@@ -17,7 +17,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'uuid', 'club_user__user__mobile_phone', 'club_user__login',
     )
     list_display = (
-        'uuid', 'created_at', 'computers', 'amount', 'is_cancelled'
+        'uuid', 'club_user', 'created_at', 'computers', 'amount', 'is_cancelled'
     )
     readonly_fields = (
         'club_branch',

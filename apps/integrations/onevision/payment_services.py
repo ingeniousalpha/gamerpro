@@ -82,7 +82,7 @@ class OVRecurrentPaymentService(BaseOneVisionService):
 
     def finalize_response(self, response):
         resp_data = b64_decode(response.get('data'))
-        # print("resp_data: ", resp_data)
+        print("resp_data: ", resp_data)
         if resp_data and response.get('success'):
             resp_data['description'] = self.kwargs.get('description')
             if 'params' not in resp_data:

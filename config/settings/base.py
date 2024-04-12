@@ -52,6 +52,7 @@ TG_AUTH_BOT_HOST = os.getenv('TG_AUTH_BOT_HOST', 'http://gp-tgauth-bot:3113')
 
 # Redis settings
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+# REDIS_HOST = "localhost"
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_DB_FOR_CELERY = os.getenv("REDIS_DB_FOR_CELERY", "0")
 REDIS_DB_FOR_CACHE = os.getenv("REDIS_DB_FOR_CACHE", "1")
@@ -194,6 +195,7 @@ DATABASES = {
         "USER": os.getenv("DB_USER", "gamerprodb"),
         "PASSWORD": os.getenv("DB_PASSWORD", "gamerprodb"),
         "HOST": os.getenv("DB_HOST", "gp-postgres"),
+        # "HOST": "localhost",
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
