@@ -47,7 +47,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
 
     def is_paid(self, obj):
          if obj.payments.exists() and obj.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
-             mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
+             return mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
          return "Не оплачено"
     is_paid.short_description = "Статус оплаты"
 
