@@ -1,6 +1,9 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 from apps.clubs.admin import FilterByClubMixin
 from .models import Booking, BookedComputer
+from ..payments import PaymentStatuses
+from ..payments.models import Payment
 
 
 class BookedComputerInline(admin.TabularInline):
@@ -11,13 +14,27 @@ class BookedComputerInline(admin.TabularInline):
     can_delete = False
 
 
+class BookingPaymentInline(admin.TabularInline):
+    model = Payment
+    fields = (
+        'outer_id',
+        'status',
+        'status_reason',
+        'amount',
+        'card',
+        'replenishment',
+    )
+    extra = 0
+    can_delete = False
+
+
 @admin.register(Booking)
 class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = (
         'uuid', 'club_user__user__mobile_phone', 'club_user__login',
     )
     list_display = (
-        'uuid', 'club_user', 'created_at', 'computers', 'amount', 'is_cancelled'
+        'uuid', 'club_user', 'club_branch', 'computers', 'amount', 'is_cancelled', 'is_paid', 'created_at'
     )
     readonly_fields = (
         'club_branch',
@@ -28,4 +45,13 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     def computers(self, obj):
         return ", ".join([str(comp.computer.number) for comp in obj.computers.all()])
 
-    inlines = [BookedComputerInline]
+    def is_paid(self, obj):
+         if obj.payments.exists() and obj.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+             mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
+         return "Не оплачено"
+    is_paid.short_description = "Статус оплаты"
+
+    inlines = [
+        BookedComputerInline,
+        BookingPaymentInline
+    ]
