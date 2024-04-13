@@ -84,13 +84,13 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
         booked_computer.computer.is_locked = True
         booked_computer.computer.save(update_fields=['is_locked'])
-        gizmo_start_user_session.apply_async(
-            (booking.uuid, booked_computer.computer.gizmo_id),
-            countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
-        )
+    gizmo_start_user_session.apply_async(
+        (booking.uuid,),
+        countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
+    )
 
 
-def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, start_now=False):
+def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
         return
@@ -124,18 +124,14 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, start_now=False)
         ).run()
     print('BRO booking time_packet activated')
 
-    for booked_computer in booking.computers.all():
-        if start_now:
-            gizmo_start_user_session.delay(str(booking.uuid), booked_computer.computer.gizmo_id)
-        else:
-            gizmo_unlock_computers_and_booking_expire.apply_async(
-                (str(booking.uuid),),
-                countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
-            )
+    gizmo_unlock_computers_and_booking_expire.apply_async(
+        (str(booking.uuid),),
+        countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
+    )
 
 
 @cel_app.task
-def gizmo_start_user_session(booking_uuid, computer_gizmo_id):
+def gizmo_start_user_session(booking_uuid):
     # TODO: Override function for several computers.
     #  Now it fits only for 1 computer booked
 
@@ -148,6 +144,7 @@ def gizmo_start_user_session(booking_uuid, computer_gizmo_id):
     booking.status = BookingStatuses.SESSION_STARTED
     booking.save(update_fields=['status'])
     # todo: check is user session already started?
+    computer_gizmo_id = booking.computers.first().computer.gizmo_id
     GizmoStartUserSessionService(
         instance=booking.club_branch,
         user_id=booking.club_user.gizmo_id,
@@ -182,7 +179,7 @@ def gizmo_unlock_computers_and_booking_expire(booking_uuid):
 
     booking.status = BookingStatuses.EXPIRED
     booking.save(update_fields=['status'])
-    gizmo_unlock_computers(str(booking.uuid), False)
+    gizmo_unlock_computers(booking_uuid, False)
 
 
 
@@ -212,17 +209,20 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     if not booking:
         return
 
-    for booked_computer in booking.computers.all():
+    for index, booked_computer in enumerate(booking.computers.all()):
         GizmoUnlockComputerService(
             instance=booking.club_branch,
             computer_id=booked_computer.computer.gizmo_id
         ).run()
-        cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
-        GizmoStartUserSessionService(
-            instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
-            computer_id=booked_computer.computer.gizmo_id
-        ).run()
+        if index == 0:
+            GizmoStartUserSessionService(
+                instance=booking.club_branch,
+                user_id=booking.club_user.gizmo_id,
+                computer_id=booked_computer.computer.gizmo_id
+            ).run()
+            cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+        else:
+            cache.set(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}', True, config.MULTIBOOKING_LAUNCHING_TIME*60)
 
     _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
 

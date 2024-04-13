@@ -6,7 +6,8 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
-from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking
+from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking, \
+    NotApprovedUserCanNotBookSeveralComputers
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
 from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status, \
@@ -43,6 +44,9 @@ class BaseCreateBookingSerializer(
             raise UserNotFound
         if club_user.has_active_booking:
             raise UserAlreadyHasActiveBooking
+        if not club_user.is_verified and len(attrs['computers']) > 1:
+            raise NotApprovedUserCanNotBookSeveralComputers
+
         attrs['club_user'] = club_user
 
         computers = []
