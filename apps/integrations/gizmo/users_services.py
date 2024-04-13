@@ -71,17 +71,24 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
             existing_club_user = ClubBranchUser.objects.filter(
                 club_branch_id=self.instance.id, login=gizmo_user['username']
             ).first()
-            serializer = GizmoUserSaveSerializer(
-                instance=existing_club_user,
-                data={
-                    "gizmo_id": gizmo_user['id'],
-                    "gizmo_phone": gizmo_phone,
-                    "login": gizmo_user['username'],
-                    "first_name": gizmo_user['firstName'],
-                    "club_branch": self.instance.id,
-                    "user": user
-                }
-            )
+            if existing_club_user:
+                serializer = GizmoUserSaveSerializer(
+                    instance=existing_club_user,
+                    data={
+                        "gizmo_id": gizmo_user['id'],
+                        "club_branch": self.instance.id,
+                    }
+                )
+            else:
+                serializer = GizmoUserSaveSerializer(
+                    data={
+                        "gizmo_id": gizmo_user['id'],
+                        "gizmo_phone": gizmo_phone,
+                        "login": gizmo_user['username'],
+                        "first_name": gizmo_user['firstName'],
+                        "club_branch": self.instance.id,
+                    }
+                )
             serializer.is_valid(raise_exception=True)
             club_user = serializer.save()
             return club_user
