@@ -1,4 +1,5 @@
 import urllib
+import urllib.parse
 from django.contrib.auth import get_user_model
 
 from apps.authentication.exceptions import UserNotFound
@@ -242,7 +243,7 @@ class GizmoCreateUserService(BaseGizmoService):
 
 
 class GizmoUpdateUserByIDService(BaseGizmoService):
-    endpoint = "/api/users?UserId={user_id}&Phone={phone}&MobilePhone={mobile_phone}"
+    endpoint = "/api/users?UserId={user_id}&Phone={phone}&MobilePhone={mobile_phone}&FirstName={first_name}"
     save_serializer = None
     method = "POST"
 
@@ -252,6 +253,8 @@ class GizmoUpdateUserByIDService(BaseGizmoService):
             "user_id": self.kwargs.get('user_id'),
             "phone": self.kwargs.get('mobile_phone').replace("+", "%2B"),
             "mobile_phone": self.kwargs.get('mobile_phone').replace("+", "%2B"),
+            "first_name": urllib.parse.quote_plus(self.kwargs.get('first_name', "")),
+
         })
 
     def finalize_response(self, response):
