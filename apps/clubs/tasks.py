@@ -1,3 +1,5 @@
+from urllib3.exceptions import ConnectTimeoutError
+
 from apps.clubs.models import ClubBranch
 from apps.integrations.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
 from apps.integrations.gizmo.time_packets_services import GizmoGetTimePacketGroupsService, GizmoGetTimePacketsService
@@ -22,5 +24,9 @@ def synchronize_gizmo_computers_state():
 
 
 def _sync_gizmo_computers_state_of_club_branch(club_branch):
-    GizmoGetComputersService(instance=club_branch).run()
-    GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
+    try:
+        GizmoGetComputersService(instance=club_branch).run()
+        GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
+    except ConnectTimeoutError:
+        club_branch.is_active = False
+        club_branch.save(update_fields=['is_active'])
