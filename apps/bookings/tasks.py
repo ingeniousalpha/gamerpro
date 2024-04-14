@@ -104,7 +104,10 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
             club_user=booking.club_user
         )
         minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
-    if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
+    if Booking.objects.filter(
+            club_user__user=booking.club_user.user,
+            payments__status=PaymentStatuses.PAYMENT_APPROVED
+    ).count() <= 1:
         minutes_to_add += config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
     GizmoAddPaidTimeToUser(
         instance=booking.club_branch,
