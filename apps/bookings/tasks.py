@@ -115,7 +115,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
         minutes=minutes_to_add,
         price=booking.time_packet.price
     ).run()
-    if config.CASHBACK_TURNED_ON:
+    if config.CASHBACK_TURNED_ON and booking.amount >= 100:
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
             user_gizmo_id=booking.club_user.gizmo_id,
