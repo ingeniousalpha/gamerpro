@@ -10,6 +10,7 @@ from apps.clubs.models import ClubBranchUser, ClubBranch
 from apps.integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
 from apps.integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUserByUsernameService, \
     GizmoUpdateUserByIDService
+from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
 from django.conf import settings
 
@@ -117,5 +118,5 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 continue
 
     booking = club_user.bookings.last()
-    if booking:
+    if booking and booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
         gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))
