@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
-from apps.common.views import dashboard_view
+from apps.common.views import dashboard_view, stats_view
 
 urlpatterns = [
-    path('dashboard/', dashboard_view),
+    path('dashboardui/', dashboard_view),
+    path('stats/', stats_view),
     path('admin/', admin.site.urls),
     # path('ckeditor/', include('ckeditor_uploader.urls')),
     path("api/", include("apps.urls")),

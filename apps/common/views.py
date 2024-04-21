@@ -102,3 +102,7 @@ def dashboard_view(request):
         "dates_list": dates_list,
         "bookings_count_list": bookings_count_list,
     })
+
+
+def stats_view(request):
+    return render(request, "stats.html")
