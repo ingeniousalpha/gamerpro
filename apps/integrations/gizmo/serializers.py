@@ -6,7 +6,7 @@ from apps.clubs.models import ClubBranchUser, ClubComputer, ClubComputerGroup, C
 class GizmoUserSaveSerializer(serializers.ModelSerializer):
     gizmo_phone = serializers.CharField(required=False, allow_blank=True)
     login = serializers.CharField(required=False, allow_blank=True)
-    first_name = serializers.CharField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
     class Meta:
