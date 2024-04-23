@@ -358,7 +358,8 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                         ).run()
                         if success:
                             cu.gizmo_phone = validated_data['mobile_phone']
-                            cu.save(update_fields=['gizmo_phone'])
+                            cu.user = user
+                            cu.save(update_fields=['gizmo_phone', 'user'])
 
             elif not club_user.gizmo_phone:
                 club_user.gizmo_phone = validated_data['mobile_phone']
