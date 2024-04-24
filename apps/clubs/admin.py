@@ -65,6 +65,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     extra = 0
     ordering = ['number']
     fields = ('id', 'group', 'gizmo_hostname', 'is_locked', 'is_active_session')
+    readonly_fields = ('group',)
 
 
 class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
@@ -78,7 +79,7 @@ class ClubBranchTimePacketGroupInline(FilterByClubMixin, admin.TabularInline):
     model = ClubTimePacketGroup
     extra = 0
     fields = ('name', 'is_active', 'computer_group')
-    readonly_fields = ('name',)
+    readonly_fields = ('name', 'computer_group',)
     show_change_link = True
     inlines = [ClubBranchTimePacketInline]
 
