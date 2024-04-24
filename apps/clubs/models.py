@@ -27,6 +27,10 @@ class ClubBranchLegalEntity(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = "ИПшка"
+        verbose_name_plural = "ИПшки"
+
 
 class ClubBranch(models.Model):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
