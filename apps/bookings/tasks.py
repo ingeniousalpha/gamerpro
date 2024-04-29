@@ -66,7 +66,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             minutes=minutes_to_add,
             price=booking.time_packet.price
         ).run()
-        if config.CASHBACK_TURNED_ON:
+        if config.CASHBACK_TURNED_ON and booking.amount >= 100:
             GizmoCreateDepositTransactionService(
                 instance=booking.club_branch,
                 user_gizmo_id=booking.club_user.gizmo_id,
@@ -84,8 +84,9 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
         booked_computer.computer.is_locked = True
         booked_computer.computer.save(update_fields=['is_locked'])
-    gizmo_start_user_session.apply_async(
-        (booking.uuid,),
+
+    gizmo_unlock_computers_and_booking_expire.apply_async(
+        (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
     )
 
