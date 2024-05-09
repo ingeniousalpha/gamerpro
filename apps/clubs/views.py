@@ -8,6 +8,7 @@ from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer,
     ClubTimePacketListSerializer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
+from apps.common.pagination import ClubsPagination
 from apps.integrations.gizmo.computers_services import GizmoGetComputersService
 
 
@@ -17,6 +18,7 @@ class ClublistView(PublicJSONRendererMixin, ListAPIView):
 
 
 class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
+    pagination_class = ClubsPagination
     queryset = (ClubBranch.objects.filter(is_active=True)
                 # .filter(club__is_bro_chain=False)
                 .order_by('-priority'))
@@ -24,6 +26,7 @@ class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
 
 
 class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
+    pagination_class = ClubsPagination
     queryset = (ClubBranch.objects.filter(is_active=True)
                 .filter(club__is_bro_chain=True)
                 .order_by('-priority'))

@@ -15,3 +15,7 @@ class CustomPagination(pagination.PageNumberPagination):
             'results': data,
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ClubsPagination(CustomPagination):
+    page_size = 20
