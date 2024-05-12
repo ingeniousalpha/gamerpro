@@ -212,11 +212,16 @@ class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'code',
+        'branches_amount',
     )
     search_fields = (
         'code',
         'name',
     )
+    readonly_fields = ('branches_amount',)
     inlines = [
         ClubBranchInline,
     ]
+
+    def branches_amount(self, obj):
+        return obj.club_branches.count()
