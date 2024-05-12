@@ -217,3 +217,6 @@ class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
         'code',
         'name',
     )
+    inlines = [
+        ClubBranchInline,
+    ]
