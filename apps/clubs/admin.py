@@ -28,10 +28,12 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     ordering = ('number',)
 
 
-class ClubBranchInline(FilterByClubMixin, admin.StackedInline):
+class ClubBranchInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranch
     extra = 0
-    fields = ('name',)
+    fields = ('name', 'api_host',)
+    readonly_fields = ('name', 'api_host')
+    show_change_link = ('name',)
 
 
 class ClubComputerGroupInline(FilterByClubMixin, admin.TabularInline):
