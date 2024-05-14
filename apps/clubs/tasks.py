@@ -21,7 +21,11 @@ def synchronize_gizmo_club_branch(club_branch_id):
 @cel_app.task
 def synchronize_gizmo_computers_state():
     for club_branch in ClubBranch.objects.filter(is_active=True):
-        _sync_gizmo_computers_state_of_club_branch(club_branch)
+        try:
+            _sync_gizmo_computers_state_of_club_branch(club_branch)
+        except Exception as e:
+            print(e)
+            print('exception handled bitch')
 
 
 def _sync_gizmo_computers_state_of_club_branch(club_branch):
