@@ -20,19 +20,14 @@ def synchronize_gizmo_club_branch(club_branch_id):
 @cel_app.task
 def synchronize_gizmo_computers_state():
     for club_branch in ClubBranch.objects.filter(is_active=True):
-        try:
-            _sync_gizmo_computers_state_of_club_branch(club_branch)
-        except Exception as e:
-            print(e)
-            print('exception handled bitch')
+        _sync_gizmo_computers_state_of_club_branch(club_branch)
 
 
 def _sync_gizmo_computers_state_of_club_branch(club_branch):
     try:
-        print('starting GizmoGetComputersService')
         GizmoGetComputersService(instance=club_branch).run()
         GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
     except (ConnectTimeout, ConnectionError, HTTPError, RequestException):
-        print('connection exception handled')
+        print(f'connection exception handled, branch {club_branch} turned off')
         club_branch.is_active = False
         club_branch.save(update_fields=['is_active'])
