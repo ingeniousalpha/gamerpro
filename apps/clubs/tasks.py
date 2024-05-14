@@ -1,4 +1,3 @@
-import requests
 from requests.exceptions import ConnectTimeout, ConnectionError, HTTPError, RequestException
 
 from apps.clubs.models import ClubBranch
@@ -37,7 +36,3 @@ def _sync_gizmo_computers_state_of_club_branch(club_branch):
         print('connection exception handled')
         club_branch.is_active = False
         club_branch.save(update_fields=['is_active'])
-    except Exception as e:
-        print('just exception handled')
-        print(e)
-

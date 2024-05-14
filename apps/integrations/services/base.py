@@ -9,6 +9,7 @@ from requests import Session
 from urllib.parse import urljoin
 from requests.models import Response
 from rest_framework.exceptions import ValidationError
+from requests.exceptions import ConnectTimeout, ConnectionError, HTTPError, RequestException
 
 from apps.integrations import ServiceStatuses
 from apps.integrations.models import OuterServiceLog
@@ -190,6 +191,9 @@ class BaseService(ABC):
         except UnauthorizedError:
             logger.error(f"Service is unauthorized {self.__class__.__name__}")
             self.status = ServiceStatuses.UNAUTHORIZED
+
+        except (ConnectTimeout, ConnectionError, HTTPError, RequestException) as exc:
+            raise exc
 
         except Exception as exc:
             logger.exception(exc)
