@@ -26,8 +26,14 @@ def synchronize_gizmo_computers_state():
 
 def _sync_gizmo_computers_state_of_club_branch(club_branch):
     try:
+        print('starting GizmoGetComputersService')
         GizmoGetComputersService(instance=club_branch).run()
         GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
     except (ConnectTimeout, ConnectionError, HTTPError, RequestException):
+        print('connection exception handled')
         club_branch.is_active = False
         club_branch.save(update_fields=['is_active'])
+    except Exception as e:
+        print('just exception handled')
+        print(e)
+
