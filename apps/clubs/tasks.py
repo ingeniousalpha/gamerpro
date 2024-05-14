@@ -1,4 +1,5 @@
-from urllib3.exceptions import ConnectTimeoutError
+import requests
+from requests.exceptions import ConnectTimeout, HTTPError, RequestException
 
 from apps.clubs.models import ClubBranch
 from apps.integrations.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
@@ -27,6 +28,6 @@ def _sync_gizmo_computers_state_of_club_branch(club_branch):
     try:
         GizmoGetComputersService(instance=club_branch).run()
         GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
-    except ConnectTimeoutError:
+    except (ConnectTimeout, HTTPError, RequestException):
         club_branch.is_active = False
         club_branch.save(update_fields=['is_active'])
