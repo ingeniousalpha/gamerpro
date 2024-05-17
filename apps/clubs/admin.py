@@ -1,3 +1,4 @@
+from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
@@ -113,6 +114,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_ready',
         'priority',
         'image',
+        'extra_data',
     )
     inlines = [
         ClubComputerGroupInline,
@@ -133,6 +135,9 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_ready',
 
     )
+    formfield_overrides = {
+        models.JSONField: {'widget': JSONEditorWidget},
+    }
 
     def response_change(self, request, obj):
         if "sync_gizmo" in request.POST:

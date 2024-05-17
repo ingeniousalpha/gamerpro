@@ -24,6 +24,7 @@ django-filter==22.1
 django-phonenumber-field==7.0.2
 django-picklefield==3.1
 django-timezone-field==5.0
+django-json-widget==2.0.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
 executing==1.2.0

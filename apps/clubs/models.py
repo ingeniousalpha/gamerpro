@@ -51,6 +51,7 @@ class ClubBranch(models.Model):
         related_name="club_branches",
         null=True
     )
+    extra_data = models.JSONField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Филиал Клуба"

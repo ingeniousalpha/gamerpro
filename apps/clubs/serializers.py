@@ -234,6 +234,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
             'is_favorite',
             'is_ready',
             'user',
+            'extra_data',
             'landing',
         )
 

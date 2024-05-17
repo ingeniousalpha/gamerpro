@@ -126,6 +126,7 @@ THIRD_PARTY_APPS = [
     "constance",
     "constance.backends.database",
     "django_celery_beat",
+    "django_json_widget",
     # "ckeditor",
     # "ckeditor_uploader",
 ]
