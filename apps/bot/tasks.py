@@ -46,7 +46,7 @@ def bot_notify_about_new_user_task(club_branch_id, login, first_name, approved=F
 @cel_app.task
 def bot_approve_user_from_admin_task(club_branch_user_id):
     club_user = ClubBranchUser.objects.filter(id=club_branch_user_id).first()
-    if not club_user:
+    if not club_user or club_user.is_verified:
         return
 
     bot_create_gizmo_user_task(

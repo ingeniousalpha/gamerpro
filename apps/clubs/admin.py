@@ -157,7 +157,7 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
         if "bot_approve_user_from_admin" in request.POST:
             print('bot_approve_user_from_admin')
             bot_approve_user_from_admin_task.delay(obj.id)
-            self.message_user(request, "Synchronizing GIZMO club info")
+            self.message_user(request, "Верифицируем и создаем аккаунт юзера...")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 
