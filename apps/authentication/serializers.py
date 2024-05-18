@@ -368,6 +368,7 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 return user
 
         if validated_data['club_branch'].club.name.lower() == "bro":
+            print('execute bot_notify_about_new_user_task')
             bot_notify_about_new_user_task.delay(
                 club_branch_id=validated_data['club_branch'].id,
                 login=validated_data['login'],

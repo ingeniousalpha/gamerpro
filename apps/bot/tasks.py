@@ -16,7 +16,7 @@ from django.conf import settings
 
 
 @cel_app.task
-def bot_notify_about_new_user_task(club_branch_id, login, first_name):
+def bot_notify_about_new_user_task(club_branch_id, login, first_name, approved=False):
     club_branch = ClubBranch.objects.get(id=club_branch_id)
     if not club_branch.admins.exists() or not settings.TELEGRAM_BOT_TOKEN:
         return
@@ -26,13 +26,38 @@ def bot_notify_about_new_user_task(club_branch_id, login, first_name):
                 f"name: {first_name}\n"
     admin = club_branch.admins.filter(is_active=True).last()
     bot = telegram.Bot(token=settings.TELEGRAM_BOT_TOKEN)
-    bot.send_message(
-        chat_id=admin.tg_chat_id,
-        text=full_text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Показал удос ✅", callback_data=f"user_approved={login}|{club_branch_id}")]]
-        ),
+    if approved:
+        bot.send_message(
+            chat_id=admin.tg_chat_id,
+            text=full_text + "\n<b>Верифицирован</b>",
+            parse_mode=ParseMode.HTML,
+        )
+    else:
+        bot.send_message(
+            chat_id=admin.tg_chat_id,
+            text=full_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Показал удос ✅", callback_data=f"user_approved={login}|{club_branch_id}")]]
+            ),
+        )
+
+
+@cel_app.task
+def bot_approve_user_from_admin_task(club_branch_user_id):
+    club_user = ClubBranchUser.objects.filter(id=club_branch_user_id).first()
+    if not club_user:
+        return
+
+    bot_create_gizmo_user_task(
+        club_branch_user_login=club_user.login,
+        club_branch_id=club_user.club_branch.id
+    )
+    bot_notify_about_new_user_task(
+        club_user.club_branch.id,
+        club_user.login,
+        club_user.first_name,
+        approved=True
     )
 
 

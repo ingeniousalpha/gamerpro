@@ -29,8 +29,8 @@ def generate_password():
 
 def save_error(error_code, error_message, stack_trace=None):
     return HandledException.objects.create(
-        code=error_code,
-        message=error_message,
+        code=error_code[:512],
+        message=error_message[:512],
         stack_trace=stack_trace
     ).pk
 

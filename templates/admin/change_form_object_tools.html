@@ -3,10 +3,19 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <li>
     {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
-    <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
+
+    {% if opts.model_name == "clubbranchuser" %}
+        <a href="javascript:run_bot_approve_user_from_admin()" class="historylink" style="margin-right: 10px">Показал Удос</a>
+    {% elif opts.model_name == "clubbranch" %}
+        <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
+    {% endif %}
     <a href="{% add_preserved_filters history_url %}" class="historylink">History</a>
 </li>
 <script>
+    function run_bot_approve_user_from_admin() {
+        $('#clubbranchuser_form').append('<input type="hidden" name="bot_approve_user_from_admin" value="" />');
+        $('#clubbranchuser_form').submit()
+    }
     function run_sync_gizmo() {
         $('#clubbranch_form').append('<input type="hidden" name="sync_gizmo" value="" />');
         $('#clubbranch_form').submit()

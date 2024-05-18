@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
-
+from apps.bot.tasks import bot_approve_user_from_admin_task
 admin.site.register(ClubComputerGroup)
 
 
@@ -152,6 +152,14 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
     list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch')
+
+    def response_change(self, request, obj):
+        if "bot_approve_user_from_admin" in request.POST:
+            print('bot_approve_user_from_admin')
+            bot_approve_user_from_admin_task.delay(obj.id)
+            self.message_user(request, "Synchronizing GIZMO club info")
+            return HttpResponseRedirect(".")
+        return super().response_change(request, obj)
 
 
 class ClubBranchUserInline(admin.TabularInline):

@@ -71,8 +71,8 @@ class MultipleModelFK(MainModel):
 
 
 class HandledException(TimestampModel):
-    code = models.CharField("Код ошибки", max_length=256)
-    message = models.CharField("Описание ошибки", max_length=256)
+    code = models.TextField("Код ошибки", max_length=512)
+    message = models.TextField("Описание ошибки", max_length=512)
     stack_trace = models.TextField("Traceback", null=True, blank=True)
 
 
