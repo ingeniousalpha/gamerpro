@@ -202,7 +202,7 @@ class ClubBranchPrice(models.Model):
 class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
-    gizmo_id = models.IntegerField(null=True, db_index=True)
+    gizmo_id = models.IntegerField(null=True, blank=True, db_index=True)
     gizmo_phone = models.CharField(max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
     first_name = models.CharField(max_length=100, null=True, blank=True)
