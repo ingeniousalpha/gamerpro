@@ -155,7 +155,7 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
 
     def get_hall_id(self, obj):
         if obj.group:
-            return obj.group.id
+            return str(obj.group.id)
 
     def get_hall_name(self, obj):
         if obj.group:
