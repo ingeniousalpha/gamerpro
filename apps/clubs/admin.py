@@ -25,7 +25,7 @@ class FilterByClubMixin:
 
 @admin.register(ClubComputer)
 class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('id', 'gizmo_id', 'number', 'gizmo_hostname', 'is_booked')
+    list_display = ('id', 'group', 'gizmo_id', 'number', 'gizmo_hostname', 'is_booked')
     ordering = ('number',)
 
 
@@ -67,7 +67,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
-    fields = ('id', 'group', 'gizmo_hostname', 'is_locked', 'is_active_session')
+    fields = ('id', 'group', 'gizmo_id', 'gizmo_hostname', 'is_locked', 'is_active_session')
     readonly_fields = ('group',)
 
 

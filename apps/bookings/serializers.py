@@ -59,7 +59,10 @@ class BaseCreateBookingSerializer(
             computers.append(computer)
 
         attrs['computers'] = computers
-        amount = attrs.get('amount', Decimal(0))
+        if attrs.get('time_packet'):
+            amount = attrs['time_packet'].price
+        else:
+            amount = attrs.get('amount', Decimal(0))
         attrs['commission_amount'] = Booking.get_commission_amount(amount)
         attrs['total_amount'] = attrs['commission_amount'] + amount
         return attrs

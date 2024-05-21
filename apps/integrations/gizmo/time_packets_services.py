@@ -85,3 +85,27 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
         if response.get('isError') == True:
             self.log_error(str(response['errors']))
             raise GizmoRequestError
+
+
+class GizmoSetTimePacketToUser(BaseGizmoService):
+    endpoint = "/api/users/{user_id}/order/{product_id}/{quantity}/invoice/payment/{payment_method}"
+    save_serializer = None
+    method = "POST"
+    log_response = True
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id'),
+            "product_id": int(self.kwargs.get('product_id')),  # Gizmo Time Packet ID
+            "quantity": int(self.kwargs.get('quantity', 1)),
+            "payment_method": self.instance.gizmo_payment_method
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response['errors']))
+            raise GizmoRequestError
+        elif response.get('result') == 16384:
+            error_msg = "Вы не можете сесть за этот компьютер"
+            self.log_error(error_msg)
+            raise GizmoRequestError(error_msg)

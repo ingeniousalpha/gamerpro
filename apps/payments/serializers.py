@@ -10,7 +10,7 @@ from apps.integrations.onevision.payment_services import OVRecurrentPaymentServi
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.payments.models import Payment, PaymentCard
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
-from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser
 
 
 class PaymentCardListSerializer(serializers.ModelSerializer):
@@ -139,11 +139,10 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
 
         replenishment = super().create(validated_data)
 
-        GizmoAddPaidTimeToUser(
+        GizmoSetTimePacketToUser(
             instance=validated_data['club_branch'],
             user_id=validated_data['booking'].club_user.gizmo_id,
-            minutes=validated_data['time_packet'].minutes,
-            price=validated_data['time_packet'].price
+            product_id=validated_data['time_packet'].gizmo_id
         ).run()
         payment.replenishment = replenishment
         payment.save()

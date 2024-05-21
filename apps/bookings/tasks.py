@@ -8,7 +8,7 @@ from apps.clubs.models import ClubBranch
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
-from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
@@ -57,14 +57,18 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
     elif booking.time_packet:
         print('booking time_packet activating...')
-        minutes_to_add = booking.time_packet.minutes
         if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
-            minutes_to_add += config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
-        GizmoAddPaidTimeToUser(
+            extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
+            GizmoAddPaidTimeToUser(
+                instance=booking.club_branch,
+                user_id=booking.club_user.gizmo_id,
+                minutes=extra_minutes,
+                price=booking.time_packet.price
+            ).run()
+        GizmoSetTimePacketToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
-            minutes=minutes_to_add,
-            price=booking.time_packet.price
+            product_id=booking.time_packet.gizmo_id
         ).run()
         if config.CASHBACK_TURNED_ON and booking.amount >= 100:
             GizmoCreateDepositTransactionService(
@@ -97,24 +101,29 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
         return
 
     print('BRO booking time_packet activating...')
-    minutes_to_add = booking.time_packet.minutes
+    # minutes_to_add = booking.time_packet.minutes
     # Add minutes for firstly cancelled bookings
-    if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
-        bookings = Booking.objects.filter(
-            status=BookingStatuses.CANCELLED,
-            club_user=booking.club_user
-        )
-        minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
+    # if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
+    #     bookings = Booking.objects.filter(
+    #         status=BookingStatuses.CANCELLED,
+    #         club_user=booking.club_user
+    #     )
+    #     minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
     if Booking.objects.filter(
             club_user__user=booking.club_user.user,
             payments__status=PaymentStatuses.PAYMENT_APPROVED
     ).count() <= 1:
-        minutes_to_add += config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
-    GizmoAddPaidTimeToUser(
+        extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
+        GizmoAddPaidTimeToUser(
+            instance=booking.club_branch,
+            user_id=booking.club_user.gizmo_id,
+            minutes=extra_minutes,
+            price=booking.time_packet.price
+        ).run()
+    GizmoSetTimePacketToUser(
         instance=booking.club_branch,
         user_id=booking.club_user.gizmo_id,
-        minutes=minutes_to_add,
-        price=booking.time_packet.price
+        product_id=booking.time_packet.gizmo_id
     ).run()
     if config.CASHBACK_TURNED_ON and booking.amount >= 100:
         GizmoCreateDepositTransactionService(
