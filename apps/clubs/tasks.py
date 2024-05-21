@@ -27,7 +27,11 @@ def _sync_gizmo_computers_state_of_club_branch(club_branch):
     try:
         GizmoGetComputersService(instance=club_branch).run()
         GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
+        if not club_branch.is_turned_on:
+            club_branch.is_turned_on = True
+            club_branch.save(update_fields=['is_turned_on'])
     except (ConnectTimeout, ConnectionError, HTTPError, RequestException):
         print(f'connection exception handled, branch {club_branch} turned off')
-        club_branch.is_active = False
-        club_branch.save(update_fields=['is_active'])
+        if club_branch.is_turned_on:
+            club_branch.is_turned_on = False
+            club_branch.save(update_fields=['is_turned_on'])
