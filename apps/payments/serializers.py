@@ -147,13 +147,16 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
         payment.replenishment = replenishment
         payment.save()
         if config.CASHBACK_TURNED_ON:
-            GizmoCreateDepositTransactionService(
-                instance=validated_data['booking'].club_branch,
-                user_gizmo_id=validated_data['booking'].club_user.gizmo_id,
-                booking=validated_data['booking'],
-                user_received_amount=validated_data['booking'].amount,
-                commission_amount=validated_data['booking'].commission_amount,
-                total_amount=validated_data['booking'].total_amount,
-                replenishment_type="cashback",
-            ).run()
+            try:
+                GizmoCreateDepositTransactionService(
+                    instance=validated_data['booking'].club_branch,
+                    user_gizmo_id=validated_data['booking'].club_user.gizmo_id,
+                    booking=validated_data['booking'],
+                    user_received_amount=validated_data['booking'].amount,
+                    commission_amount=validated_data['booking'].commission_amount,
+                    total_amount=validated_data['booking'].total_amount,
+                    replenishment_type="cashback",
+                ).run()
+            except Exception as e:
+                pass
         return replenishment
