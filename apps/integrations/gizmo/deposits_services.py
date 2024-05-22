@@ -11,6 +11,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
     endpoint = "/api/v2.0/deposittransactions"
     save_serializer = None
     method = "POST"
+    log_request = True
     log_response = True
 
     def run_service(self):
