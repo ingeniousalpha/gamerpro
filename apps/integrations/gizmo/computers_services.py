@@ -88,7 +88,7 @@ class GizmoLockComputerService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
 
 
@@ -104,5 +104,5 @@ class GizmoUnlockComputerService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError

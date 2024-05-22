@@ -32,7 +32,7 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
 
         return DepositReplenishment.objects.create(

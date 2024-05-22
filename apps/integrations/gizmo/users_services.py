@@ -196,7 +196,7 @@ class GizmoStartUserSessionService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
         else:
             self.instance.is_starting_session = True
@@ -215,7 +215,7 @@ class GizmoEndUserSessionService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
 
 
@@ -234,7 +234,7 @@ class GizmoCreateUserService(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             if response.get('errorCodeTypeReadable') == "NonUniqueEntityValue":
                 raise GizmoLoginAlreadyExistsError
             raise GizmoRequestError

@@ -83,7 +83,7 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
 
 
@@ -103,7 +103,7 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
 
     def finalize_response(self, response):
         if response.get('isError') == True:
-            self.log_error(str(response['errors']))
+            self.log_error(str(response))
             raise GizmoRequestError
         elif response.get('result') == 16384:
             error_msg = "Вы не можете сесть за этот компьютер"
