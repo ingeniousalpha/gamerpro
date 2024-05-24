@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.common.models import Document
+from apps.common.models import Document, City
 
 
 class AbstractNameSerializer(serializers.ModelSerializer):
@@ -93,3 +93,12 @@ class DocumentListSerializer(serializers.ModelSerializer):
         if obj.code == "public_offer":
             return "https://server.gamerpro.kz/api/documents/public_offer"
         return self.context['request'].build_absolute_uri(obj.file.url)
+
+
+class CitiesListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = (
+            'id',
+            'name',
+        )

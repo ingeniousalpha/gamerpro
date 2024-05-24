@@ -6,8 +6,8 @@ from django.utils import timezone
 
 from apps.common.mixins import PublicJSONRendererMixin
 from rest_framework.response import Response
-from .models import Document, AppVersion
-from .serializers import DocumentListSerializer
+from .models import Document, AppVersion, City
+from .serializers import DocumentListSerializer, CitiesListSerializer
 from ..bookings.models import Booking
 from ..clubs.models import ClubBranch
 
@@ -55,6 +55,12 @@ class DocumentPaymentPolicyView(PublicJSONRendererMixin, GenericAPIView):
         return render(request, "payment_policy.html", {
             "trader_name": trader_name
         })
+
+
+class CitiesListView(PublicJSONRendererMixin, ListAPIView):
+    queryset = City.objects.filter(is_active=True)
+    serializer_class = CitiesListSerializer
+    pagination_class = None
 
 
 class BroAppVersionsView(PublicJSONRendererMixin, GenericAPIView):

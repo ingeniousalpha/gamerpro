@@ -101,11 +101,12 @@ class ClubAdmin(admin.ModelAdmin):
 @admin.register(ClubBranch)
 class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
+        'club',
         'name',
         'trader_name',
         'trader',
         'address',
-        'club',
+        'city',
         'api_host',
         'api_user',
         'api_password',

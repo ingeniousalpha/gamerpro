@@ -53,6 +53,12 @@ class ClubBranch(models.Model):
         null=True
     )
     extra_data = models.JSONField(null=True, blank=True)
+    city = models.ForeignKey(
+        "common.City",
+        on_delete=models.SET_NULL,
+        related_name="club_branches",
+        null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "Филиал Клуба"

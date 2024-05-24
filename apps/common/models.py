@@ -91,3 +91,31 @@ class AppVersion(TimestampModel):
     platform = models.CharField(max_length=10, choices=[("IOS", "IOS"), ("ANDROID", "ANDROID")])
     app = models.CharField(max_length=10, choices=[("BRO", "BRO"), ("Lobby", "Lobby")])
 
+
+class Country(models.Model):
+    name = models.CharField(max_length=30)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Страна"
+        verbose_name_plural = "* Страны"
+
+    def __str__(self):
+        return self.name
+
+
+class City(models.Model):
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.PROTECT,
+        related_name="cities",
+    )
+    name = models.CharField(max_length=30)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Город"
+        verbose_name_plural = "* Города"
+
+    def __str__(self):
+        return self.name

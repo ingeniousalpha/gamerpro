@@ -24,6 +24,11 @@ class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
                 .order_by('-priority'))
     serializer_class = ClubBranchListSerializer
 
+    def get_queryset(self):
+        if self.request.GET.get('city'):
+            return self.queryset.filter(Q(city=self.request.GET.get('city')) & Q(city__is_active=True))
+        return self.queryset
+
 
 class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
     pagination_class = ClubsPagination
@@ -31,6 +36,11 @@ class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
                 .filter(club__is_bro_chain=True)
                 .order_by('-priority'))
     serializer_class = ClubBranchListSerializer
+
+    def get_queryset(self):
+        if self.request.GET.get('city'):
+            return self.queryset.filter(Q(city=self.request.GET.get('city')) & Q(city__is_active=True))
+        return self.queryset
 
 
 class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):

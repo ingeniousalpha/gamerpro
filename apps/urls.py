@@ -4,7 +4,8 @@ from apps.common.views import (
     DocumentListView,
     DocumentPrivacyPolicyView,
     DocumentPublicOfferView,
-    DocumentPaymentPolicyView, BroAppVersionsView, LobbyAppVersionsView
+    DocumentPaymentPolicyView, BroAppVersionsView, LobbyAppVersionsView,
+    CitiesListView,
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     path("documents/privacy_policy", DocumentPrivacyPolicyView.as_view()),
     path("documents/payment_policy", DocumentPaymentPolicyView.as_view()),
     path("documents/public_offer", DocumentPublicOfferView.as_view()),
+    path("cities", CitiesListView.as_view()),
     path("app_versions/bro", BroAppVersionsView.as_view()),
     path("app_versions/lobby", LobbyAppVersionsView.as_view()),
 ]
