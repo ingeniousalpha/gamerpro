@@ -20,8 +20,8 @@ def bot_notify_about_booking_task(club_branch_id, booking_uuid, booking_created_
     if not admin or not settings.TELEGRAM_BOT_TOKEN:
         return
 
-    full_text = ("Новая бронь!"
-                 "Номер: {booking_uuid})\n"
+    full_text = ("Новая бронь!\n"
+                 "Номер: {booking_uuid}\n"
                  "Дата: {booking_created_at}\n\n"
                  "<b>Логин:</b> {login}\n"
                  "<b>Пакет:</b> {time_packet_name}\n"
