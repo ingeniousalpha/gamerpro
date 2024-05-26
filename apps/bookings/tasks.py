@@ -4,7 +4,6 @@ from decimal import Decimal
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
-from apps.bot.tasks import bot_notify_about_booking_task
 from apps.clubs.models import ClubBranch
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
@@ -102,6 +101,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
     if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
         return
 
+    from apps.bot.tasks import bot_notify_about_booking_task
     print('BRO booking time_packet activating...')
     # minutes_to_add = booking.time_packet.minutes
     # Add minutes for firstly cancelled bookings
