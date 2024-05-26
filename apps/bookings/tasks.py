@@ -139,10 +139,11 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
         ).run()
     print('BRO booking time_packet activated')
 
-    bot_notify_about_booking_task(
+    bot_notify_about_booking_task.delay(
         club_branch_id=booking.club_branch.id,
         booking_uuid=booking.uuid,
         login=booking.club_user.login,
+        time_packet_name=booking.time_packet.display_name,
         computers=[bc.computer.number for bc in booking.computers.all()]
     )
     gizmo_unlock_computers_and_booking_expire.apply_async(
