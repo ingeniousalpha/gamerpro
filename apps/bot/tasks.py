@@ -15,25 +15,24 @@ from django.conf import settings
 
 
 @cel_app.task
-def bot_notify_about_booking_task(club_branch_id, booking_uuid, login, time_packet_name, computers):
+def bot_notify_about_booking_task(club_branch_id, booking_uuid, booking_created_at, login, time_packet_name, computers):
     admin = ClubBranchAdmin.objects.filter(club_branch_id=club_branch_id, is_active=True).last()
     if not admin or not settings.TELEGRAM_BOT_TOKEN:
         return
 
-    full_text = """
-        Новая бронь!
-        номер: {booking_uuid}
+    full_text = ("Новая бронь!"
+                 "Номер: {booking_uuid})\n"
+                 "Дата: {booking_created_at}\n\n"
+                 "<b>Логин:</b> {login}\n"
+                 "<b>Пакет:</b> {time_packet_name}\n"
+                 "<b>Компьютер(ы):</b> {computers}")
 
-        <b>Логин:</b> {login}
-        <b>Пакет:</b> {time_packet_name}
-        <b>Компьютер(ы):</b> {computers}
-        
-    """
     bot = telegram.Bot(token=settings.TELEGRAM_BOT_TOKEN)
     bot.send_message(
         chat_id=admin.tg_chat_id,
         text=full_text.format(
-            booking_uuid=booking_uuid,
+            booking_uuid=booking_uuid[:8],
+            booking_created_at=booking_created_at,
             login=login,
             time_packet_name=time_packet_name,
             computers=",".join(computers),

@@ -142,6 +142,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
     bot_notify_about_booking_task.delay(
         club_branch_id=booking.club_branch.id,
         booking_uuid=booking.uuid,
+        booking_created_at=booking.created_at.strftime('%Y.%m.%d %H:%M:%S'),
         login=booking.club_user.login,
         time_packet_name=booking.time_packet.display_name,
         computers=[str(bc.computer.number) for bc in booking.computers.all()]
