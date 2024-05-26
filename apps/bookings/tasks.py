@@ -144,7 +144,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
         booking_uuid=booking.uuid,
         login=booking.club_user.login,
         time_packet_name=booking.time_packet.display_name,
-        computers=[bc.computer.number for bc in booking.computers.all()]
+        computers=[str(bc.computer.number) for bc in booking.computers.all()]
     )
     gizmo_unlock_computers_and_booking_expire.apply_async(
         (str(booking.uuid),),
