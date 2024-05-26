@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
+from apps.bot.tasks import bot_notify_about_booking_task
 from apps.clubs.models import ClubBranch
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
@@ -96,7 +97,8 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
 
 
 def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
-    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    booking = (Booking.objects.select_related('club_user', 'club_user__user', 'club_branch', 'time_packet')
+               .prefetch_related('computers').filter(uuid=booking_uuid).first())
     if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
         return
 
@@ -137,6 +139,12 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
         ).run()
     print('BRO booking time_packet activated')
 
+    bot_notify_about_booking_task(
+        club_branch_id=booking.club_branch.id,
+        booking_uuid=booking.uuid,
+        login=booking.club_user.login,
+        computers=[bc.computer.number for bc in booking.computers.all()]
+    )
     gizmo_unlock_computers_and_booking_expire.apply_async(
         (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING

@@ -6,7 +6,7 @@ import telegram
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
 from apps.bookings.tasks import gizmo_bro_add_time_and_set_booking_expiration
-from apps.clubs.models import ClubBranchUser, ClubBranch
+from apps.clubs.models import ClubBranchUser, ClubBranch, ClubBranchAdmin
 from apps.integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
 from apps.integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUserByUsernameService, \
     GizmoUpdateUserByIDService
@@ -14,6 +14,33 @@ from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
 from django.conf import settings
 
+
+@cel_app.task
+def bot_notify_about_booking_task(club_branch_id, booking_uuid, login, time_packet_name, computers):
+    admin = ClubBranchAdmin.objects.filter(club_branch_id=club_branch_id, is_active=True).last()
+    if not admin or not settings.TELEGRAM_BOT_TOKEN:
+        return
+
+    full_text = """
+        Новая бронь!
+        номер: {booking_uuid}
+
+        <b>Логин:</b> {login}
+        <b>Пакет:</b> {time_packet_name}
+        <b>Компьютер(ы):</b> {computers}
+        
+    """
+    bot = telegram.Bot(token=settings.TELEGRAM_BOT_TOKEN)
+    bot.send_message(
+        chat_id=admin.tg_chat_id,
+        text=full_text.format(
+            booking_uuid=booking_uuid,
+            login=login,
+            time_packet_name=time_packet_name,
+            computers=",".join(computers),
+        ),
+        parse_mode=ParseMode.HTML,
+    )
 
 @cel_app.task
 def bot_notify_about_new_user_task(club_branch_id, login, first_name, approved=False):
