@@ -103,14 +103,14 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
 
     from apps.bot.tasks import bot_notify_about_booking_task
     print('BRO booking time_packet activating...')
-    # minutes_to_add = booking.time_packet.minutes
-    # Add minutes for firstly cancelled bookings
-    # if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
-    #     bookings = Booking.objects.filter(
-    #         status=BookingStatuses.CANCELLED,
-    #         club_user=booking.club_user
-    #     )
-    #     minutes_to_add += bookings.aggregate(Sum('time_packet__minutes'))['time_packet__minutes__sum'] or 0
+    if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
+        # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS
+        for cancelled in Booking.objects.filter(status=BookingStatuses.CANCELLED, club_user=booking.club_user):
+            GizmoSetTimePacketToUser(
+                instance=cancelled.club_branch,
+                user_id=cancelled.club_user.gizmo_id,
+                product_id=cancelled.time_packet.gizmo_id
+            ).run()
     if Booking.objects.filter(
             club_user__user=booking.club_user.user,
             payments__status=PaymentStatuses.PAYMENT_APPROVED
