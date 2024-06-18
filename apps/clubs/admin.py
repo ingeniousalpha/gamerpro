@@ -67,7 +67,10 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
-    fields = ('id', 'group', 'gizmo_id', 'gizmo_hostname', 'is_locked', 'is_active_session', 'is_broken')
+    fields = (
+        'id', 'group', 'gizmo_id', 'gizmo_hostname',
+        'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
+    )
     readonly_fields = ('group',)
 
 
