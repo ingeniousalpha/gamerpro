@@ -25,8 +25,19 @@ class FilterByClubMixin:
 
 @admin.register(ClubComputer)
 class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('id', 'group', 'gizmo_id', 'number', 'gizmo_hostname', 'is_booked')
     ordering = ('number',)
+    list_display = (
+        'id',
+        'group',
+        'gizmo_id',
+        'number',
+        'gizmo_hostname',
+        'is_booked',
+        'is_active_session',
+        'is_locked',
+        'is_broken',
+        'is_deleted',
+    )
 
 
 class ClubBranchInline(FilterByClubMixin, admin.TabularInline):
@@ -72,7 +83,6 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
-    sortable_by = ('id',)
 
 
 class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
