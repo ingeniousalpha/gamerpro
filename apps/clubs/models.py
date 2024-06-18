@@ -94,6 +94,7 @@ class ClubComputer(models.Model):
     is_active_session = models.BooleanField(default=False)
     is_locked = models. BooleanField(default=False)
     is_broken = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     gizmo_id = models.IntegerField(null=True, db_index=True)
     gizmo_hostname = models.CharField(max_length=10, null=True)
 

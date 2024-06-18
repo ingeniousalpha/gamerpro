@@ -130,7 +130,7 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
 
     def get_computers(self, obj):
         return ClubComputerSerializer(
-            obj.club_branch.computers.filter(group_id=obj.id),
+            obj.club_branch.computers.filter(group_id=obj.id, is_deleted=False),
             many=True
         ).data
 
@@ -167,7 +167,7 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
     halls_info = ClubBranchInfoSerializer(source='computer_groups', many=True)
-    computers = ClubComputerListSerializer(many=True)
+    computers = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubBranch
@@ -184,6 +184,12 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
 
     def get_name(self, obj):
         return obj.club.name
+
+    def get_computers(self, obj):
+        return ClubComputerListSerializer(
+            obj.computers.filter(is_deleted=False, group__isnull=False),
+            many=True,
+        ).data
 
     # def get_vip(self, obj):
     #     return ClubBranchInfoSerializer(obj, context={"hall_type": ClubHallTypes.VIP}).data
