@@ -67,7 +67,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     model = ClubComputer
     extra = 0
     ordering = ['number']
-    fields = ('id', 'group', 'gizmo_id', 'gizmo_hostname', 'is_locked', 'is_active_session')
+    fields = ('id', 'group', 'gizmo_id', 'gizmo_hostname', 'is_locked', 'is_active_session', 'is_broken')
     readonly_fields = ('group',)
 
 
@@ -113,6 +113,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'gizmo_payment_method',
         'is_active',
         'is_ready',
+        'is_turned_on',
         'priority',
         'image',
         'extra_data',
