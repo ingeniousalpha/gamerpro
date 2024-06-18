@@ -73,7 +73,9 @@ class GizmoGetComputersService(BaseGizmoService):
                 else:
                     computer.is_locked = bool(gizmo_computer['state'] == 2)
                     computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
-                    computer.save(update_fields=['is_locked', 'is_broken'])
+                    computer.number = gizmo_computer['number']
+                    computer.gizmo_hostname = gizmo_computer['hostname']
+                    computer.save(update_fields=['is_locked', 'is_broken', 'number', 'gizmo_hostname'])
 
 
 class GizmoLockComputerService(BaseGizmoService):
