@@ -72,6 +72,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
+    sortable_by = ('id',)
 
 
 class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
