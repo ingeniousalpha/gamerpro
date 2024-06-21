@@ -11,6 +11,7 @@ ParamKeyWords = {
         "http://89.218.47.166": "Pagination.Limit",
         "http://88.204.160.106:58880": "Pagination.Limit",
         "http://95.59.142.22:58880": "Pagination.Limit",
-        "http://89.218.89.162": "Pagination.Limit"
+        "http://89.218.89.162": "Pagination.Limit",
+        "http://87.255.218.34": "Pagination.Limit",
     }
 }
