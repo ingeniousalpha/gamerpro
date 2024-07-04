@@ -9,7 +9,8 @@ from apps.bookings.serializers import (
     CreateBookingByCardPaymentSerializer,
     BookingSerializer,
     CreateBookingByTimePacketPaymentSerializer,
-    CreateBookingByTimePacketCardPaymentSerializer
+    CreateBookingByTimePacketCardPaymentSerializer,
+    CreateBookingByCashbackSerializer
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
@@ -46,6 +47,11 @@ class CreateBookingByPaymentView(PublicJSONRendererMixin, CreateAPIView):
 class CreateBookingByCardPaymentView(PublicJSONRendererMixin, CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = CreateBookingByCardPaymentSerializer
+
+
+class CreateBookingByCashbackView(JSONRendererMixin, CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = CreateBookingByCashbackSerializer
 
 
 class CreateBookingByTimePacketPaymentView(JSONRendererMixin, CreateAPIView):

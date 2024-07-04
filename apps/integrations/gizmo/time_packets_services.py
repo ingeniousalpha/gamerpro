@@ -98,7 +98,7 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
             "user_id": self.kwargs.get('user_id'),
             "product_id": int(self.kwargs.get('product_id')),  # Gizmo Time Packet ID
             "quantity": int(self.kwargs.get('quantity', 1)),
-            "payment_method": self.instance.gizmo_payment_method
+            "payment_method": self.instance.gizmo_points_method if self.kwargs.get('by_points') else self.instance.gizmo_payment_method
         })
 
     def finalize_response(self, response):

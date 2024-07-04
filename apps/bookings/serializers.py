@@ -171,6 +171,29 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
         }
 
 
+class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
+    class Meta(BaseCreateBookingSerializer.Meta):
+        fields = BaseCreateBookingSerializer.Meta.fields + (
+            'amount',
+            'time_packet',
+        )
+
+    def extra_task(self, instance, validated_data):
+        if instance.club_branch.club.name.lower() == "bro":
+            gizmo_lock_computers(str(instance.uuid))
+            if instance.club_user.is_verified:
+                gizmo_bro_add_time_and_set_booking_expiration(str(instance.uuid), by_points=True)
+        else:
+            # TODO: this need to check
+            gizmo_book_computers(str(instance.uuid))
+
+    def to_representation(self, instance):
+        return {
+            "booking_uuid": str(instance.uuid),
+            "status": self.context['status']
+        }
+
+
 class CreateBookingByTimePacketPaymentSerializer(CreateBookingByPaymentSerializer):
     class Meta(CreateBookingByPaymentSerializer.Meta):
         fields = CreateBookingByPaymentSerializer.Meta.fields + ('time_packet',)
@@ -184,8 +207,8 @@ class CreateBookingByTimePacketCardPaymentSerializer(CreateBookingByCardPaymentS
 class BookedComputerListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='computer.id')
     number = serializers.IntegerField(source='computer.number')
-    hall_name = serializers.CharField(source='computer.group.name')
-    hall_id = serializers.IntegerField(source='computer.group.id')
+    hall_name = serializers.SerializerMethodField()
+    hall_id = serializers.SerializerMethodField()
 
     class Meta:
         model = BookedComputer
@@ -195,6 +218,16 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
             'hall_name',
             'hall_id',
         )
+
+    def get_hall_name(self, obj):
+        if obj.computer.group:
+            return obj.computer.group.name
+        return ""
+
+    def get_hall_id(self, obj):
+        if obj.computer.group.id:
+            return obj.computer.group.id
+        return 0
 
 
 class BookingSerializer(serializers.ModelSerializer):

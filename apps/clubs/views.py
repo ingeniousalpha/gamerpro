@@ -1,15 +1,13 @@
 from django.db.models import Q, F
-from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from apps.clubs.models import Club, ClubBranch, ClubTimePacket
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback
 from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, \
-    ClubTimePacketListSerializer
+    ClubTimePacketListSerializer, ClubUserCashbackSerializer
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from apps.common.pagination import ClubsPagination
-from apps.integrations.gizmo.computers_services import GizmoGetComputersService
 
 
 class ClublistView(PublicJSONRendererMixin, ListAPIView):
@@ -66,3 +64,20 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
                 Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(available_time_start__lte=timezone.now().astimezone().time()))
              )
         ).order_by('priority')
+
+
+class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):
+    queryset = ClubUserCashback.objects.all()
+    serializer_class = ClubUserCashbackSerializer
+
+    def get_object(self):
+        obj = super().get_queryset().filter(
+            club_id=self.kwargs.get('pk'),
+            user=self.request.user
+        ).first()
+        if not obj:
+            obj = ClubUserCashback.objects.create(
+                club_id=self.kwargs.get('pk'),
+                user=self.request.user,
+            )
+        return obj

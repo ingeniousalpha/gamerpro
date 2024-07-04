@@ -125,6 +125,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'api_user',
         'api_password',
         'gizmo_payment_method',
+        'gizmo_points_method',
         'is_active',
         'is_ready',
         'is_turned_on',
@@ -188,6 +189,15 @@ class ClubBranchUserInline(admin.TabularInline):
         "login",
         "first_name",
         "balance",
+    )
+
+
+class ClubUserCashbackInline(admin.TabularInline):
+    model = ClubUserCashback
+    extra = 0
+    fields = (
+        'club',
+        'cashback_amount',
     )
 
 
