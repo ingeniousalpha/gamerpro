@@ -170,5 +170,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 continue
 
     booking = club_user.bookings.last()
-    if booking and booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+    print("booking of new user: ", booking)
+    print(booking.payments.all())
+    if booking and booking.payments.exclude(status=PaymentStatuses.FAILED).exists():
         gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))

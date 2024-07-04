@@ -53,7 +53,7 @@ class SafeJWTAuthentication(BaseAuthentication):
 
         # self.enforce_csrf(request)
         user_logged_in.send(sender=user.__class__, request=request, user=user)
-        logger.info(f"User {user.email} authorized successfully")
+        # logger.info(f"User {user.email} authorized successfully")
         return user, None
 
     def enforce_csrf(self, request):
