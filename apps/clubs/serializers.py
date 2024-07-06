@@ -9,6 +9,7 @@ from .models import (
 )
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
+from .services import get_cashback
 
 
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
@@ -27,12 +28,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
         if self.user:
             club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
             if club_user and club_user.gizmo_id:
-                if obj.club.name.lower() == "bro":
-                    try:
-                        return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
-                    except UserNotFound:
-                        return 0
-                return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
+                return get_cashback(user=club_user.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
