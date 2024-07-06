@@ -6,10 +6,12 @@ from apps.clubs.views import (
     BROClubBranchlistView,
     ClubBranchDetailView,
     ClubBranchTimePacketListView,
+    ClubUserCashbackView,
 )
 
 urlpatterns = [
     path('', ClublistView.as_view()),
+    path('<int:pk>/cashback', ClubUserCashbackView.as_view()),
     path('branches', ClubBranchlistView.as_view()),
     path('branches/bro', BROClubBranchlistView.as_view()),
     path('branches/<int:pk>', ClubBranchDetailView.as_view()),

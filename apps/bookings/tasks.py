@@ -5,10 +5,12 @@ from decimal import Decimal
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch
+from apps.clubs.services import add_cashback, subtract_cashback
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
-from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
+    GizmoSetPointsToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
@@ -71,15 +73,11 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             product_id=booking.time_packet.gizmo_id
         ).run()
         if config.CASHBACK_TURNED_ON and booking.amount >= 100:
-            GizmoCreateDepositTransactionService(
-                instance=booking.club_branch,
-                user_gizmo_id=booking.club_user.gizmo_id,
-                booking=booking,
-                user_received_amount=booking.amount,
-                commission_amount=booking.commission_amount,
-                total_amount=booking.total_amount,
-                replenishment_type="cashback",
-            ).run()
+            add_cashback(
+                user=booking.club_user.user,
+                club=booking.club_branch.club,
+                from_amount=booking.total_amount
+            )
         print('booking time_packet activated')
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
@@ -95,14 +93,16 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     )
 
 
-def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
+def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False):
     booking = (Booking.objects.select_related('club_user', 'club_user__user', 'club_branch', 'time_packet')
                .prefetch_related('computers').filter(uuid=booking_uuid).first())
     if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
         return
 
     from apps.bot.tasks import bot_notify_about_booking_task
+
     print('BRO booking time_packet activating...')
+
     if not Booking.objects.filter(status=BookingStatuses.COMPLETED).exists():
         # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS
         for cancelled in Booking.objects.filter(status=BookingStatuses.CANCELLED, club_user=booking.club_user):
@@ -111,9 +111,9 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
                 user_id=cancelled.club_user.gizmo_id,
                 product_id=cancelled.time_packet.gizmo_id
             ).run()
+
     if Booking.objects.filter(
-            club_user__user=booking.club_user.user,
-            payments__status=PaymentStatuses.PAYMENT_APPROVED
+            club_user__user=booking.club_user.user, payments__status=PaymentStatuses.PAYMENT_APPROVED
     ).count() <= 1:
         extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
         GizmoAddPaidTimeToUser(
@@ -122,21 +122,35 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid):
             minutes=extra_minutes,
             price=booking.time_packet.price
         ).run()
+
+    if by_points:
+        GizmoSetPointsToUser(
+            instance=booking.club_branch,
+            user_id=booking.club_user.gizmo_id,
+            amount=booking.time_packet.price
+        ).run()
+
     GizmoSetTimePacketToUser(
         instance=booking.club_branch,
         user_id=booking.club_user.gizmo_id,
-        product_id=booking.time_packet.gizmo_id
+        product_id=booking.time_packet.gizmo_id,
+        by_points=by_points,
     ).run()
-    if config.CASHBACK_TURNED_ON and booking.amount >= 100:
-        GizmoCreateDepositTransactionService(
-            instance=booking.club_branch,
-            user_gizmo_id=booking.club_user.gizmo_id,
-            booking=booking,
-            user_received_amount=booking.amount,
-            commission_amount=booking.commission_amount,
-            total_amount=booking.total_amount,
-            replenishment_type="cashback",
-        ).run()
+
+    if by_points:
+        subtract_cashback(
+            user=booking.club_user.user,
+            club=booking.club_branch.club,
+            amount=booking.time_packet.price
+        )
+
+    if config.CASHBACK_TURNED_ON and not by_points and booking.amount >= 100:
+        add_cashback(
+            user=booking.club_user.user,
+            club=booking.club_branch.club,
+            from_amount=booking.total_amount
+        )
+
     print('BRO booking time_packet activated')
 
     bot_notify_about_booking_task.delay(

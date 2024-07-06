@@ -25,6 +25,7 @@ class Booking(UUIDModel, TimestampModel):
         default=BookingStatuses.ACCEPTED
     )
     use_balance = models.BooleanField(default=False)
+    use_cashback = models.BooleanField(default=False)
     platform = models.CharField(
         max_length=256,
         choices=PlatformTypes.choices,
