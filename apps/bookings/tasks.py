@@ -5,11 +5,12 @@ from decimal import Decimal
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch
-from apps.clubs.services import add_cashback
+from apps.clubs.services import add_cashback, subtract_cashback
 from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
-from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser
+from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
+    GizmoSetPointsToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
@@ -123,8 +124,6 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False)
         ).run()
 
     if by_points:
-        # TODO: check user cashback amount
-        # TODO: set points to user
         GizmoSetPointsToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
@@ -139,7 +138,6 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False)
     ).run()
 
     if by_points:
-        # TODO: decrease cashback amount
         subtract_cashback(
             user=booking.club_user.user,
             club=booking.club_branch.club,

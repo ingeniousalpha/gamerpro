@@ -53,6 +53,12 @@ class CreateBookingByCashbackView(JSONRendererMixin, CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = CreateBookingByCashbackSerializer
 
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'booking_method': 'by_cashback'
+        }
+
 
 class CreateBookingByTimePacketPaymentView(JSONRendererMixin, CreateAPIView):
     queryset = Booking.objects.all()

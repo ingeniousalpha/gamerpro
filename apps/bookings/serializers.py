@@ -7,16 +7,17 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking, \
-    NotApprovedUserCanNotBookSeveralComputers
+    NotApprovedUserCanNotBookSeveralComputers, NotSufficientCashbackAmount
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
 from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status, \
     gizmo_bro_add_time_and_set_booking_expiration
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.serializers import ClubBranchSerializer
+from apps.clubs.services import get_cashback
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.common.services import date_format_with_t
-from apps.payments import PAYMENT_STATUSES_MAPPER
+from apps.payments import PAYMENT_STATUSES_MAPPER, PaymentStatuses
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
 from apps.integrations.onevision.payment_services import OVInitPaymentService, OVRecurrentPaymentService
@@ -46,6 +47,9 @@ class BaseCreateBookingSerializer(
             raise UserAlreadyHasActiveBooking
         if not club_user.is_verified and len(attrs['computers']) > 1:
             raise NotApprovedUserCanNotBookSeveralComputers
+        if self.context.get('booking_method') == 'by_cashback':
+            if get_cashback(club_user.user, club_user.club_branch.club) < attrs['time_packet'].price:
+                raise NotSufficientCashbackAmount
 
         attrs['club_user'] = club_user
 
@@ -179,18 +183,25 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
         )
 
     def extra_task(self, instance, validated_data):
-        if instance.club_branch.club.name.lower() == "bro":
-            gizmo_lock_computers(str(instance.uuid))
-            if instance.club_user.is_verified:
-                gizmo_bro_add_time_and_set_booking_expiration(str(instance.uuid), by_points=True)
-        else:
-            # TODO: this need to check
-            gizmo_book_computers(str(instance.uuid))
+        try:
+            instance.use_cashback = True
+            instance.save()
+            if config.INTEGRATIONS_TURNED_ON:
+                if instance.club_branch.club.name.lower() == "bro":
+                    gizmo_lock_computers(str(instance.uuid))
+                    if instance.club_user.is_verified:
+                        gizmo_bro_add_time_and_set_booking_expiration(str(instance.uuid), by_points=True)
+                else:
+                    # TODO: this need to check is it working
+                    gizmo_book_computers(str(instance.uuid))
+            send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)
+        except Exception as e:
+            logger.error(f"CreateBookingByCashbackSerializer Error: {str(e)}")
+            raise e
 
     def to_representation(self, instance):
         return {
-            "booking_uuid": str(instance.uuid),
-            "status": self.context['status']
+            "booking_uuid": str(instance.uuid)
         }
 
 

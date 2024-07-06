@@ -109,3 +109,21 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
             error_msg = "Вы не можете сесть за этот компьютер"
             self.log_error(error_msg)
             raise GizmoRequestError(error_msg)
+
+
+class GizmoSetPointsToUser(BaseGizmoService):
+    endpoint = "/api/points/{user_id}/{amount}"
+    save_serializer = None
+    method = "POST"
+    log_response = False
+
+    def run_service(self):
+        return self.fetch(path_params={
+            "user_id": self.kwargs.get('user_id'),
+            "amount": int(self.kwargs.get('amount')),
+        })
+
+    def finalize_response(self, response):
+        if response.get('isError') == True:
+            self.log_error(str(response))
+            raise GizmoRequestError
