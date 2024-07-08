@@ -62,7 +62,7 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
             raise UserNotFound
 
         gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
-        if not gizmo_phone:
+        if not gizmo_phone and not self.kwargs.get('mobile_phone'):
             raise UserDoesNotHavePhoneNumber
 
         try:

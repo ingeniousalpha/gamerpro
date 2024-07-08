@@ -113,7 +113,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         club_user.save(update_fields=['gizmo_id'])
     except GizmoLoginAlreadyExistsError as e:
         club_user = GizmoGetUserByUsernameService(
-            instance=club_branch, username=club_user.login
+            instance=club_branch, username=club_user.login, mobile_phone=club_user.gizmo_phone
         ).run()
         GizmoUpdateUserByIDService(
             instance=club_branch,
@@ -152,7 +152,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 branch_club_user.save(update_fields=['gizmo_id'])
             except GizmoLoginAlreadyExistsError as e:
                 branch_club_user = GizmoGetUserByUsernameService(
-                    instance=branch, username=club_user.login
+                    instance=branch, username=club_user.login, mobile_phone=club_user.gizmo_phone,
                 ).run()
                 branch_club_user.user = club_user.user
 
