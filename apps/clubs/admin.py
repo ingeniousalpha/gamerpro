@@ -207,13 +207,34 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'club_computer_group',
         'minutes',
         'price',
-        'priority',
+        #'priority',
+        'days_available',
+        #'available_time_start',
+        #'available_time_end',
+        'time_available',
         'is_active',
     )
     list_filter = ('club_computer_group__club_branch',)
-    list_editable = ('priority', 'is_active')
-    ordering = ['priority']
+    #list_editable = ('priority', 'is_active')
+    #ordering = ['priority']
     club_filter_field = "packet_group__club_branch__club"
+
+    def days_available(self, obj):
+        days = obj.available_days.values_list('name', flat=True)
+        days_str = ''
+        for day in days:
+            days_str += day + ', '
+
+        days_str = days_str[:-2]
+
+        return days_str if days_str else '-'
+    
+    
+    def time_available(self, obj):
+        if obj.available_time_start and obj.available_time_end:
+            return '{0}-{1}'.format(obj.available_time_start, obj.available_time_end)
+        
+        return '-'
 
 
 @admin.register(DayModel)
