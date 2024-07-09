@@ -225,7 +225,7 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_active',
     )
     list_filter = ('club_computer_group__club_branch',)
-    list_editable = ('priority', 'is_active')
+    list_editable = ('priority', 'is_active', 'price')
     ordering = ['priority']
     club_filter_field = "packet_group__club_branch__club"
 
