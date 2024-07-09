@@ -221,12 +221,7 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
 
     def days_available(self, obj):
         days = obj.available_days.values_list('name', flat=True)
-        days_str = ''
-        for day in days:
-            days_str += day + ', '
-
-        days_str = days_str[:-2]
-
+        days_str = ", ".join(days)
         return days_str if days_str else '-'
     
     
