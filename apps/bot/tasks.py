@@ -113,7 +113,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         club_user.save(update_fields=['gizmo_id'])
     except GizmoLoginAlreadyExistsError as e:
         club_user = GizmoGetUserByUsernameService(
-            instance=club_branch, username=club_user.login
+            instance=club_branch, username=club_user.login, mobile_phone=club_user.gizmo_phone
         ).run()
         GizmoUpdateUserByIDService(
             instance=club_branch,
@@ -152,7 +152,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 branch_club_user.save(update_fields=['gizmo_id'])
             except GizmoLoginAlreadyExistsError as e:
                 branch_club_user = GizmoGetUserByUsernameService(
-                    instance=branch, username=club_user.login
+                    instance=branch, username=club_user.login, mobile_phone=club_user.gizmo_phone,
                 ).run()
                 branch_club_user.user = club_user.user
 
@@ -170,5 +170,8 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 continue
 
     booking = club_user.bookings.last()
-    if booking and booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
-        gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))
+    print(f"booking of new user: {club_user}, booking: {booking}")
+    if booking:
+        print(booking.payments.all())
+        if booking.payments.exclude(status=PaymentStatuses.FAILED).exists():
+            gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))

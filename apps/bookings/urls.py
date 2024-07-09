@@ -14,6 +14,7 @@ from .views import (
     CreateBookingByTimePacketCardPaymentView,
     ComputerSessionFinishView,
     BookingProlongByTimePacketView,
+    CreateBookingByCashbackView,
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('by_time_packet_payment', CreateBookingByTimePacketPaymentView.as_view()),
     path('by_time_packet_payment/<uuid:booking_uuid>/retry', RetryPaymentForBookingByTimePacketView.as_view()),
     path('by_time_packet_card_payment', CreateBookingByTimePacketCardPaymentView.as_view()),
+    path('by_cashback', CreateBookingByCashbackView.as_view()),
     path('<uuid:booking_uuid>/cancel', CancelBookingView.as_view()),
     path('<uuid:booking_uuid>/unlock', UnlockBookedComputersView.as_view()),
     path('<uuid:booking_uuid>/prolong', BookingProlongView.as_view()),

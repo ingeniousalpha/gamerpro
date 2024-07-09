@@ -1,15 +1,15 @@
 from django.core.cache import cache
-from django.db.models import Subquery, OuterRef
 from django.utils import timezone
 from rest_framework import serializers
 
 from apps.authentication.exceptions import UserNotFound
-from apps.bookings.models import BookedComputer
-from apps.clubs import ClubHallTypes
-from apps.clubs.models import Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware, \
-    ClubComputerGroup, ClubBranchUser, ClubTimePacket
+from .models import (
+    Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
+    ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback
+)
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
+from .services import get_cashback
 
 
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
@@ -28,12 +28,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
         if self.user:
             club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
             if club_user and club_user.gizmo_id:
-                if obj.club.name.lower() == "bro":
-                    try:
-                        return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
-                    except UserNotFound:
-                        return 0
-                return GizmoGetUserBalanceService(instance=obj, user_id=club_user.gizmo_id).run()
+                return get_cashback(user=club_user.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
@@ -282,3 +277,22 @@ class ClubTimePacketListSerializer(serializers.ModelSerializer):
         if not obj.available_time_start:
             return True
         return obj.available_time_start <= timezone.now().astimezone().time() <= obj.available_time_end
+
+
+class ClubUserCashbackSerializer(serializers.ModelSerializer):
+    total_amount = serializers.IntegerField(default=0, source="cashback_amount")
+
+    class Meta:
+        model = ClubUserCashback
+        fields = (
+            'total_amount',
+        )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        print("representation: ", representation)
+        if representation is None:
+            return {
+                'total_amount': 0
+            }
+        return representation

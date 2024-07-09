@@ -6,6 +6,21 @@ class HallTypesManagerMixin:
     objects = HallTypesManager()
 
 
+class ClubUserCashbackManager(models.Manager):
+    def get_balance(self, club):
+        if c := self.get_queryset().filter(club=club).first():
+            return c.cashback_amount
+        return None
+
+    def add(self, amount, club):
+        if amount == 0:
+            raise Exception("Cannot add 0 cashback")
+
+        club_cashback = self.get_queryset().filter(club=club).first()
+        club_cashback.cashback_amount += amount
+        club_cashback.save()
+
+
 class Club(models.Model):
     name = models.CharField(max_length=50)
     code = models.CharField(max_length=50, null=True, blank=True)
@@ -40,7 +55,8 @@ class ClubBranch(models.Model):
     api_host = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
     api_user = models.CharField("Логин для API филиала", max_length=20, null=True)
     api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
-    gizmo_payment_method = models.IntegerField(default=2)
+    gizmo_payment_method = models.IntegerField(default=2)  # payment method - online payment
+    gizmo_points_method = models.IntegerField(default=-4)  # payment method - points payment
     is_active = models.BooleanField(default=False)
     is_ready = models.BooleanField(default=False)
     is_turned_on = models.BooleanField(default=True)
@@ -238,6 +254,23 @@ class ClubBranchUser(models.Model):
     class Meta:
         verbose_name = "Юзер в гизмо"
         verbose_name_plural = "Юзеры в гизмо"
+
+
+class ClubUserCashback(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="cashbacks",
+        null=True, blank=True
+    )
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name="user_cashbacks"
+    )
+    cashback_amount = models.IntegerField(default=0)
+
+    objects = ClubUserCashbackManager()
 
 
 class ClubBranchAdmin(models.Model):

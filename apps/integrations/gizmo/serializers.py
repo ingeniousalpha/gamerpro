@@ -8,7 +8,6 @@ class GizmoUserSaveSerializer(serializers.ModelSerializer):
     login = serializers.CharField(required=False, allow_blank=True)
     first_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
-
     class Meta:
         model = ClubBranchUser
         fields = (

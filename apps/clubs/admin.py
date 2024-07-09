@@ -125,6 +125,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'api_user',
         'api_password',
         'gizmo_payment_method',
+        'gizmo_points_method',
         'is_active',
         'is_ready',
         'is_turned_on',
@@ -191,6 +192,15 @@ class ClubBranchUserInline(admin.TabularInline):
     )
 
 
+class ClubUserCashbackInline(admin.TabularInline):
+    model = ClubUserCashback
+    extra = 0
+    fields = (
+        'club',
+        'cashback_amount',
+    )
+
+
 @admin.register(ClubTimePacketGroup)
 class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
@@ -215,7 +225,7 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_active',
     )
     list_filter = ('club_computer_group__club_branch',)
-    list_editable = ('priority', 'is_active', 'price')
+    list_editable = ('priority', 'is_active')
     ordering = ['priority']
     club_filter_field = "packet_group__club_branch__club"
 
