@@ -88,6 +88,7 @@ def bot_approve_user_from_admin_task(club_branch_user_id):
 
 @cel_app.task
 def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
+    print(f"params: {str(club_branch_user_login)}, {str(club_branch_id)}")
     from apps.bookings.tasks import gizmo_bro_add_time_and_set_booking_expiration
     from apps.bookings.models import Booking
 
