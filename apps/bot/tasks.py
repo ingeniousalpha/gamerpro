@@ -89,6 +89,7 @@ def bot_approve_user_from_admin_task(club_branch_user_id):
 @cel_app.task
 def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
     from apps.bookings.tasks import gizmo_bro_add_time_and_set_booking_expiration
+    from apps.bookings.models import Booking
 
     club_user = ClubBranchUser.objects.get(
         club_branch_id=club_branch_id,
@@ -169,9 +170,15 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             except Exception:
                 continue
 
-    booking = club_user.bookings.last()
+    booking = club_user.bookings.filter(
+        payments__status=PaymentStatuses.PAYMENT_APPROVED
+    ).order_by('-created_at').last()
     print(f"booking of new user: {club_user}, booking: {booking}")
+    if not booking:
+        booking = Booking.objects.filter(
+            club_user__login=club_user.login,
+            payments__status=PaymentStatuses.PAYMENT_APPROVED
+        ).order_by('-created_at').last()
+
     if booking:
-        print(booking.payments.all())
-        if booking.payments.exclude(status=PaymentStatuses.FAILED).exists():
-            gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))
+        gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))
