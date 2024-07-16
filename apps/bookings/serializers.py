@@ -236,7 +236,7 @@ class BookedComputerListSerializer(serializers.ModelSerializer):
         return ""
 
     def get_hall_id(self, obj):
-        if obj.computer.group.id:
+        if obj.computer.group:
             return obj.computer.group.id
         return 0
 
@@ -263,8 +263,8 @@ class BookingSerializer(serializers.ModelSerializer):
     def get_payment_status(self, obj):
         if obj.payments.exists():
             return PAYMENT_STATUSES_MAPPER.get(int(obj.payments.last().status))
-        elif obj.use_balance:
-            return "BALANCE_APPROVED"
+        elif obj.use_cashback:
+            return PaymentStatuses.PAYMENT_APPROVED
         return "NOT_PAID"
 
     def get_session_starting_at(self, obj):
