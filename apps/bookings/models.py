@@ -75,7 +75,7 @@ class Booking(UUIDModel, TimestampModel):
         ]:
             if self.payments.exists() and self.payments.last().status == PaymentStatuses.PAYMENT_APPROVED:
                 return True
-            elif self.use_balance:
+            elif self.use_cashback:
                 return True
         return False
 

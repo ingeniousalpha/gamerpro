@@ -264,7 +264,7 @@ class BookingSerializer(serializers.ModelSerializer):
         if obj.payments.exists():
             return PAYMENT_STATUSES_MAPPER.get(int(obj.payments.last().status))
         elif obj.use_cashback:
-            return "PAYMENT_APPROVED"
+            return "CASHBACK_APPROVED"
         return "NOT_PAID"
 
     def get_session_starting_at(self, obj):
