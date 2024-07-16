@@ -227,7 +227,7 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
         return
 
     # TODO: rewrite this
-    if check_payment and booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+    if check_payment and (booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists() or booking.use_cashback):
         return
 
     for booked_computer in booking.computers.all():
