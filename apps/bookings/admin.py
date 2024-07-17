@@ -48,6 +48,8 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
     def is_paid(self, obj):
          if obj.payments.exists() and obj.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
              return mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
+         if obj.use_cashback:
+             return mark_safe(f'<div style="background:#52C135;">Оплачено Бонусами</div>')
          return "Не оплачено"
     is_paid.short_description = "Статус оплаты"
 
