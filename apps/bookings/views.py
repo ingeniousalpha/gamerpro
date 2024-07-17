@@ -116,7 +116,7 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
         if booking.club_branch.club.name.lower() == "bro" and not booking.club_user.is_verified:
             raise UserNeedToVerifyIIN
 
-        if not booking.use_balance and not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+        if not booking.use_cashback and not booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
             return Response({})
 
         elif booking.status == BookingStatuses.CANCELLED:
