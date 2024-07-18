@@ -1,4 +1,5 @@
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, F, CharField, Value
+from django.db.models.functions import Concat
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView, GenericAPIView
 from django.conf import settings
@@ -7,11 +8,14 @@ from django.utils import timezone
 from apps.common.mixins import PublicJSONRendererMixin
 from rest_framework.response import Response
 from .models import Document, AppVersion, City
+from .services import str_to_datetime
 from .serializers import DocumentListSerializer, CitiesListSerializer
 from ..bookings.models import Booking, BookingStatuses
 from ..clubs.models import ClubBranch
 from ..payments.models import Payment, PaymentStatuses
 from ..users.models import User
+
+from urllib.parse import unquote
 
 
 class DocumentListView(PublicJSONRendererMixin, ListAPIView):
@@ -165,6 +169,63 @@ def dashboard_view(request):
         "users_count_list": users_count_list,
         "bookings_summary_table": bookings_summary_table
     })
+
+def reports_view(request):
+    payments_reports_table = Payment.objects.select_related('booking__club_branch').annotate(
+        club_branch=F('booking__club_branch__name'),
+        payment_uuid=F('uuid'),
+        payment_amount=F('amount'),
+        payment_status=F('status'),
+        payment_created_at=F('created_at')
+        ).values(
+            'club_branch',
+            'payment_uuid',
+            'payment_amount',
+            'payment_status',
+            'payment_created_at'
+            )
+    
+    start_date = request.GET.get('start_date', '')
+    start_time = request.GET.get('start_time', '')
+    end_date = request.GET.get('end_date', '')
+    end_time = request.GET.get('end_time', '')
+    club_branch = request.GET.get('club_branch', '')
+    
+    '''start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    start_time = start_time + ':00'
+    start_time = timezone.datetime.strptime(start_time, '%H:%M:%S').time()
+
+    end_time = end_time + ':00'
+    end_time = timezone.datetime.strptime(end_time, '%H:%M:%S').time()'''
+
+
+    if start_date:
+        payments_reports_table = payments_reports_table.filter(payment_created_at__date__gte=start_date)
+    if start_time:
+        payments_reports_table = payments_reports_table.filter(payment_created_at__time__gte=start_time)
+    if end_date:
+        payments_reports_table = payments_reports_table.filter(payment_created_at__date__lte=end_date)
+    if end_time:
+        payments_reports_table = payments_reports_table.filter(payment_created_at__time__lte=end_time)
+    if club_branch:
+        payments_reports_table = payments_reports_table.filter(club_branch__icontains=club_branch)
+
+
+    club_branches = ClubBranch.objects.values_list('name', flat=True).distinct()
+
+    return render(request, 'reports.html', {
+        'payments_reports_table': payments_reports_table,
+        'start_date': start_date,
+        'start_time': start_time,
+        'end_date': end_date,
+        'end_time': end_time,
+        'club_branch': club_branch,
+        'club_branches': club_branches,
+
+    })
+
 
 
 def stats_view(request):
