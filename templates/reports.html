@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SB Admin 2 - Payments Reports</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <style type="text/css">
+        .topbar {
+            background-color: rgb(78, 115, 223) !important;
+            font-size: 18pt;
+            color: white;
+            padding: 8px 28px;
+        }
+        .backend-data-font {
+            font-size: 18pt; /* Размер шрифта */
+            color: #000000; /* Цвет шрифта */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-xl-6">
+                <div class="card shadow">
+                    <div class="card-body">
+                            <form method="GET" action="">
+                                <div class="form-group row">
+                                    <label for="start_date" class="col-sm-3 col-form-label">Start Date:</label>
+                                    <div class="col-sm-9">
+                                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="start_time" class="col-sm-3 col-form-label">Start Time:</label>
+                                    <div class="col-sm-9">
+                                        <input type="time" step="1", class="form-control" id="start_time" name="start_time" value="{{ start_time }}">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="end_date" class="col-sm-3 col-form-label">End Date:</label>
+                                    <div class="col-sm-9">
+                                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="end_time" class="col-sm-3 col-form-label">End Time:</label>
+                                    <div class="col-sm-9">
+                                        <input type="time" step="1" class="form-control" id="end_time" name="end_time" value="{{ end_time }}">
+                                    </div>
+                                </div>
+                                <div class="form-row mt-2">
+                                    <div class="col">
+                                        <label for="club_branch">Club Branch:</label>
+                                        <select class="form-control" id="club_branch" name="club_branch">
+                                            <option value="">Select Club Branch</option>
+                                            {% for cb in club_branches %}
+                                                <option value="{{ cb }}" {% if cb == club_branch %}selected{% endif %}>{{ cb }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-12 text-center">
+                                        <button type="submit" class="btn btn-primary mt-4">Apply Filters</button>
+                                    </div>
+                                </div>
+                            </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-respopnsive">
+                        <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Club Branch</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment UUID</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Amount</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Status</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in payments_reports_table %}
+                                <tr>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.club_branch }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_uuid }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_amount }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_status }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
+    
+    
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+</body>
+</html>
