@@ -93,10 +93,10 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     )
 
 
-def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False):
+def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False, check_status=True):
     booking = (Booking.objects.select_related('club_user', 'club_user__user', 'club_branch', 'time_packet')
                .prefetch_related('computers').filter(uuid=booking_uuid).first())
-    if not booking or booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
+    if not booking or (check_status and booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]):
         return
 
     from apps.bot.tasks import bot_notify_about_booking_task

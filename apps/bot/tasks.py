@@ -171,10 +171,11 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             except Exception:
                 continue
 
-    booking = club_user.bookings.filter(
+    successful_bookings = club_user.bookings.filter(
         payments__status=PaymentStatuses.PAYMENT_APPROVED
-    ).order_by('-created_at').last()
-    print(f"booking of new user: {club_user}, booking: {booking}")
+    ).order_by('-created_at')
+    booking = successful_bookings.last()
+    print(f"booking of new user: {club_user}, booking: {booking}, booking.status: {booking.status}")
     if not booking:
         booking = Booking.objects.filter(
             club_user__login=club_user.login,
@@ -182,4 +183,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         ).order_by('-created_at').last()
 
     if booking:
-        gizmo_bro_add_time_and_set_booking_expiration(str(booking.uuid))
+        gizmo_bro_add_time_and_set_booking_expiration(
+            booking_uuid=str(booking.uuid),
+            check_status=bool(successful_bookings.count() != 1)
+        )
