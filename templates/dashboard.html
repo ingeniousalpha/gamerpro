@@ -164,7 +164,7 @@
                             <tbody>
                                 {% for row in bookings_summary_table %}
                                 <tr>
-                                    <td>{{ row.club_branch }}</td>
+                                    <td>{{ row.club_branch__name }}</td>
                                     <td>{{ row.amount_of_successful_bookings }}</td>
                                     <td>{{ row.amount_of_not_cancelled_successful_bookings }}</td>
                                     <td>{{ row.amount_of_successful_bookings_with_cashback }}</td>

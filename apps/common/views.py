@@ -130,7 +130,7 @@ def dashboard_view(request):
         users_count_list.append(item['users_count'])
 
     
-    bookings_summary_table = Booking.objects.values('club_branch').annotate(
+    bookings_summary_table = Booking.objects.select_related('club_branch').values('club_branch__name').annotate(
         amount_of_successful_bookings=Count('id', filter=Q(status__in=[
             BookingStatuses.ACCEPTED, 
             BookingStatuses.SESSION_STARTED, 
