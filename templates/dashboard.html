@@ -10,7 +10,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SB Admin 2 - Dashboard</title>
+    <title>Lobby Dashboard</title>
 
     <!-- Custom fonts for this template-->
     <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
@@ -26,6 +26,13 @@
             font-size: 18pt;
             color: white;
             padding: 8px 28px;
+        }
+        .container {
+            color: black;
+            margin-bottom: 70px;
+        }
+        .table {
+            color: black;
         }
     </style>
 
@@ -44,7 +51,7 @@
 
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow" id="topbar">
-                    Gamer Pro Dashboard
+                    Lobby Dashboard
                 </nav>
                 <!-- End of Topbar -->
 
@@ -143,8 +150,31 @@
 
                     </div>
 
-                    <!-- Content Row -->
+                    <div class="container mt-4">
+                        <h1>Таблица броней по клубам</h1>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Филиал клуба</th>
+                                    <th>Кол-во успешных броней</th>
+                                    <th>Кол-во успешных неотмененных броней</th>
+                                    <th>Кол-во успешных броней с кэшбеком</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in bookings_summary_table %}
+                                <tr>
+                                    <td>{{ row.club_branch }}</td>
+                                    <td>{{ row.amount_of_successful_bookings }}</td>
+                                    <td>{{ row.amount_of_not_cancelled_successful_bookings }}</td>
+                                    <td>{{ row.amount_of_successful_bookings_with_cashback }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
 
+                    <!-- Content Row -->
                     <div class="row">
 
                         <!-- Area Chart -->
@@ -247,30 +277,6 @@
                         </div>
 
                     </div>
-                    <div class="container mt-4">
-                        <h1>Таблица броней по клубам</h1>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Филиал клуба</th>
-                                    <th>Кол-во успешных броней</th>
-                                    <th>Кол-во успешных неотмененных броней</th>
-                                    <th>Кол-во успешных броней с кэшбеком</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in bookings_summary_table %}
-                                <tr>
-                                    <td>{{ row.club_branch }}</td>
-                                    <td>{{ row.amount_of_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_not_cancelled_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_successful_bookings_with_cashback }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
                 </div>
                 <!-- /.container-fluid -->
 
