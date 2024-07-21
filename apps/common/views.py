@@ -149,7 +149,7 @@ def dashboard_view(request):
             BookingStatuses.PLAYING, 
             BookingStatuses.COMPLETED
         ]) & Q(use_cashback=True))
-    )
+    ).order_by('amount_of_successful_bookings')
 
     
 
