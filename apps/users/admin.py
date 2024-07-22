@@ -1,6 +1,7 @@
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib import admin
 from django import forms
+from django.template.loader import get_template
 
 from apps.authentication.services import validate_password_in_forms
 
@@ -45,13 +46,15 @@ class UserAdmin(BaseUserAdmin):
     add_form = UserCreationForm
     ordering = ['-created_at']
     inlines = [
-        ClubBranchUserInline,
-        ClubUserCashbackInline
+        ClubUserCashbackInline,
+        ClubBranchUserInline
     ]
+    readonly_fields = ('club_user_cashback_inline',)
 
     fieldsets = (
         (None, {
             "fields": (
+                'club_user_cashback_inline',
                 'uuid',
                 'mobile_phone',
                 'email',
@@ -81,4 +84,16 @@ class UserAdmin(BaseUserAdmin):
                 'user_permissions',
             ),
         }),
+        
     )
+
+    def club_user_cashback_inline(self, *args, **kwargs):
+        context = getattr(self.response, 'context_data', None) or {} # somtimes context.copy() is better
+        inline = context['inline_admin_formset'] = context['inline_admin_formsets'].pop(0)
+        return get_template(inline.opts.template).render(context, self.request)
+    club_user_cashback_inline.short_description = "Кешбэк пользователя"
+
+    def render_change_form(self, request, *args, **kwargs):
+        self.request = request
+        self.response = super().render_change_form(request, *args, **kwargs)
+        return self.response
