@@ -38,6 +38,7 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_broken',
         'is_deleted',
     )
+    list_filter = FilterByClubMixin.list_filter + ('is_deleted',)
 
 
 class ClubBranchInline(FilterByClubMixin, admin.TabularInline):

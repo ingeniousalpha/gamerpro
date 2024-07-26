@@ -88,12 +88,17 @@ class LobbyAppVersionsView(PublicJSONRendererMixin, GenericAPIView):
 
 
 def dashboard_view(request):
+    period = request.GET.get('period')  # today/last_week/last_month/last_year
     queryset = Booking.objects.all()
-    bookings_count_total = queryset.count()
-    today_bookings = queryset.filter(created_at__date=timezone.now().date())
-    bookings_count_today = today_bookings.count()
-    today_amount = today_bookings.aggregate(Sum('amount'))['amount__sum'] if today_bookings.count() > 0 else 0
-    commission_amount = today_bookings.aggregate(Sum('commission_amount'))['commission_amount__sum'] if today_bookings.count() > 0 else 0
+    successful_bookings = queryset.filter(
+        Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True)
+    )
+    cancelled_bookings = successful_bookings.filter(is_cancelled=True)
+    bookings_total_count = queryset.count()
+    bookings_successful_count = successful_bookings.count()
+    bookings_cancelled_count = cancelled_bookings.count()
+    bookings_successful_revenue_amount = successful_bookings.exclude(is_cancelled=True).aggregate(Sum('total_amount'))['total_amount__sum']
+    users_total_count = User.objects.all()
 
     dates = queryset.filter(
         created_at__date__gte=timezone.now() - timezone.timedelta(days=10)
@@ -131,18 +136,19 @@ def dashboard_view(request):
 
     
     bookings_summary_table = Booking.objects.select_related('club_branch').values('club_branch__name').annotate(
-        amount_of_successful_bookings=Count('id', filter=Q(status__in=[
-            BookingStatuses.ACCEPTED, 
-            BookingStatuses.SESSION_STARTED, 
-            BookingStatuses.PLAYING, 
+        amount_of_booking_tries=Count('id'),
+        amount_of_successful_bookings=Count('id', filter=(
+                Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True)
+        )),
+        amount_of_cancelled_successful_bookings=Count('id', filter=(
+                Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True))
+                & Q(is_cancelled=True)),
+        amount_of_successful_revenue=Sum('total_amount', filter=Q(status__in=[
+            BookingStatuses.ACCEPTED,
+            BookingStatuses.SESSION_STARTED,
+            BookingStatuses.PLAYING,
             BookingStatuses.COMPLETED
-        ])),
-        amount_of_not_cancelled_successful_bookings=Count('id', filter=Q(status__in=[
-            BookingStatuses.ACCEPTED, 
-            BookingStatuses.SESSION_STARTED, 
-            BookingStatuses.PLAYING, 
-            BookingStatuses.COMPLETED
-        ]) & Q(is_cancelled=False)),
+        ]) & (Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True)) & Q(is_cancelled=False)),
         amount_of_successful_bookings_with_cashback=Count('id', filter=Q(status__in=[
             BookingStatuses.ACCEPTED, 
             BookingStatuses.SESSION_STARTED, 
@@ -151,15 +157,14 @@ def dashboard_view(request):
         ]) & Q(use_cashback=True))
     ).order_by('-amount_of_successful_bookings')
 
-    
 
     print(dates_list)
     print(bookings_count_list)
     return render(request, "dashboard.html", {
-        "bookings_count_total": bookings_count_total,
-        "bookings_count_today": bookings_count_today,
-        "today_amount": today_amount,
-        "commission_amount": commission_amount,
+        "bookings_total_count": bookings_total_count,
+        "bookings_successful_count": bookings_successful_count,
+        "bookings_cancelled_count": bookings_cancelled_count,
+        "bookings_successful_revenue_amount": bookings_successful_revenue_amount,
         "users_count_total": users_count_total,
         "dates_list": dates_list,
         "bookings_count_list": bookings_count_list,

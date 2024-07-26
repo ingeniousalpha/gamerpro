@@ -59,6 +59,7 @@
                 <div class="container-fluid">
 
                     <!-- Content Row -->
+                    <h1>Метрики всего</h1>
                     <div class="row">
 
                         <!-- Earnings (Monthly) Card Example -->
@@ -68,8 +69,8 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Всего броней</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_count_total}}</div>
+                                                Всего попыток броней</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_total_count}}</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -85,8 +86,8 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Сегодня броней</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_count_today}}</div>
+                                                Всего успешных броней</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_count}}</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -98,16 +99,16 @@
 
                         <!-- Earnings (Monthly) Card Example -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Сумма за сегодня</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{today_amount}}</div>
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Кол-во отмен успешных броней</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_cancelled_count}}</div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -120,8 +121,8 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Наша комиссия сегодня</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{commission_amount}}</div>
+                                                Revenue</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_revenue_amount}}</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -137,11 +138,11 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Всего пользователей</div>
+                                                Всего новых пользователей</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{users_count_total}}</div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                            <i class="fas fa-user fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -156,18 +157,22 @@
                             <thead>
                                 <tr>
                                     <th>Филиал клуба</th>
+                                    <th>Кол-во попыток броней</th>
                                     <th>Кол-во успешных броней</th>
-                                    <th>Кол-во успешных неотмененных броней</th>
-                                    <th>Кол-во успешных броней с кэшбеком</th>
+                                    <th>Кол-во отмен успешных броней</th>
+                                    <th>Оборот денег</th>
+<!--                                    <th>Пользователи</th>-->
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in bookings_summary_table %}
                                 <tr>
                                     <td>{{ row.club_branch__name }}</td>
+                                    <td>{{ row.amount_of_booking_tries }}</td>
                                     <td>{{ row.amount_of_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_not_cancelled_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_successful_bookings_with_cashback }}</td>
+                                    <td>{{ row.amount_of_cancelled_successful_bookings }}</td>
+                                    <td>{{ row.amount_of_successful_revenue }}</td>
+<!--                                    <td>{{ row.amount_of_successful_revenue }}</td>-->
                                 </tr>
                                 {% endfor %}
                             </tbody>
