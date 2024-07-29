@@ -106,11 +106,11 @@ class LobbyAppVersionsView(PublicJSONRendererMixin, GenericAPIView):
 
 class MonthYear(Func):
     function = 'CONCAT'
-    template = "%(function)s(EXTRACT(MONTH FROM %(expressions)s), '.', EXTRACT(YEAR FROM %(expressions)s))"
+    template = "%(function)s(EXTRACT(YEAR FROM %(expressions)s), '.', EXTRACT(MONTH FROM %(expressions)s))"
 
 
 def get_month_str(month_dot_year):
-    month, year = month_dot_year.split('.')
+    year, month = month_dot_year.split('.')
     return f"{MONTHS_NAMES.get(month)} {year}"
 
 
