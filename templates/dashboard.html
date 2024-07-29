@@ -29,10 +29,35 @@
         }
         .container {
             color: black;
-            margin-bottom: 70px;
+            overflow: auto;
+            padding: 0;
+            max-width: inherit !important;
         }
         .table {
             color: black;
+        }
+        .title {
+            margin-bottom: 24px;
+        }
+        .title h1 {
+            display: inline-block;
+            color: black;
+            margin-right: 10px;
+        }
+        .title select {
+            display: inline-block;
+            padding: 10px;
+            font-size: 14pt;
+            border: 2px solid #4e73df !important;
+            border-radius: 7px;
+        }
+        .loader {
+            display: none;
+            padding: 10px;
+        }
+        .content-block {
+            padding-top: 20px;
+            margin-bottom: 50px;
         }
     </style>
 
@@ -50,7 +75,7 @@
             <div id="content">
 
                 <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow" id="topbar">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow" id="topbar">
                     Lobby Dashboard
                 </nav>
                 <!-- End of Topbar -->
@@ -59,229 +84,262 @@
                 <div class="container-fluid">
 
                     <!-- Content Row -->
-                    <h1>Метрики всего</h1>
-                    <div class="row">
+                    <div class="content-block" id="block1">
+                        <div class="title">
+                            <h1>Метрики за</h1>
+                            <select name="period" class="period_select" onchange="location = this.value;">
+                                <option value="?period=today#block1" {% if period == "today" %}selected{% endif %}>Сегодня</option>
+                                <option value="?period=last_week#block1" {% if period == "last_week" %}selected{% endif %}>Последнюю неделю</option>
+                                <option value="?period=last_month#block1" {% if period == "last_month" %}selected{% endif %}>Последний месяц</option>
+                                <option value="?period=last_year#block1" {% if period == "last_year" %}selected{% endif %}>Последний год</option>
+                            </select>
+                            <div class="loader"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="row">
 
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Всего попыток броней</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_total_count}}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            <!-- Earnings (Monthly) Card Example -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Всего попыток броней</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_total_count}}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Всего успешных броней</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_count}}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Всего успешных броней</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_count}}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Кол-во отмен успешных броней</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_cancelled_count}}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            <!-- Earnings (Monthly) Card Example -->
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Кол-во отмен после успешных броней</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_cancelled_count}}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Revenue</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_revenue_amount}}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-success shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    Revenue</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{bookings_successful_revenue_amount}}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Всего новых пользователей</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{users_count_total}}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Всего новых пользователей</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{users_count_total}}</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-user fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
 
-                    <div class="container mt-4">
-                        <h1>Таблица броней по клубам</h1>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Филиал клуба</th>
-                                    <th>Кол-во попыток броней</th>
-                                    <th>Кол-во успешных броней</th>
-                                    <th>Кол-во отмен успешных броней</th>
-                                    <th>Оборот денег</th>
-<!--                                    <th>Пользователи</th>-->
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in bookings_summary_table %}
-                                <tr>
-                                    <td>{{ row.club_branch__name }}</td>
-                                    <td>{{ row.amount_of_booking_tries }}</td>
-                                    <td>{{ row.amount_of_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_cancelled_successful_bookings }}</td>
-                                    <td>{{ row.amount_of_successful_revenue }}</td>
-<!--                                    <td>{{ row.amount_of_successful_revenue }}</td>-->
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="content-block" id="block2">
+                        <div class="title">
+                            <h1>Таблица по клубам за</h1>
+                            <select name="period" class="period_select" onchange="location = this.value;">
+                                <option value="?period=today#block2" {% if period == "today" %}selected{% endif %}>Сегодня</option>
+                                <option value="?period=last_week#block2" {% if period == "last_week" %}selected{% endif %}>Последнюю неделю</option>
+                                <option value="?period=last_month#block2" {% if period == "last_month" %}selected{% endif %}>Последний месяц</option>
+                                <option value="?period=last_year#block2" {% if period == "last_year" %}selected{% endif %}>Последний год</option>
+                            </select>
+                            <div class="loader"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="container mt-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Филиал клуба</th>
+                                        <th>Кол-во попыток броней</th>
+                                        <th>Кол-во успешных броней</th>
+                                        <th>Кол-во отмен успешных броней</th>
+                                        <th>Оборот денег</th>
+    <!--                                    <th>Пользователи</th>-->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in bookings_summary_table %}
+                                    <tr>
+                                        <td>{{ row.club_branch__name }}</td>
+                                        <td>{{ row.amount_of_booking_tries }}</td>
+                                        <td>{{ row.amount_of_successful_bookings }}</td>
+                                        <td>{{ row.amount_of_cancelled_successful_bookings }}</td>
+                                        <td>{{ row.amount_of_successful_revenue }}</td>
+    <!--                                    <td>{{ row.amount_of_successful_revenue }}</td>-->
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- Content Row -->
-                    <div class="row">
+                    <div class="content-block" id="block3">
+                        <div class="title">
+                            <h1>Графики за</h1>
+                            <select name="period" class="period_select" onchange="location = this.value;">
+                                <option value="?period=today#block3" {% if period == "today" %}selected{% endif %}>Сегодня</option>
+                                <option value="?period=last_week#block3" {% if period == "last_week" %}selected{% endif %}>Последнюю неделю</option>
+                                <option value="?period=last_month#block3" {% if period == "last_month" %}selected{% endif %}>Последний месяц</option>
+                                <option value="?period=last_year#block3" {% if period == "last_year" %}selected{% endif %}>Последний год</option>
+                            </select>
+                            <div class="loader"><div class="spinner-border text-primary" role="status"></div></div>
+                        </div>
+                        <div class="row">
 
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-12">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Кол-во заказов за последнюю неделю</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Период:</div>
-                                            <a class="dropdown-item" href="#">За неделю</a>
-                                            <a class="dropdown-item" href="#">За месяц</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">За год</a>
+                            <!-- Area Chart -->
+                            <div class="col-xl-12 col-lg-12">
+                                <div class="card shadow mb-4">
+                                    <!-- Card Header - Dropdown -->
+                                    <div
+                                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                        <h6 class="m-0 font-weight-bold text-primary">Кол-во заказов за последнюю неделю</h6>
+                                        <div class="dropdown no-arrow">
+                                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                                aria-labelledby="dropdownMenuLink">
+                                                <div class="dropdown-header">Период:</div>
+                                                <a class="dropdown-item" href="#">За неделю</a>
+                                                <a class="dropdown-item" href="#">За месяц</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">За год</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Card Body -->
+                                    <div class="card-body">
+                                        <div class="chart-area">
+                                            <canvas id="myAreaChart"></canvas>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
+                            </div>
+
+                        </div>
+                        <div class="row">
+
+                            <!-- Area Chart -->
+                            <div class="col-xl-12 col-lg-12">
+                                <div class="card shadow mb-4">
+                                    <!-- Card Header - Dropdown -->
+                                    <div
+                                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                        <h6 class="m-0 font-weight-bold text-primary">Кол-во успешных оплат за последнюю неделю</h6>
+                                        <div class="dropdown no-arrow">
+                                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                                aria-labelledby="dropdownMenuLink">
+                                                <div class="dropdown-header">Период:</div>
+                                                <a class="dropdown-item" href="#">За неделю</a>
+                                                <a class="dropdown-item" href="#">За месяц</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">За год</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Card Body -->
+                                    <div class="card-body">
+                                        <div class="chart-area">
+                                            <canvas id="paymentsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+
+                            <!-- Area Chart -->
+                            <div class="col-xl-12 col-lg-12">
+                                <div class="card shadow mb-4">
+                                    <!-- Card Header - Dropdown -->
+                                    <div
+                                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                        <h6 class="m-0 font-weight-bold text-primary">Кол-во новых пользователей за последнюю неделю</h6>
+                                        <div class="dropdown no-arrow">
+                                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                                aria-labelledby="dropdownMenuLink">
+                                                <div class="dropdown-header">Период:</div>
+                                                <a class="dropdown-item" href="#">За неделю</a>
+                                                <a class="dropdown-item" href="#">За месяц</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">За год</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Card Body -->
+                                    <div class="card-body">
+                                        <div class="chart-area">
+                                            <canvas id="newUsersChart"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
-                    <div class="row">
 
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-12">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Кол-во успешных оплат за последнюю неделю</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Период:</div>
-                                            <a class="dropdown-item" href="#">За неделю</a>
-                                            <a class="dropdown-item" href="#">За месяц</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">За год</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="paymentsChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="row">
-
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-12">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Кол-во новых пользователей за последнюю неделю</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Период:</div>
-                                            <a class="dropdown-item" href="#">За неделю</a>
-                                            <a class="dropdown-item" href="#">За месяц</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">За год</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="newUsersChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
                 <!-- /.container-fluid -->
 
@@ -310,6 +368,11 @@
     <!-- Page level custom scripts -->
     <!-- <script src="js/demo/chart-area-demo.js"></script> -->
     <script type="text/javascript">
+
+        $('.period_select').on('change', function(e){
+            $(this).next().css('display', 'inline-block');
+        });
+
         // Set new default font family and font color to mimic Bootstrap's default styling
         Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
         Chart.defaults.global.defaultFontColor = '#858796';
@@ -344,7 +407,7 @@
         var myLineChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: [{% for item in dates_list %}"{{item}}",{% endfor %}],
+            labels: [{% for item in bookings_dates_list %}"{{item}}",{% endfor %}],
             datasets: [{
               label: "Заказов - ",
               lineTension: 0.3,

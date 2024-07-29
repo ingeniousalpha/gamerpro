@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db.models import Sum, Count, Q, F, CharField, Value
 from django.db.models.functions import Concat
 from django.shortcuts import render
@@ -17,6 +19,20 @@ from ..users.models import User
 
 from urllib.parse import unquote
 
+MONTHS = {
+    1: "Январь",
+    2: "Февраль",
+    3: "Март",
+    4: "Апрель",
+    5: "Май",
+    6: "Июнь",
+    7: "Июль",
+    8: "Август",
+    9: "Сентябрь",
+    10: "Октябрь",
+    11: "Ноябрь",
+    12: "Декабрь"
+}
 
 class DocumentListView(PublicJSONRendererMixin, ListAPIView):
     queryset = Document.objects.all()
@@ -89,53 +105,63 @@ class LobbyAppVersionsView(PublicJSONRendererMixin, GenericAPIView):
 
 def dashboard_view(request):
     period = request.GET.get('period')  # today/last_week/last_month/last_year
-    queryset = Booking.objects.all()
+    group_by_field = 'created_at__date'
+    if period == 'today':
+        filter_period = timezone.now().date()
+    elif period == 'last_week':
+        filter_period = timezone.now() - timezone.timedelta(days=7)
+    elif period == 'last_year':
+        group_by_field = 'created_at__month'
+        filter_period = timezone.now() - timezone.timedelta(days=365)
+    else:
+        period = 'last_month'
+        filter_period = timezone.now() - timezone.timedelta(days=30)
+
+    queryset = Booking.objects.filter(created_at__gte=filter_period)
     successful_bookings = queryset.filter(
         Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True)
-    )
+    ).filter(created_at__gte=filter_period)
     cancelled_bookings = successful_bookings.filter(is_cancelled=True)
     bookings_total_count = queryset.count()
     bookings_successful_count = successful_bookings.count()
     bookings_cancelled_count = cancelled_bookings.count()
-    bookings_successful_revenue_amount = successful_bookings.exclude(is_cancelled=True).aggregate(Sum('total_amount'))['total_amount__sum']
+    bookings_successful_revenue_amount = successful_bookings.exclude(is_cancelled=True).aggregate(
+        Sum('total_amount')
+    )['total_amount__sum'] or 0
     users_total_count = User.objects.all()
 
-    dates = queryset.filter(
-        created_at__date__gte=timezone.now() - timezone.timedelta(days=10)
-    ).values('created_at__date').annotate(bookings_count=Count('id')).order_by('created_at__date')
-    print(dates)
-    dates_list = []
+    dates = queryset.values(group_by_field).annotate(bookings_count=Count('id')).order_by(group_by_field)
+    bookings_dates_list = []
     bookings_count_list = []
     for item in dates:
-        dates_list.append(item['created_at__date'].strftime("%d.%m"))
+        bookings_dates_list.append(MONTHS.get(item[group_by_field]) if period=="last_year" else item[group_by_field])
         bookings_count_list.append(item['bookings_count'])
         
     successful_payments = Payment.objects.filter(status=PaymentStatuses.PAYMENT_APPROVED)
     payments_dates = successful_payments.filter(
-        created_at__date__gte=timezone.now() - timezone.timedelta(days=10)
-    ).values('created_at__date').annotate(payments_count=Count('id')).order_by('created_at__date')
-
+        created_at__gte=filter_period
+    ).values(group_by_field).annotate(payments_count=Count('id')).order_by(group_by_field)
     payments_dates_list = []
     payments_count_list = []
     for item in payments_dates:
-        payments_dates_list.append(item['created_at__date'].strftime("%d.%m"))
+        payments_dates_list.append(MONTHS.get(item[group_by_field]) if period=="last_year" else item[group_by_field])
         payments_count_list.append(item['payments_count'])
 
-    
     all_users = User.objects.all()
     users_count_total = all_users.count()
     users_dates = all_users.filter(
-        created_at__date__gte=timezone.now() - timezone.timedelta(days=10)
-    ).values('created_at__date').annotate(users_count=Count('id')).order_by('created_at__date')
-
+        created_at__gte=filter_period
+    ).values(group_by_field).annotate(users_count=Count('id')).order_by(group_by_field)
     users_dates_list = []
     users_count_list = []
     for item in users_dates:
-        users_dates_list.append(item['created_at__date'].strftime("%d.%m"))
+        users_dates_list.append(MONTHS.get(item[group_by_field]) if period=="last_year" else item[group_by_field])
         users_count_list.append(item['users_count'])
 
-    
-    bookings_summary_table = Booking.objects.select_related('club_branch').values('club_branch__name').annotate(
+    bookings_summary_table = (Booking.objects
+                              .select_related('club_branch')
+                              .filter(created_at__gte=filter_period)
+                              .values('club_branch__name').annotate(
         amount_of_booking_tries=Count('id'),
         amount_of_successful_bookings=Count('id', filter=(
                 Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) | Q(use_cashback=True)
@@ -155,18 +181,16 @@ def dashboard_view(request):
             BookingStatuses.PLAYING, 
             BookingStatuses.COMPLETED
         ]) & Q(use_cashback=True))
-    ).order_by('-amount_of_successful_bookings')
+    ).order_by('-amount_of_successful_bookings'))
 
-
-    print(dates_list)
-    print(bookings_count_list)
     return render(request, "dashboard.html", {
+        "period": period,
         "bookings_total_count": bookings_total_count,
         "bookings_successful_count": bookings_successful_count,
         "bookings_cancelled_count": bookings_cancelled_count,
         "bookings_successful_revenue_amount": bookings_successful_revenue_amount,
         "users_count_total": users_count_total,
-        "dates_list": dates_list,
+        "bookings_dates_list": bookings_dates_list,
         "bookings_count_list": bookings_count_list,
         "payments_dates_list": payments_dates_list,
         "payments_count_list": payments_count_list,
@@ -174,6 +198,7 @@ def dashboard_view(request):
         "users_count_list": users_count_list,
         "bookings_summary_table": bookings_summary_table
     })
+
 
 def reports_view(request):
     payments_reports_table = Payment.objects.select_related('booking__club_branch').annotate(

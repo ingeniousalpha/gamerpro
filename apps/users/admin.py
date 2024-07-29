@@ -38,7 +38,7 @@ class UserCreationForm(forms.ModelForm):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('id', 'mobile_phone', 'email', 'is_email_confirmed', 'is_staff',)
+    list_display = ('id', 'mobile_phone', 'email', 'is_email_confirmed', 'is_staff', 'created_at')
     list_filter = ('is_staff',)
     list_display_links = ('id', 'mobile_phone', 'email', 'is_staff',)
     search_fields = ('email', 'uuid', 'mobile_phone')
@@ -55,6 +55,7 @@ class UserAdmin(BaseUserAdmin):
         (None, {
             "fields": (
                 'club_user_cashback_inline',
+                'created_at',
                 'uuid',
                 'mobile_phone',
                 'email',
@@ -66,7 +67,6 @@ class UserAdmin(BaseUserAdmin):
                 'is_email_confirmed',
                 'groups',
                 'user_permissions',
-                'created_at',
             )
         }),
     )
