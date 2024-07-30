@@ -340,6 +340,11 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 user=user,
             )
         else:
+            if not club_user.is_verified:
+                club_user.login = validated_data['login']
+                club_user.gizmo_phone = validated_data['mobile_phone']
+                club_user.save()
+
             exact_club_users = ClubBranchUser.objects.filter(login=club_user.login, gizmo_phone=validated_data['mobile_phone'])
             same_login_users = ClubBranchUser.objects.filter(login=club_user.login)
             has_same_login = False
@@ -350,7 +355,7 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 has_same_login = True
             if exact_club_users or has_same_login:
                 for cu in ClubBranchUser.objects.filter(login=club_user.login):
-                    if cu.gizmo_phone != validated_data['mobile_phone']:
+                    if cu.gizmo_id and cu.gizmo_phone != validated_data['mobile_phone']:
                         success = GizmoUpdateUserByIDService(
                             instance=cu.club_branch,
                             user_id=cu.gizmo_id,

@@ -146,6 +146,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_filter = ('club',)
     list_editable = ('priority', 'is_active', 'is_ready',)
     list_display = (
+        'id',
         '__str__',
         'api_host',
         'priority',
