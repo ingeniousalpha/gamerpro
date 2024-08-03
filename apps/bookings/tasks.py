@@ -106,11 +106,12 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
     if not Booking.objects.filter(status=BookingStatuses.COMPLETED, club_user__user=booking.club_user.user).exists():
         # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS
         for cancelled in Booking.objects.filter(status=BookingStatuses.CANCELLED, club_user=booking.club_user):
-            GizmoSetTimePacketToUser(
-                instance=cancelled.club_branch,
-                user_id=cancelled.club_user.gizmo_id,
-                product_id=cancelled.time_packet.gizmo_id
-            ).run()
+            if cancelled.uuid != booking.uuid:
+                GizmoSetTimePacketToUser(
+                    instance=cancelled.club_branch,
+                    user_id=cancelled.club_user.gizmo_id,
+                    product_id=cancelled.time_packet.gizmo_id
+                ).run()
 
     if Booking.objects.filter(
             club_user__user=booking.club_user.user,
