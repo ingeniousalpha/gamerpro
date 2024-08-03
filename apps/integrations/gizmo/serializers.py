@@ -32,16 +32,6 @@ class GizmoComputersSaveSerializer(serializers.ModelSerializer):
         )
 
 
-class GizmoComputerGroupsSaveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClubComputerGroup
-        fields = (
-            'gizmo_id',
-            'name',
-            'club_branch',
-        )
-
-
 class GizmoTimePacketGroupSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacketGroup

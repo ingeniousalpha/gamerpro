@@ -394,6 +394,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'senet': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'onevision': {
             'handlers': ['console'],
             'level': 'INFO',

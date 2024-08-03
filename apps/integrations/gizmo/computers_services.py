@@ -1,12 +1,13 @@
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
-from apps.integrations.gizmo.serializers import GizmoComputersSaveSerializer, GizmoComputerGroupsSaveSerializer
+from apps.integrations.gizmo.serializers import GizmoComputersSaveSerializer
+from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer
 
 
 class GizmoGetComputerGroupsService(BaseGizmoService):
     endpoint = "/api/hostgroups"
-    save_serializer = GizmoComputerGroupsSaveSerializer
+    save_serializer = OuterComputerGroupsSaveSerializer
     method = "GET"
 
     def save(self, response):
@@ -14,13 +15,13 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
             resp_data = response['result']
             for gizmo_comp_group in resp_data:
                 if not ClubComputerGroup.objects.filter(
-                    gizmo_id=gizmo_comp_group['id'],
+                    outer_id=gizmo_comp_group['id'],
                     club_branch_id=self.instance.id
                 ).exists():
                     try:
                         serializer = self.save_serializer(
                             data={
-                                "gizmo_id": gizmo_comp_group['id'],
+                                "outer_id": gizmo_comp_group['id'],
                                 "name": gizmo_comp_group['name'],
                                 "club_branch": self.instance.id,
                             }
@@ -50,7 +51,7 @@ class GizmoGetComputersService(BaseGizmoService):
                 if computer is None:
                     group_id = None
                     if group := ClubComputerGroup.objects.filter(
-                            gizmo_id=gizmo_computer['hostGroupId'],
+                            outer_id=gizmo_computer['hostGroupId'],
                             club_branch_id=self.instance.id
                     ).first():
                         group_id = group.id
