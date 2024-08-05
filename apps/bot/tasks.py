@@ -102,10 +102,9 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         return
     elif club_user.count() > 1:
         club_user.first().delete()
-        club_user = club_user.last()
 
+    club_user = club_user.last()
     club_branch = club_user.club_branch
-    # TODO: create this user in every branch
 
     # TODO: check if him already exist
     try:
