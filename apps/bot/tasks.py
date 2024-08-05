@@ -92,13 +92,17 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
     from apps.bookings.tasks import gizmo_bro_add_time_and_set_booking_expiration
     from apps.bookings.models import Booking
 
-    club_user = ClubBranchUser.objects.get(
+    club_user = ClubBranchUser.objects.filter(
         club_branch_id=club_branch_id,
         login=club_branch_user_login,
         gizmo_id__isnull=True,
     )
+
     if not club_user:
         return
+    elif club_user.count() > 1:
+        club_user.first().delete()
+        club_user = club_user.last()
 
     club_branch = club_user.club_branch
     # TODO: create this user in every branch
