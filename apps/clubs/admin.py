@@ -29,9 +29,9 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'group',
-        'gizmo_id',
+        # 'gizmo_id',
         'number',
-        'gizmo_hostname',
+        'outer_hostname',
         'is_booked',
         'is_active_session',
         'is_locked',
@@ -80,7 +80,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     extra = 0
     ordering = ['number']
     fields = (
-        'id', 'group', 'gizmo_id', 'gizmo_hostname',
+        'id', 'group', 'outer_id', 'outer_hostname',
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
@@ -171,8 +171,8 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
 
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
-    search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
-    list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch')
+    search_fields = ('outer_id', 'login', 'outer_phone', 'user__mobile_phone', 'first_name')
+    list_display = ('outer_id', 'login', 'outer_phone', 'club_branch')
 
     def response_change(self, request, obj):
         if "bot_approve_user_from_admin" in request.POST:

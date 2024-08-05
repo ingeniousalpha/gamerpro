@@ -3,35 +3,6 @@ from rest_framework import serializers
 from apps.clubs.models import ClubBranchUser, ClubComputer, ClubComputerGroup, ClubTimePacketGroup, ClubTimePacket
 
 
-class GizmoUserSaveSerializer(serializers.ModelSerializer):
-    gizmo_phone = serializers.CharField(required=False, allow_blank=True)
-    login = serializers.CharField(required=False, allow_blank=True)
-    first_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-
-    class Meta:
-        model = ClubBranchUser
-        fields = (
-            'gizmo_id',
-            'gizmo_phone',
-            'login',
-            'first_name',
-            'club_branch',
-        )
-
-
-class GizmoComputersSaveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClubComputer
-        fields = (
-            'gizmo_id',
-            'number',
-            'gizmo_hostname',
-            'is_locked',
-            'club_branch',
-            'group',
-        )
-
-
 class GizmoTimePacketGroupSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacketGroup

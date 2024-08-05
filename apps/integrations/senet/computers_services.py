@@ -1,4 +1,4 @@
-from apps.clubs.models import ClubComputerGroup
+from apps.clubs.models import ClubComputerGroup, ClubComputer
 from apps.integrations.senet.base import BaseSenetService
 from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer
 
@@ -8,7 +8,7 @@ class SenetGetComputerZonesService(BaseSenetService):
     method = "GET"
     save_serializer = OuterComputerGroupsSaveSerializer
 
-    def run_service(self):
+    def run_request(self):
         return self.fetch(path_params={
             "office_id": self.instance.outer_id
         })
@@ -34,3 +34,82 @@ class SenetGetComputerZonesService(BaseSenetService):
                         self.log_error(e)
         else:
             self.log_error("Empty Response")
+
+
+class SenetGetComputersWithSessionsService(BaseSenetService):
+    endpoint = "/api/v2/map/?limit=999&office_id={office_id}"
+    method = "GET"
+
+    def run_request(self):
+        return self.fetch(path_params={
+            "office_id": self.instance.outer_id
+        })
+
+    def save(self, response):
+        if response and response.get('results') and isinstance(response['results'], list):
+            resp_data = response['results']
+            for outer_computer in resp_data:
+                computer = ClubComputer.objects.filter(
+                    outer_id=outer_computer['workstation_id'],
+                    club_branch_id=self.instance.id
+                ).first()
+                if computer is None:
+                    group_id = None
+                    if group := ClubComputerGroup.objects.filter(
+                            outer_id=outer_computer['dic_office_zone_id'],
+                            club_branch_id=self.instance.id
+                    ).first():
+                        group_id = group.id
+                    serializer = self.save_serializer(
+                        data={
+                            "outer_id": outer_computer['workstation_id'],
+                            "number": outer_computer['num'],
+                            "outer_hostname": None,
+                            "club_branch": self.instance.id,
+                            "is_locked": outer_computer['is_locked'] or outer_computer['work_mode'] == 1,
+                            "group": group_id,
+                        }
+                    )
+                    try:
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save()
+                    except Exception as e:
+                        self.log_error(e)
+                else:
+                    computer.is_locked = outer_computer['is_locked'] or outer_computer['work_mode'] == 1
+                    computer.number = outer_computer['num']
+                    computer.is_active_session = bool(outer_computer['user_session_id'])
+                    computer.save(update_fields=['is_locked', 'is_active_session', 'number'])
+
+
+class SenetWorkstationCommandService(BaseSenetService):
+    endpoint = "/api/v2/workstation/command/"
+    method = "POST"
+
+
+class SenetLockComputersService(SenetWorkstationCommandService):
+    save_serializer = None
+
+    def run_request(self):
+        comps = self.kwargs.get('computers')
+        if not isinstance(comps, list):
+            comps = [comps]
+        computers = [{
+            "workstation_id": c_outer_id,
+            "command_type": "maintenance"
+        } for c_outer_id in comps]
+        return self.fetch(json=computers)
+
+
+class SenetUnlockComputersService(SenetWorkstationCommandService):
+    save_serializer = None
+
+    def run_request(self):
+        comps = self.kwargs.get('computers')
+        if not isinstance(comps, list):
+            comps = [comps]
+        computers = [{
+            "workstation_id": c_outer_id,
+            "command_type": "release"
+        } for c_outer_id in comps]
+        return self.fetch(json=computers)

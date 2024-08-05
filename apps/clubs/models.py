@@ -27,7 +27,7 @@ class Club(models.Model):
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
     software_type = models.CharField(choices=[
-        ("Senet", "Senet"), ("Gizmo", "Gizmo")
+        ("SENET", "SENET"), ("GIZMO", "GIZMO")
     ], null=True, max_length=20)
 
     class Meta:
@@ -103,6 +103,7 @@ class ClubComputerGroup(models.Model):
 
 
 class ClubComputer(models.Model):
+    outer_id = models.IntegerField(null=True, db_index=True)
     club_branch = models.ForeignKey(
         ClubBranch,
         on_delete=models.CASCADE,
@@ -115,12 +116,11 @@ class ClubComputer(models.Model):
     is_locked = models. BooleanField(default=False)
     is_broken = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
-    gizmo_id = models.IntegerField(null=True, db_index=True)
-    gizmo_hostname = models.CharField(max_length=10, null=True)
+    outer_hostname = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
-        if self.gizmo_hostname:
-            return self.gizmo_hostname
+        if self.outer_hostname:
+            return self.outer_hostname
         return f"Comp({self.number})"
 
     class Meta:
@@ -230,8 +230,8 @@ class ClubBranchPrice(models.Model):
 class ClubBranchUser(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
-    gizmo_id = models.IntegerField(null=True, blank=True, db_index=True)
-    gizmo_phone = models.CharField(max_length=12, null=True, db_index=True)
+    outer_id = models.IntegerField(null=True, blank=True, db_index=True)
+    outer_phone = models.CharField(max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
@@ -250,10 +250,12 @@ class ClubBranchUser(models.Model):
 
     @property
     def is_verified(self):
-        return bool(self.gizmo_id)
+        return bool(self.outer_id)
 
     def __str__(self):
-        return f"{self.login}({self.gizmo_phone})"
+        if self.outer_phone:
+            return f"{self.login}({self.outer_phone})"
+        return f"{self.login}({self.user.mobile_phone})"
 
     class Meta:
         verbose_name = "Юзер в гизмо"

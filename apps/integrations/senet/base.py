@@ -1,4 +1,6 @@
 import logging
+from abc import abstractmethod
+from typing import Any
 
 from django.core.cache import cache
 
@@ -36,12 +38,18 @@ class BaseSenetService(ServiceLoggingMixin, BaseService):
         cache.set(f"SENET_AUTH_TOKEN_{self.instance.id}", senet_token, expires=24*60*60)
         return senet_token
 
+    @abstractmethod
+    def run_request(self) -> Any:
+        """
+        This method should be overload
+        """
+
     def run_service(self):
         try:
-            return self.fetch()
+            return self.run_request()
         except UnauthorizedError:
             self.headers["Authorization"] = self.set_new_auth_token()
-            return self.fetch()
+            return self.run_request()
         except Exception as e:
             raise e
 

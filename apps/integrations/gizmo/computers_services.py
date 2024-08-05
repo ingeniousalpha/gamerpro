@@ -1,8 +1,7 @@
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
-from apps.integrations.gizmo.serializers import GizmoComputersSaveSerializer
-from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer
+from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer, OuterComputersSaveSerializer
 
 
 class GizmoGetComputerGroupsService(BaseGizmoService):
@@ -34,7 +33,7 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
 
 class GizmoGetComputersService(BaseGizmoService):
     endpoint = "/api/hostcomputers"
-    save_serializer = GizmoComputersSaveSerializer
+    save_serializer = OuterComputersSaveSerializer
     method = "GET"
 
     def save(self, response):
@@ -45,7 +44,7 @@ class GizmoGetComputersService(BaseGizmoService):
                 if gizmo_computer['isDeleted']:
                     continue
                 computer = ClubComputer.objects.filter(
-                    gizmo_id=gizmo_computer['id'],
+                    outer_id=gizmo_computer['id'],
                     club_branch_id=self.instance.id
                 ).first()
                 if computer is None:
@@ -57,9 +56,9 @@ class GizmoGetComputersService(BaseGizmoService):
                         group_id = group.id
                     serializer = self.save_serializer(
                         data={
-                            "gizmo_id": gizmo_computer['id'],
+                            "outer_id": gizmo_computer['id'],
                             "number": gizmo_computer['number'],
-                            "gizmo_hostname": gizmo_computer['hostname'],
+                            "outer_hostname": gizmo_computer['hostname'],
                             "club_branch": self.instance.id,
                             "is_locked": bool(gizmo_computer['state'] == 2),
                             "is_broken": bool(gizmo_computer['state'] in [1, 3]),
@@ -75,8 +74,8 @@ class GizmoGetComputersService(BaseGizmoService):
                     computer.is_locked = bool(gizmo_computer['state'] == 2)
                     computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
                     computer.number = gizmo_computer['number']
-                    computer.gizmo_hostname = gizmo_computer['hostname']
-                    computer.save(update_fields=['is_locked', 'is_broken', 'number', 'gizmo_hostname'])
+                    computer.outer_hostname = gizmo_computer['hostname']
+                    computer.save(update_fields=['is_locked', 'is_broken', 'number', 'outer_hostname'])
 
 
 class GizmoLockComputerService(BaseGizmoService):
