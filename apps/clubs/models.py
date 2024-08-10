@@ -1,4 +1,6 @@
 from django.db import models
+
+from apps.clubs import SoftwareTypes
 from apps.clubs.managers import HallTypesManager
 
 
@@ -26,9 +28,7 @@ class Club(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
-    software_type = models.CharField(choices=[
-        ("SENET", "SENET"), ("GIZMO", "GIZMO")
-    ], null=True, max_length=20)
+    software_type = models.CharField(choices=SoftwareTypes.choices, null=True, max_length=20)
 
     class Meta:
         verbose_name = "Клуб"
@@ -87,6 +87,9 @@ class ClubBranch(models.Model):
 
     def __str__(self):
         return f"{self.club} {self.name}"
+
+    def software_type(self):
+        return self.club.software_type
 
 
 class ClubComputerGroup(models.Model):
