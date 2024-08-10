@@ -144,7 +144,7 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
                 club_branch_id=self.instance.id, login=gizmo_user['username']
             ).first()
             if existing_club_user:
-                serializer = GizmoUserSaveSerializer(
+                serializer = OuterUserSaveSerializer(
                     instance=existing_club_user,
                     data={
                         "gizmo_id": gizmo_user['id'],
@@ -152,10 +152,10 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
                     }
                 )
             else:
-                serializer = GizmoUserSaveSerializer(
+                serializer = OuterUserSaveSerializer(
                     data={
-                        "gizmo_id": gizmo_user['id'],
-                        "gizmo_phone": gizmo_phone,
+                        "outer_id": gizmo_user['id'],
+                        "outer_phone": gizmo_phone,
                         "login": gizmo_user['username'],
                         "first_name": gizmo_user['firstName'],
                         "club_branch": self.instance.id,

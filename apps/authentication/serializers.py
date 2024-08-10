@@ -13,12 +13,14 @@ from .models import TGAuthUser, VerifiedOTP
 from .services import verify_otp, generate_access_and_refresh_tokens_for_user, tg_auth_verify, tg_auth_send_otp_code
 from apps.users.services import get_or_create_user_by_phone
 from apps.bot.tasks import bot_notify_about_new_user_task
+from ..clubs import SoftwareTypes
 from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin, NeedToInputUserMobilePhone
 from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
 from ..integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
 from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService, \
     GizmoUpdateUserByIDService, GizmoGetUserIDByUsernameService, GizmoGetUserByUsernameService
+from ..integrations.senet.users_services import SenetSearchUserByPhoneService
 
 User = get_user_model()
 
@@ -71,7 +73,7 @@ class SigninByUsernameNewSerializer(serializers.ModelSerializer):
             ClubBranchUser.objects.create(
                 club_branch=validated_data['club_branch'],
                 gizmo_id=validated_data.get('gizmo_user_id'),
-                gizmo_phone=validated_data['mobile_phone'],
+                outer_phone=validated_data['mobile_phone'],
                 login=validated_data['login'],
                 first_name=validated_data['first_name'],
                 user=user,
@@ -112,7 +114,7 @@ class SigninWithoutOTPSerializer(serializers.ModelSerializer):
 
         GizmoGetUsersService(instance=attrs['club_branch']).run()
 
-        club_user = ClubBranchUser.objects.filter(gizmo_phone=attrs['mobile_phone'], club_branch=attrs['club_branch']).first()
+        club_user = ClubBranchUser.objects.filter(outer_phone=attrs['mobile_phone'], club_branch=attrs['club_branch']).first()
         print(club_user)
         if not club_user and not attrs.get('login'):
             raise NeedToInputUserLogin
@@ -136,7 +138,7 @@ class SigninWithoutOTPSerializer(serializers.ModelSerializer):
             ClubBranchUser.objects.create(
                 club_branch=validated_data['club_branch'],
                 gizmo_id=validated_data.get('gizmo_user_id'),
-                gizmo_phone=validated_data['mobile_phone'],
+                outer_phone=validated_data['mobile_phone'],
                 login=validated_data['login'],
                 first_name=validated_data.get('first_name'),
                 user=user,
@@ -177,7 +179,7 @@ class OLDSigninWithOTPSerializer(serializers.ModelSerializer):
 
         GizmoGetUsersService(instance=attrs['club_branch']).run()
 
-        club_user = ClubBranchUser.objects.filter(gizmo_phone=attrs['mobile_phone'], club_branch=attrs['club_branch']).first()
+        club_user = ClubBranchUser.objects.filter(outer_phone=attrs['mobile_phone'], club_branch=attrs['club_branch']).first()
         print(club_user)
         if not club_user and not attrs.get('login'):
             raise NeedToInputUserLogin
@@ -191,7 +193,7 @@ class OLDSigninWithOTPSerializer(serializers.ModelSerializer):
         if not club_user:
             ClubBranchUser.objects.create(
                 club_branch=validated_data['club_branch'],
-                gizmo_phone=validated_data['mobile_phone'],
+                outer_phone=validated_data['mobile_phone'],
                 first_name=validated_data.get('first_name'),
                 login=validated_data['login'],
                 user=user,
@@ -245,7 +247,7 @@ class VerifyOTPSerializer(serializers.Serializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
         print(attrs)
-        club_branch = ClubBranch.objects.filter(id=attrs.pop('club_branch')).first()
+        club_branch = ClubBranch.objects.select_related('club').filter(id=attrs.pop('club_branch')).first()
         if not club_branch:
             raise ClubBranchNotFound
 
@@ -259,11 +261,20 @@ class VerifyOTPSerializer(serializers.Serializer):
             user=user,
         )
 
-        # GizmoGetUsersService(instance=club_branch).run()
+        user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
+
+        if club_branch.software_type == SoftwareTypes.GIZMO:
+            GizmoGetUsersService(instance=club_branch).run()
+
         club_user = ClubBranchUser.objects.filter(
-            gizmo_phone=attrs['mobile_phone'],
+            outer_phone=attrs['mobile_phone'],
             club_branch=club_branch
         ).first()
+
+        if not club_user and club_branch.software_type == SoftwareTypes.SENET:
+            club_user = SenetSearchUserByPhoneService(
+                instance=club_branch, phone=attrs['mobile_phone']
+            ).run()
 
         if not club_user or not club_user.is_verified:
             raise NeedToInputUserLogin
@@ -294,7 +305,7 @@ class VerifyOTPSerializer(serializers.Serializer):
         #             instance=club_branch,
         #             login=club_user.login,
         #             first_name=club_user.first_name,
-        #             mobile_phone=club_user.gizmo_phone
+        #             mobile_phone=club_user.outer_phone
         #         ).run()
         #         club_user.gizmo_id = gizmo_user_id
         #         club_user.save(update_fields=['gizmo_id'])
@@ -340,25 +351,25 @@ class RegisterV2Serializer(serializers.ModelSerializer):
         user, _ = get_or_create_user_by_phone(validated_data['mobile_phone'])
         club_user = ClubBranchUser.objects.filter(
             Q(club_branch=validated_data['club_branch']) & (
-                    Q(gizmo_phone=validated_data['mobile_phone']) | Q(login=validated_data['login'])
+                    Q(outer_phone=validated_data['mobile_phone']) | Q(login=validated_data['login'])
             )
         ).first()
         if not club_user:
             club_user = ClubBranchUser.objects.create(
-                gizmo_phone=validated_data['mobile_phone'],
+                outer_phone=validated_data['mobile_phone'],
                 club_branch=validated_data['club_branch'],
                 login=validated_data['login'],
                 first_name=validated_data.get('first_name'),
-                gizmo_id=None,
+                outer_id=None,
                 user=user,
             )
         else:
             if not club_user.is_verified:
                 club_user.login = validated_data['login']
-                club_user.gizmo_phone = validated_data['mobile_phone']
+                club_user.outer_phone = validated_data['mobile_phone']
                 club_user.save()
 
-            exact_club_users = ClubBranchUser.objects.filter(login=club_user.login, gizmo_phone=validated_data['mobile_phone'])
+            exact_club_users = ClubBranchUser.objects.filter(login=club_user.login, outer_phone=validated_data['mobile_phone'])
             same_login_users = ClubBranchUser.objects.filter(login=club_user.login)
             has_same_login = False
             if same_login_users and (
@@ -368,20 +379,24 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 has_same_login = True
             if exact_club_users or has_same_login:
                 for cu in ClubBranchUser.objects.filter(login=club_user.login):
-                    if cu.gizmo_id and cu.gizmo_phone != validated_data['mobile_phone']:
+                    if cu.outer_id and cu.outer_phone != validated_data['mobile_phone']:
+                        # TODO: write a function can will update user mobile phone
+                        # TODO: Make integrations through functions. Services layer should be in order to add
+                        # TODO: new integrations in one place.
                         success = GizmoUpdateUserByIDService(
                             instance=cu.club_branch,
-                            user_id=cu.gizmo_id,
+                            user_id=cu.outer_id,
                             mobile_phone=validated_data['mobile_phone'],
                         ).run()
-                        if success:
-                            cu.gizmo_phone = validated_data['mobile_phone']
-                            cu.user = user
-                            cu.save(update_fields=['gizmo_phone', 'user'])
 
-            elif not club_user.gizmo_phone:
-                club_user.gizmo_phone = validated_data['mobile_phone']
-                club_user.save(update_fields=['gizmo_phone'])
+                        if success:
+                            cu.outer_phone = validated_data['mobile_phone']
+                            cu.user = user
+                            cu.save(update_fields=['outer_phone', 'user'])
+
+            elif not club_user.outer_phone:
+                club_user.outer_phone = validated_data['mobile_phone']
+                club_user.save(update_fields=['outer_phone'])
             if club_user.is_verified:
                 return user
 

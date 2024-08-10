@@ -416,8 +416,8 @@ class ClubBranchUserInline(admin.TabularInline):
     extra = 0
     fields = (
         "club_branch",
-        "gizmo_id",
-        "gizmo_phone",
+        "outer_id",
+        "outer_phone",
         "login",
         "first_name",
         "balance",
