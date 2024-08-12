@@ -94,37 +94,38 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
 
 
 def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False, check_status=True):
-    booking = (Booking.objects.select_related('club_user', 'club_user__user', 'club_branch', 'time_packet')
-               .prefetch_related('computers').filter(uuid=booking_uuid).first())
+    booking = (Booking.objects.select_related(
+        'club_user', 'club_user__user', 'club_branch', 'club_branch__club', 'time_packet'
+    ).prefetch_related('computers').filter(uuid=booking_uuid).first())
     if not booking or (check_status and booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]):
         return
 
     from apps.bot.tasks import bot_notify_about_booking_task
+    user = booking.club_user.user
+    club = booking.club_branch.club
 
     print('BRO booking time_packet activating...')
 
-    if not Booking.objects.filter(status=BookingStatuses.COMPLETED, club_user__user=booking.club_user.user).exists():
-        # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS
-        for cancelled in Booking.objects.filter(status=BookingStatuses.CANCELLED, club_user=booking.club_user):
-            if cancelled.uuid != booking.uuid:
+    if delayed_times := user.delayed_time_set.filter(club=club):
+        for delayed in delayed_times:
+            if delayed.booking.uuid != booking.uuid:
+                # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS OF UNVERIFIED CLUB USER
                 GizmoSetTimePacketToUser(
-                    instance=cancelled.club_branch,
-                    user_id=cancelled.club_user.gizmo_id,
-                    product_id=cancelled.time_packet.gizmo_id
+                    instance=delayed.booking.club_branch,
+                    user_id=delayed.booking.club_user.gizmo_id,
+                    product_id=delayed.time_packet.gizmo_id
                 ).run()
+        delayed_times.delete()
 
-    if Booking.objects.filter(
-            club_user__user=booking.club_user.user,
-            payments__status=PaymentStatuses.PAYMENT_APPROVED,
-            status=BookingStatuses.COMPLETED
-    ).exclude(id__in=[booking.id]).count() == 0:
-        extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION
+    if club_perk := club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
+            and not user.is_used_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION"):
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
-            minutes=extra_minutes,
+            minutes=club_perk.value,
             price=booking.time_packet.price
         ).run()
+        user.use_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION")
 
     if by_points:
         GizmoSetPointsToUser(
@@ -142,16 +143,12 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
 
     if by_points:
         subtract_cashback(
-            user=booking.club_user.user,
-            club=booking.club_branch.club,
-            amount=booking.time_packet.price
+            user=user, club=club, amount=booking.time_packet.price
         )
 
     if config.CASHBACK_TURNED_ON and not by_points and booking.amount >= 100:
         add_cashback(
-            user=booking.club_user.user,
-            club=booking.club_branch.club,
-            from_amount=booking.total_amount
+            user=user, club=club, from_amount=booking.total_amount
         )
 
     print('BRO booking time_packet activated')

@@ -7,6 +7,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from .managers import UserManager
 from apps.bookings.models import Booking
+from ..clubs.models import ClubPerk
+from ..common.models import TimestampModel
 
 
 class User(PermissionsMixin, AbstractBaseUser):
@@ -44,6 +46,12 @@ class User(PermissionsMixin, AbstractBaseUser):
     @property
     def has_bookings(self):
         return Booking.objects.filter(club_user__user=self).exists()
+
+    def is_used_perk(self, code):
+        return self.perks.filter(perk__code=code).exists()
+
+    def use_perk(self, code):
+        self.perks.add(UserPerk(perk=ClubPerk.objects.get(code="EXTRA_MINUTES_TO_FIRST_TRANSACTION")), bulk=False)
 
     # @property
     # def username(self):
@@ -112,4 +120,19 @@ class UserOneVisionPayer(models.Model):
         "ID юзера в платежной системе",
         null=True, blank=True,
         max_length=255
+    )
+
+
+class UserPerk(TimestampModel):
+    perk = models.ForeignKey(
+        "clubs.ClubPerk",
+        related_name="used_users",
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="perks",
+        null=True, blank=True
     )

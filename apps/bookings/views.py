@@ -18,6 +18,7 @@ from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_co
     send_push_about_booking_status
 from constance import config
 
+from ..clubs.models import DelayedTimeSetting
 from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService, \
     GizmoEndUserSessionService
 from ..integrations.onevision.payment_services import OVInitPaymentService
@@ -96,6 +97,13 @@ class CancelBookingView(JSONRendererMixin, BookingMixin, GenericAPIView):
         booking.is_cancelled = True
         booking.status = BookingStatuses.CANCELLED
         booking.save(update_fields=['is_cancelled', 'status'])
+        if not booking.club_user.is_verified:
+            DelayedTimeSetting.objects.create(
+                booking=booking,
+                user=booking.club_user.user,
+                club=booking.club_branch.club,
+                time_packet=booking.time_packet,
+            )
         if config.INTEGRATIONS_TURNED_ON:
             gizmo_cancel_booking.delay(booking.uuid)
         send_push_about_booking_status.delay(booking.uuid, BookingStatuses.CANCELLED)

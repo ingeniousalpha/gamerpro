@@ -113,6 +113,13 @@ class ClubAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(ClubPerk)
+class ClubAdmin(FilterByClubMixin, admin.ModelAdmin):
+    club_filter_field = "club"
+    list_display = ('club', 'code', 'name')
+    list_filter = ('club',)
+
+
 @admin.register(ClubBranch)
 class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (

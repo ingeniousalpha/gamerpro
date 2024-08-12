@@ -1,5 +1,6 @@
 from django.db import models
 from apps.clubs.managers import HallTypesManager
+from apps.common.models import TimestampModel
 
 
 class HallTypesManagerMixin:
@@ -33,6 +34,9 @@ class Club(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_perk(self, code):
+        return self.perks.filter(code=code).first()
 
 
 class ClubBranchLegalEntity(models.Model):
@@ -83,6 +87,17 @@ class ClubBranch(models.Model):
 
     def __str__(self):
         return f"{self.club} {self.name}"
+
+
+class ClubPerk(models.Model):
+    club = models.ForeignKey(
+        Club, related_name="perks",
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50)
+    value = models.IntegerField(default=0)
 
 
 class ClubComputerGroup(models.Model):
@@ -205,6 +220,31 @@ class ClubTimePacket(models.Model):
         return self.display_name or self.gizmo_name
 
 
+class DelayedTimeSetting(TimestampModel):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name="delayed_times"
+    )
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="delayed_time_set",
+        null=True, blank=True
+    )
+    booking = models.ForeignKey(
+        "bookings.Booking",
+        on_delete=models.CASCADE,
+        related_name="delayed_time_set"
+    )
+    time_packet = models.ForeignKey(
+        ClubTimePacket,
+        on_delete=models.SET_NULL,
+        related_name="delayed_time_set",
+        null=True, blank=True
+    )
+
+
 class ClubBranchProperty(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="properties")
     group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True, blank=True)
@@ -224,7 +264,7 @@ class ClubBranchPrice(models.Model):
     price = models.IntegerField()
 
 
-class ClubBranchUser(models.Model):
+class ClubBranchUser(TimestampModel):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
     gizmo_id = models.IntegerField(null=True, blank=True, db_index=True)
