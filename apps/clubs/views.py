@@ -44,6 +44,7 @@ class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
 class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     queryset = ClubBranch.objects.all()
     serializer_class = ClubBranchDetailSerializer
+
     def retrieve(self, request, *args, **kwargs):
         _sync_gizmo_computers_state_of_club_branch(self.get_object())
         return super().retrieve(request, *args, **kwargs)

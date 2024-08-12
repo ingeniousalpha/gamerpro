@@ -161,7 +161,7 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
 class ClubBranchDetailSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
-    halls_info = ClubBranchInfoSerializer(source='computer_groups', many=True)
+    halls_info = serializers.SerializerMethodField()
     computers = serializers.SerializerMethodField()
 
     class Meta:
@@ -182,8 +182,12 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
 
     def get_computers(self, obj):
         return ClubComputerListSerializer(
-            obj.computers.filter(is_deleted=False, group__isnull=False),
-            many=True,
+            obj.computers.filter(is_deleted=False, group__isnull=False), many=True,
+        ).data
+
+    def get_halls_info(self, obj):
+        return ClubBranchInfoSerializer(
+            obj.computer_groups.filter(is_deleted=False), many=True
         ).data
 
     # def get_vip(self, obj):
@@ -230,7 +234,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
-    landing = ClubComputerGroupLanding(source='computer_groups', many=True)
+    landing = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubBranch
@@ -254,11 +258,10 @@ class ClubBranchListSerializer(ClubUserSerializer):
     def get_description(self, obj):
         return obj.club.description
 
-    # def get_landing(self, obj):
-    #     halls = []
-    #     for group in obj.computer_groups.all():
-    #         halls.append(ClubComputerGroupLanding(obj, context={"group_name": group.name}).data)
-    #     return halls
+    def get_landing(self, obj):
+        return ClubComputerGroupLanding(
+            obj.computer_groups.filter(is_deleted=False), many=True
+        ).data
 
 
 class ClubTimePacketListSerializer(serializers.ModelSerializer):
