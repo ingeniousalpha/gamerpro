@@ -117,12 +117,12 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
                 ).run()
         delayed_times.delete()
 
-    if club_perk := club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
+    if club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
             and not user.is_used_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION"):
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id,
-            minutes=club_perk.value,
+            minutes=club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION").value,
             price=booking.time_packet.price
         ).run()
         user.use_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION")
