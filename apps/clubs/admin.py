@@ -57,6 +57,13 @@ class ClubComputerGroupInline(FilterByClubMixin, admin.TabularInline):
     can_delete = False
 
 
+class ClubComputerLayoutGroupInline(FilterByClubMixin, admin.TabularInline):
+    model = ClubComputerLayoutGroup
+    extra = 0
+    fields = ('name', 'is_available')
+    can_delete = False
+
+
 class ClubBranchPropertyInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranchProperty
     extra = 0
@@ -80,7 +87,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     extra = 0
     ordering = ['number']
     fields = (
-        'id', 'group', 'gizmo_id', 'gizmo_hostname',
+        'id', 'group', 'layout_group', 'gizmo_id', 'gizmo_hostname',
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
@@ -143,6 +150,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     )
     inlines = [
         ClubComputerGroupInline,
+        ClubComputerLayoutGroupInline,
         ClubBranchTimePacketGroupInline,
         ClubBranchPropertyInline,
         ClubBranchHardwareInline,

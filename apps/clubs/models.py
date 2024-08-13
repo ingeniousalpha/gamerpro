@@ -120,6 +120,20 @@ class ClubComputerGroup(models.Model):
         verbose_name_plural = "Залы клубов"
 
 
+class ClubComputerLayoutGroup(models.Model):
+    club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="layout_groups")
+    name = models.CharField(max_length=20)
+    outer_id = models.IntegerField(null=True, blank=True)
+    is_available = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Layout Group"
+        verbose_name_plural = "Layout Groups"
+
+    def __str__(self):
+        return f"{self.club_branch} {self.name}"
+
+
 class ClubComputer(models.Model):
     club_branch = models.ForeignKey(
         ClubBranch,
@@ -128,7 +142,16 @@ class ClubComputer(models.Model):
         db_index=True
     )
     number = models.IntegerField()
-    group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
+    group = models.ForeignKey(
+        ClubComputerGroup,
+        null=True, on_delete=models.SET_NULL,
+        related_name="computers"
+    )
+    layout_group = models.ForeignKey(
+        ClubComputerLayoutGroup,
+        null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="computers"
+    )
     is_active_session = models.BooleanField(default=False)
     is_locked = models. BooleanField(default=False)
     is_broken = models.BooleanField(default=False)
