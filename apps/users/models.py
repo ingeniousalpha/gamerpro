@@ -52,7 +52,7 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     def use_perk(self, club, code):
         self.perks.add(
-            UserPerk(perk=ClubPerk.objects.get(club=club, code="EXTRA_MINUTES_TO_FIRST_TRANSACTION")),
+            UserPerk(perk=ClubPerk.objects.get(club=club, code=code)),
             bulk=False
         )
 
