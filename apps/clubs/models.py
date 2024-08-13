@@ -102,6 +102,9 @@ class ClubPerk(models.Model):
     class Meta:
         unique_together = ("club", "code")
 
+    def __str__(self):
+        return f"{self.club}/{self.code}"
+
 
 class ClubComputerGroup(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")

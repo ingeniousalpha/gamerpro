@@ -39,6 +39,7 @@ class UserCreationForm(forms.ModelForm):
 class UserPerkInline(admin.TabularInline):
     model = UserPerk
     fields = ('perk',)
+    extra = 0
 
 
 @admin.register(User)
