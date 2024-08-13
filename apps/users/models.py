@@ -51,10 +51,11 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.perks.filter(perk__code=code).exists()
 
     def use_perk(self, club, code):
-        self.perks.add(
-            UserPerk(perk=ClubPerk.objects.get(club=club, code=code)),
-            bulk=False
-        )
+        club_perk = ClubPerk.objects.filter(club=club, code=code).first()
+        if club_perk:
+            self.perks.add(UserPerk(perk=club_perk), bulk=False)
+        else:
+            print(f'There is no such perk: {club}, {code}')
 
     # @property
     # def username(self):
