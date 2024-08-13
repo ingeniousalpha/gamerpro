@@ -162,7 +162,7 @@ class ClubBranchLayoutInfoSerializer(serializers.ModelSerializer):
         group = obj.club_branch.computers.filter(
             layout_group_id=obj.id, is_deleted=False
         ).first()
-        if group: return group.id
+        if group: return str(group.id)
 
     def get_computers(self, obj):
         return ClubComputerSerializer(
@@ -269,10 +269,15 @@ class ClubComputerGroupLanding(serializers.ModelSerializer):
         )
 
     def get_computers_total(self, obj):
-        return obj.club_branch.computers.filter(group_id=obj.id).count()
+        return obj.club_branch.computers.filter(group_id=obj.id, is_deleted=False).count()
 
     def get_computers_free(self, obj):
-        return obj.club_branch.computers.filter(group_id=obj.id, is_active_session=False, is_locked=False).count()
+        return obj.club_branch.computers.filter(
+            group_id=obj.id,
+            is_deleted=False,
+            is_active_session=False,
+            is_locked=False
+        ).count()
 
 
 class ClubComputerLayoutGroupLanding(serializers.ModelSerializer):
@@ -289,11 +294,12 @@ class ClubComputerLayoutGroupLanding(serializers.ModelSerializer):
         )
 
     def get_computers_total(self, obj):
-        return obj.club_branch.computers.filter(layout_group_id=obj.id).count()
+        return obj.club_branch.computers.filter(layout_group_id=obj.id, is_deleted=False).count()
 
     def get_computers_free(self, obj):
         return obj.club_branch.computers.filter(
             layout_group_id=obj.id,
+            is_deleted=False,
             is_active_session=False,
             is_locked=False
         ).count()
