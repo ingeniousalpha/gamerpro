@@ -159,9 +159,10 @@ class ClubBranchLayoutInfoSerializer(serializers.ModelSerializer):
         return []
 
     def get_id(self, obj):
-        return obj.club_branch.computers.filter(
+        group = obj.club_branch.computers.filter(
             layout_group_id=obj.id, is_deleted=False
-        ).first().group.id
+        ).first()
+        if group: return group.id
 
     def get_computers(self, obj):
         return ClubComputerSerializer(
