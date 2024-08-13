@@ -159,14 +159,12 @@ class ClubBranchLayoutInfoSerializer(serializers.ModelSerializer):
         return []
 
     def get_id(self, obj):
-        group = obj.club_branch.computers.filter(
-            layout_group_id=obj.id, is_deleted=False
-        ).first()
+        group = obj.computers.filter(is_deleted=False).first()
         if group: return group.id
 
     def get_computers(self, obj):
         return ClubComputerSerializer(
-            obj.club_branch.computers.filter(layout_group_id=obj.id, is_deleted=False),
+            obj.computers.filter(is_deleted=False),
             many=True
         ).data
 
@@ -227,9 +225,9 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
         ).data
 
     def get_halls_info(self, obj):
-        if obj.layout_groups.filter(is_available=True).exists():
+        if obj.layout_groups.filter(computers__isnull=False, is_available=True).exists():
             return ClubBranchLayoutInfoSerializer(
-                obj.layout_groups.filter(is_available=True), many=True
+                obj.layout_groups.filter(computers__isnull=False, is_available=True), many=True
             ).data
         return ClubBranchInfoSerializer(
             obj.computer_groups.filter(is_deleted=False), many=True
@@ -294,11 +292,10 @@ class ClubComputerLayoutGroupLanding(serializers.ModelSerializer):
         )
 
     def get_computers_total(self, obj):
-        return obj.club_branch.computers.filter(layout_group_id=obj.id, is_deleted=False).count()
+        return obj.computers.filter(is_deleted=False).count()
 
     def get_computers_free(self, obj):
-        return obj.club_branch.computers.filter(
-            layout_group_id=obj.id,
+        return obj.computers.filter(
             is_deleted=False,
             is_active_session=False,
             is_locked=False
@@ -334,9 +331,9 @@ class ClubBranchListSerializer(ClubUserSerializer):
         return obj.club.description
 
     def get_landing(self, obj):
-        if obj.layout_groups.filter(is_available=True).exists():
+        if obj.layout_groups.filter(computers__isnull=False, is_available=True).exists():
             return ClubComputerLayoutGroupLanding(
-                obj.layout_groups.filter(is_available=True), many=True
+                obj.layout_groups.filter(computers__isnull=False, is_available=True), many=True
             ).data
         return ClubComputerGroupLanding(
             obj.computer_groups.filter(is_deleted=False), many=True
