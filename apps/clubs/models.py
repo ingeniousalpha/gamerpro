@@ -99,6 +99,9 @@ class ClubPerk(models.Model):
     code = models.CharField(max_length=50)
     value = models.IntegerField(default=0)
 
+    class Meta:
+        unique_together = ("club", "code")
+
 
 class ClubComputerGroup(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")

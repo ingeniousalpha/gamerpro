@@ -125,7 +125,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
             minutes=club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION").value,
             price=booking.time_packet.price
         ).run()
-        user.use_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION")
+        user.use_perk(club, "EXTRA_MINUTES_TO_FIRST_TRANSACTION")
 
     if by_points:
         GizmoSetPointsToUser(

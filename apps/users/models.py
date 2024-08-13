@@ -50,8 +50,11 @@ class User(PermissionsMixin, AbstractBaseUser):
     def is_used_perk(self, code):
         return self.perks.filter(perk__code=code).exists()
 
-    def use_perk(self, code):
-        self.perks.add(UserPerk(perk=ClubPerk.objects.get(code="EXTRA_MINUTES_TO_FIRST_TRANSACTION")), bulk=False)
+    def use_perk(self, club, code):
+        self.perks.add(
+            UserPerk(perk=ClubPerk.objects.get(club=club, code="EXTRA_MINUTES_TO_FIRST_TRANSACTION")),
+            bulk=False
+        )
 
     # @property
     # def username(self):
