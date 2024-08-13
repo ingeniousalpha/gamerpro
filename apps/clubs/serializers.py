@@ -225,9 +225,9 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
         ).data
 
     def get_halls_info(self, obj):
-        if obj.layout_groups.filter(computers__isnull=False, is_available=True).exists():
+        if obj.layout_groups.filter(computers__isnull=False, is_available=True).distinct().exists():
             return ClubBranchLayoutInfoSerializer(
-                obj.layout_groups.filter(computers__isnull=False, is_available=True), many=True
+                obj.layout_groups.filter(computers__isnull=False, is_available=True).distinct(), many=True
             ).data
         return ClubBranchInfoSerializer(
             obj.computer_groups.filter(is_deleted=False), many=True
@@ -331,9 +331,9 @@ class ClubBranchListSerializer(ClubUserSerializer):
         return obj.club.description
 
     def get_landing(self, obj):
-        if obj.layout_groups.filter(computers__isnull=False, is_available=True).exists():
+        if obj.layout_groups.filter(computers__isnull=False, is_available=True).distinct().exists():
             return ClubComputerLayoutGroupLanding(
-                obj.layout_groups.filter(computers__isnull=False, is_available=True), many=True
+                obj.layout_groups.filter(computers__isnull=False, is_available=True).distinct(), many=True
             ).data
         return ClubComputerGroupLanding(
             obj.computer_groups.filter(is_deleted=False), many=True
