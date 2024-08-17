@@ -41,6 +41,24 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'club_user',
         'payment_card',
     )
+    fields = (
+        'uuid',
+        'created_at',
+        'club_branch',
+        'club_user',
+        'status',
+        'use_balance',
+        'use_cashback',
+        'platform',
+        'amount',
+        'commission_amount',
+        'total_amount',
+        'payment_card',
+        'expiration_date',
+        'is_cancelled',
+        'is_starting_session',
+        'time_packet',
+    )
 
     def computers(self, obj):
         return ", ".join([str(comp.computer.number) for comp in obj.computers.all()])
