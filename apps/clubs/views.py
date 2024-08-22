@@ -64,7 +64,7 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
         previous_day = current_day - 1 if current_day > 1 else 7
         next_day = current_day + 1 if current_day < 7 else 1
 
-        return super().get_queryset().filter(
+        queryset = super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
             is_active=True,
         ).filter(
@@ -73,12 +73,12 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
              Q(available_time_start__lte=current_time) &
              Q(available_time_end__gte=current_time)) |
 
-            # Packets that start before midnight and extend into the next day
+            # Packets that start late on the current day and extend into the next day
             (Q(available_days__number=current_day) &
-             Q(available_time_start__gte=F('available_time_end')) &
-             Q(available_time_start__lte=current_time)) |
+             Q(available_time_start__gte=time(22, 0)) &
+             Q(available_time_end__lte=time(5, 0))) |
 
-            # Packets that start late on the previous day and are still active
+            # Packets that started on the previous day and are still active
             (Q(available_days__number=previous_day) &
              Q(available_time_start__gte=time(22, 0)) &
              Q(available_time_end__lte=time(5, 0)) &
@@ -87,20 +87,10 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
             # Packets that are valid on the next day after midnight
             (Q(available_days__number=next_day) &
              Q(available_time_start__gte=F('available_time_end')) &
-             Q(available_time_end__gte=current_time)) |
-
-            # Handle packets that start late on the current day and continue into the next day (e.g., Packet88)
-            (Q(available_days__number=current_day) &
-             Q(available_time_start__gte=time(22, 0)) &
-             Q(available_time_end__lte=time(5, 0)) &
-             Q(available_time_end__gte=current_time)) |
-
-            # Handle packets that started the previous day but are still active (e.g., Packet88 on Sunday night into Monday)
-            (Q(available_days__number=previous_day) &
-             Q(available_time_start__gte=time(22, 0)) &
-             Q(available_time_end__lte=time(5, 0)) &
              Q(available_time_end__gte=current_time))
-        ).order_by('priority')
+        ).order_by('priority').distinct()
+
+        return queryset
 
 
 class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):
