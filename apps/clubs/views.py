@@ -80,14 +80,25 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
 
             # Packets that start late on the previous day and are still active
             (Q(available_days__number=previous_day) &
-             Q(available_time_start__gte=time(22,
-                                              0)) &  # Assuming packets starting after 22:00 might extend to the next day
+             Q(available_time_start__gte=time(22, 0)) &
              Q(available_time_end__lte=time(5, 0)) &
              Q(available_time_end__gte=current_time)) |
 
             # Packets that are valid on the next day after midnight
             (Q(available_days__number=next_day) &
              Q(available_time_start__gte=F('available_time_end')) &
+             Q(available_time_end__gte=current_time)) |
+
+            # Handle packets that start late on the current day and continue into the next day (e.g., Packet88)
+            (Q(available_days__number=current_day) &
+             Q(available_time_start__gte=time(22, 0)) &
+             Q(available_time_end__lte=time(5, 0)) &
+             Q(available_time_end__gte=current_time)) |
+
+            # Handle packets that started the previous day but are still active (e.g., Packet88 on Sunday night into Monday)
+            (Q(available_days__number=previous_day) &
+             Q(available_time_start__gte=time(22, 0)) &
+             Q(available_time_end__lte=time(5, 0)) &
              Q(available_time_end__gte=current_time))
         ).order_by('priority')
 
