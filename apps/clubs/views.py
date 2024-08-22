@@ -1,3 +1,4 @@
+import pytz
 from django.db.models import Q, F
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -56,24 +57,37 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        current_time = timezone.now().astimezone().time()
-        current_day = timezone.now().weekday() + 1  # Monday=0, Sunday=6
+        almaty_tz = pytz.timezone('Asia/Almaty')
+        current_time = timezone.now().astimezone(almaty_tz).time()
+        current_day = timezone.now().astimezone(almaty_tz).weekday() + 1  # Monday=0, Sunday=6
+        previous_day = current_day - 1 if current_day > 1 else 7
+        next_day = current_day + 1 if current_day < 7 else 1
 
         return super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
             is_active=True,
-            available_days__number=current_day,
         ).filter(
-            # Case 1: Time packet starts and ends on the same day
-            Q(available_time_start__lte=current_time, available_time_end__gte=current_time) |
+            # Packets that are valid on the current day and within the time range
+            (Q(available_days__number=current_day) &
+             Q(available_time_start__lte=current_time) &
+             Q(available_time_end__gte=current_time)) |
 
-            # Case 2: Time packet starts before midnight and ends after midnight (spanning two days)
-            Q(available_time_start__gte=F('available_time_end')) & (
-                    Q(available_time_end__gte=current_time) | Q(available_time_start__lte=current_time)
-            )
-        ).exclude(
-            # Exclude time packets ending on the previous day
-            Q(available_time_end__lte=current_time) & Q(available_time_start__gte=F('available_time_end'))
+            # Packets that start before midnight and extend into the next day
+            (Q(available_days__number=current_day) &
+             Q(available_time_start__gte=F('available_time_end')) &
+             Q(available_time_start__lte=current_time)) |
+
+            # Packets that start late on the previous day and are still active
+            (Q(available_days__number=previous_day) &
+             Q(available_time_start__gte=time(22,
+                                              0)) &  # Assuming packets starting after 22:00 might extend to the next day
+             Q(available_time_end__lte=time(5, 0)) &
+             Q(available_time_end__gte=current_time)) |
+
+            # Packets that are valid on the next day after midnight
+            (Q(available_days__number=next_day) &
+             Q(available_time_start__gte=F('available_time_end')) &
+             Q(available_time_end__gte=current_time))
         ).order_by('priority')
 
 
