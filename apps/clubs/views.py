@@ -56,14 +56,24 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
+        current_time = timezone.now().astimezone().time()
+        current_day = timezone.now().weekday() + 1  # Monday=0, Sunday=6
+
         return super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=timezone.now().weekday() + 1,
+            is_active=True,
+            available_days__number=current_day,
         ).filter(
-            (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(available_time_end__gte=timezone.now().astimezone().time())) |
-            (Q(available_time_start__gte=F('available_time_end')) & (
-                Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(available_time_start__lte=timezone.now().astimezone().time()))
-             )
+            # Case 1: Time packet starts and ends on the same day
+            Q(available_time_start__lte=current_time, available_time_end__gte=current_time) |
+
+            # Case 2: Time packet starts before midnight and ends after midnight (spanning two days)
+            Q(available_time_start__gte=F('available_time_end')) & (
+                    Q(available_time_end__gte=current_time) | Q(available_time_start__lte=current_time)
+            )
+        ).exclude(
+            # Exclude time packets ending on the previous day
+            Q(available_time_end__lte=current_time) & Q(available_time_start__gte=F('available_time_end'))
         ).order_by('priority')
 
 
