@@ -92,6 +92,10 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     )
     readonly_fields = ('group',)
 
+    def get_queryset(self, request):
+        qs = super(ClubBranchComputerInline, self).get_queryset(request)
+        return qs.filter(is_deleted=False)
+
 
 class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
     model = ClubTimePacket
