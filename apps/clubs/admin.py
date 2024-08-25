@@ -194,7 +194,7 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     def response_change(self, request, obj):
         if "bot_approve_user_from_admin" in request.POST:
             print('bot_approve_user_from_admin')
-            bot_approve_user_from_admin_task.delay(obj.id)
+            bot_approve_user_from_admin_task(obj.id)
             self.message_user(request, "Верифицируем и создаем аккаунт юзера...")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
