@@ -58,40 +58,17 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        almaty_tz = pytz.timezone('Asia/Almaty')
-        current_time = timezone.now().astimezone(almaty_tz).time()
-        current_day = timezone.now().astimezone(almaty_tz).weekday() + 1  # Monday=0, Sunday=6
-        previous_day = current_day - 1 if current_day > 1 else 7
-        next_day = current_day + 1 if current_day < 7 else 1
-
-        queryset = super().get_queryset().filter(
+        return super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True,
+            is_active=True, available_days__number=timezone.now().weekday() + 1,
         ).filter(
-            # Packets that are valid on the current day and within the time range
-            (Q(available_days__number=current_day) &
-             Q(available_time_start__lte=current_time) &
-             Q(available_time_end__gte=current_time)) |
-
-            # Packets that started on the previous day and are still active
-            (Q(available_days__number=previous_day) &
-             Q(available_time_start__gte=time(22, 0)) &
-             Q(available_time_end__lte=time(5, 0)) &
-             Q(available_time_end__gte=current_time)) |
-
-            # Packets that are valid on the next day after midnight
-            (Q(available_days__number=next_day) &
-             Q(available_time_start__gte=F('available_time_end')) &
-             Q(available_time_end__gte=current_time))
-        ).exclude(
-            # Exclude packets like Packet88 until their start time
-            Q(available_days__number=current_day) &
-            Q(available_time_start__gte=time(22, 0)) &
-            Q(available_time_end__lte=time(5, 0)) &
-            Q(available_time_start__gte=current_time)
-        ).order_by('priority').distinct()
-
-        return queryset
+            (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(
+                available_time_end__gte=timezone.now().astimezone().time())) |
+            (Q(available_time_start__gte=F('available_time_end')) & (
+                    Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(
+                available_time_start__lte=timezone.now().astimezone().time()))
+             )
+        ).order_by('priority')
 
 
 class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):
