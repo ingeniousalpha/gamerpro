@@ -11,7 +11,7 @@ from .views import (
 
 urlpatterns = [
     path('webhook', OVWebhookHandlerView.as_view()),
-    path('kaspi_callback', KaspiCallbackHandlerView.as_view()),
+    path('kaspi_webhook', KaspiCallbackHandlerView.as_view()),
     path('cards', PaymentCardListView.as_view()),
     path('cards/<int:pk>/delete', PaymentCardDeleteView.as_view()),
     path('deposit', DepositReplenishmentView.as_view()),
