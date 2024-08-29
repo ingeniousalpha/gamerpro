@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
 
-from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
+from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, PublicAPIMixin
 from apps.payments.models import PaymentCard
 from apps.payments.services import handle_ov_response
 from apps.common.utils import b64_decode
@@ -31,7 +31,7 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
         return success
 
 
-class KaspiCallbackHandlerView(GenericAPIView):
+class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
     def get(self, request):
         try:
             command = request.GET.get('command')
