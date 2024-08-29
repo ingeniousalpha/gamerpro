@@ -41,19 +41,19 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             sum = request.GET.get('sum')
         except Exception as e:
             print("KaspiCallbackHandlerView error: ", str(e))
-            return {
+            return Response({
                 "txn_id": txn_id,
                 "sum": 500,
                 "comment": "",
                 "result": 3,
                 "error_msg_code": "internal_server_error"
-            }
-        return {
+            })
+        return Response({
             "txn_id": txn_id,
             "result": 0,
             "sum": 500,
             "comment": "",
-        }
+        })
 
 
 class PaymentCardListView(JSONRendererMixin, ListAPIView):
