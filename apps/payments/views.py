@@ -31,6 +31,31 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
         return success
 
 
+class KaspiCallbackHandlerView(GenericAPIView):
+    def get(self, request):
+        try:
+            command = request.GET.get('command')
+            txn_id = request.GET.get('txn_id')
+            txn_date = request.GET.get('txn_date')
+            account = request.GET.get('account')
+            sum = request.GET.get('sum')
+        except Exception as e:
+            print("KaspiCallbackHandlerView error: ", str(e))
+            return {
+                "txn_id": txn_id,
+                "sum": 500,
+                "comment": "",
+                "result": 3,
+                "error_msg_code": "internal_server_error"
+            }
+        return {
+            "txn_id": txn_id,
+            "result": 0,
+            "sum": 500,
+            "comment": "",
+        }
+
+
 class PaymentCardListView(JSONRendererMixin, ListAPIView):
     serializer_class = PaymentCardListSerializer
     pagination_class = None
