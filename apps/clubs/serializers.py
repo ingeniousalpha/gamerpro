@@ -26,9 +26,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
 
     def get_balance(self, obj):
         if self.user:
-            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
-            if club_user and club_user.gizmo_id:
-                return get_cashback(user=club_user.user, club=obj.club)
+            return get_cashback(user=self.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
