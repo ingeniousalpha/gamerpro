@@ -37,6 +37,8 @@ def handle_ov_response(webhook_data, is_webhook=True):
     booking_uuid = None
     payer = UserOneVisionPayer.objects.filter(payer_id=outer_payer_id).first()
     if not payer:
+        print(f"User not found by OneVision payer_id: {outer_payer_id}")
+        print(f"Webhook data: {webhook_data}")
         raise Exception("User not found by OneVision payer_id")
 
     user = payer.user
