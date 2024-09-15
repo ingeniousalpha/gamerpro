@@ -1,3 +1,5 @@
+import time
+
 from apps.clubs.models import ClubTimePacketGroup
 from apps.integrations.exceptions import ServiceNotFound, ServiceUnavailable
 from apps.integrations.gizmo import ParamKeyWords
@@ -109,6 +111,7 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
         error = None
         for i in range(0, 5):
             try:
+                print(f"Request Attempt {self.__class__.__name__}: {i+1}")
                 response = self.fetch(path_params={
                     "user_id": self.kwargs.get('user_id'),
                     "product_id": int(self.kwargs.get('product_id')),  # Gizmo Time Packet ID
@@ -119,6 +122,7 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
                 break
             except (ServiceNotFound, ServiceUnavailable) as e:
                 error = e
+                time.sleep(1)
 
         if error:
             raise error

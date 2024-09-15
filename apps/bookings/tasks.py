@@ -93,6 +93,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     )
 
 
+@cel_app.task
 def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False, check_status=True):
     booking = (Booking.objects.select_related(
         'club_user', 'club_user__user', 'club_branch', 'club_branch__club', 'time_packet'
@@ -104,7 +105,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
     user = booking.club_user.user
     club = booking.club_branch.club
 
-    print('BRO booking time_packet activating...')
+    print(f"BRO booking({str(booking.uuid)}) time_packet activating...")
 
     if delayed_times := user.delayed_time_set.filter(club=club):
         for delayed in delayed_times:
@@ -151,7 +152,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
             user=user, club=club, from_amount=booking.total_amount
         )
 
-    print('BRO booking time_packet activated')
+    print(f"BRO booking({str(booking.uuid)}) time_packet activated")
 
     bot_notify_about_booking_task.delay(
         club_branch_id=booking.club_branch.id,

@@ -160,7 +160,7 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
                 if instance.club_branch.club.name.lower() == "bro":
                     gizmo_lock_computers(str(instance.uuid))
                     if instance.club_user.is_verified:
-                        gizmo_bro_add_time_and_set_booking_expiration(str(instance.uuid))
+                        gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid))
                 else:
                     gizmo_book_computers(str(instance.uuid))
             self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
@@ -190,7 +190,7 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
                 if instance.club_branch.club.name.lower() == "bro":
                     gizmo_lock_computers(str(instance.uuid))
                     if instance.club_user.is_verified:
-                        gizmo_bro_add_time_and_set_booking_expiration(str(instance.uuid), by_points=True)
+                        gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid), by_points=True)
                 else:
                     # TODO: this need to check is it working
                     gizmo_book_computers(str(instance.uuid))
