@@ -98,6 +98,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
     booking = (Booking.objects.select_related(
         'club_user', 'club_user__user', 'club_branch', 'club_branch__club', 'time_packet'
     ).prefetch_related('computers').filter(uuid=booking_uuid).first())
+    print(f"uuid: {booking_uuid}, booking.status: {booking.status if booking else ''}", )
     if not booking or (check_status and booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]):
         return
 
