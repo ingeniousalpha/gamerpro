@@ -5,7 +5,7 @@ from django.template.loader import get_template
 
 from apps.authentication.services import validate_password_in_forms
 
-from .models import User
+from .models import User, UserPerk
 from ..clubs.admin import ClubBranchUserInline, ClubUserCashbackInline
 
 
@@ -36,6 +36,12 @@ class UserCreationForm(forms.ModelForm):
         return user
 
 
+class UserPerkInline(admin.TabularInline):
+    model = UserPerk
+    fields = ('perk',)
+    extra = 0
+
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = ('id', 'mobile_phone', 'email', 'is_email_confirmed', 'is_staff', 'created_at')
@@ -47,7 +53,8 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['-created_at']
     inlines = [
         ClubUserCashbackInline,
-        ClubBranchUserInline
+        ClubBranchUserInline,
+        UserPerkInline
     ]
     readonly_fields = ('club_user_cashback_inline',)
 

@@ -7,6 +7,8 @@ import json
 import datetime
 
 from os import getenv
+
+from aiogram.client.default import DefaultBotProperties
 from celery import Celery
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
@@ -203,7 +205,7 @@ async def get_admin_mobile_phone(message: types.Message) -> None:
 
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     # And the run events dispatching
     await dp.start_polling(bot)
 

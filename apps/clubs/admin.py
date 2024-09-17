@@ -57,6 +57,13 @@ class ClubComputerGroupInline(FilterByClubMixin, admin.TabularInline):
     can_delete = False
 
 
+class ClubComputerLayoutGroupInline(FilterByClubMixin, admin.TabularInline):
+    model = ClubComputerLayoutGroup
+    extra = 0
+    fields = ('name', 'is_available')
+    can_delete = False
+
+
 class ClubBranchPropertyInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranchProperty
     extra = 0
@@ -84,6 +91,10 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
+
+    def get_queryset(self, request):
+        qs = super(ClubBranchComputerInline, self).get_queryset(request)
+        return qs.filter(is_deleted=False)
 
 
 class ClubBranchTimePacketInline(FilterByClubMixin, admin.TabularInline):
@@ -114,6 +125,13 @@ class ClubAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(ClubPerk)
+class ClubAdmin(FilterByClubMixin, admin.ModelAdmin):
+    club_filter_field = "club"
+    list_display = ('club', 'code', 'name')
+    list_filter = ('club',)
+
+
 @admin.register(ClubBranch)
 class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
@@ -138,6 +156,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     )
     inlines = [
         ClubComputerGroupInline,
+        ClubComputerLayoutGroupInline,
         ClubBranchTimePacketGroupInline,
         ClubBranchPropertyInline,
         ClubBranchHardwareInline,
@@ -263,6 +282,13 @@ class ClubBranchAdminModelAdmin(admin.ModelAdmin):
         'is_active',
         'club_branch',
     )
+    list_filter = (
+        'club_branch',
+    )
+
+
+@admin.register(ClubComputerGroup)
+class ClubComputerGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_filter = (
         'club_branch',
     )

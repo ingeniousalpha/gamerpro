@@ -37,6 +37,8 @@ def handle_ov_response(webhook_data, is_webhook=True):
     booking_uuid = None
     payer = UserOneVisionPayer.objects.filter(payer_id=outer_payer_id).first()
     if not payer:
+        print(f"User not found by OneVision payer_id: {outer_payer_id}")
+        print(f"Webhook data: {webhook_data}")
         raise Exception("User not found by OneVision payer_id")
 
     user = payer.user
@@ -88,7 +90,7 @@ def handle_ov_response(webhook_data, is_webhook=True):
         payment.user.set_current_card(payment.card)
         if booking_uuid and not booking.payment_card and not booking.use_balance:
             if booking.club_branch.club.name.lower() == "bro" and booking.club_user.is_verified:
-                gizmo_bro_add_time_and_set_booking_expiration(booking_uuid)
+                gizmo_bro_add_time_and_set_booking_expiration.delay(booking_uuid)
             elif booking.club_branch.club.name.lower() != "bro":
                 gizmo_book_computers(booking_uuid)
                 send_push_about_booking_status.delay(booking.uuid, BookingStatuses.ACCEPTED)  # booking by new payment accepted

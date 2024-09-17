@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
 
-from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
+from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, PublicAPIMixin
 from apps.payments.models import PaymentCard
 from apps.payments.services import handle_ov_response
 from apps.common.utils import b64_decode
@@ -29,6 +29,31 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
         except Exception as e:
             logger.error(f"WEBHOOK PAYMENT={webhook_data['transaction_id']} ERROR: {str(e)}")
         return success
+
+
+class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
+    def get(self, request):
+        try:
+            command = request.GET.get('command')
+            txn_id = request.GET.get('txn_id')
+            txn_date = request.GET.get('txn_date')
+            account = request.GET.get('account')
+            sum = request.GET.get('sum')
+        except Exception as e:
+            print("KaspiCallbackHandlerView error: ", str(e))
+            return Response({
+                "txn_id": txn_id,
+                "sum": 500,
+                "comment": "",
+                "result": 3,
+                "error_msg_code": "internal_server_error"
+            })
+        return Response({
+            "txn_id": txn_id,
+            "result": 0,
+            "sum": 500,
+            "comment": "",
+        })
 
 
 class PaymentCardListView(JSONRendererMixin, ListAPIView):

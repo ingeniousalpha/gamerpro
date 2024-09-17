@@ -1,4 +1,7 @@
+import time
+
 from apps.clubs.models import ClubTimePacketGroup
+from apps.integrations.exceptions import ServiceNotFound, ServiceUnavailable
 from apps.integrations.gizmo import ParamKeyWords
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
@@ -74,12 +77,23 @@ class GizmoAddPaidTimeToUser(BaseGizmoService):
     log_response = True
 
     def run_service(self):
-        return self.fetch(path_params={
-            "user_id": self.kwargs.get('user_id'),
-            "time": int(self.kwargs.get('minutes')),
-            "price": int(self.kwargs.get('price')),
-            "payment_method": self.instance.gizmo_payment_method
-        })
+        error = None
+        for i in range(0, 5):
+            try:
+                response = self.fetch(path_params={
+                    "user_id": self.kwargs.get('user_id'),
+                    "time": int(self.kwargs.get('minutes')),
+                    "price": int(self.kwargs.get('price')),
+                    "payment_method": self.instance.gizmo_payment_method
+                })
+                error = None
+                break
+            except (ServiceNotFound, ServiceUnavailable) as e:
+                error = e
+
+        if error:
+            raise error
+        return response
 
     def finalize_response(self, response):
         if response.get('isError') == True:
@@ -94,12 +108,25 @@ class GizmoSetTimePacketToUser(BaseGizmoService):
     log_response = True
 
     def run_service(self):
-        return self.fetch(path_params={
-            "user_id": self.kwargs.get('user_id'),
-            "product_id": int(self.kwargs.get('product_id')),  # Gizmo Time Packet ID
-            "quantity": int(self.kwargs.get('quantity', 1)),
-            "payment_method": self.instance.gizmo_points_method if self.kwargs.get('by_points') else self.instance.gizmo_payment_method
-        })
+        error = None
+        for i in range(0, 5):
+            try:
+                print(f"Request Attempt {self.__class__.__name__}: {i+1}")
+                response = self.fetch(path_params={
+                    "user_id": self.kwargs.get('user_id'),
+                    "product_id": int(self.kwargs.get('product_id')),  # Gizmo Time Packet ID
+                    "quantity": int(self.kwargs.get('quantity', 1)),
+                    "payment_method": self.instance.gizmo_points_method if self.kwargs.get('by_points') else self.instance.gizmo_payment_method
+                })
+                error = None
+                break
+            except (ServiceNotFound, ServiceUnavailable) as e:
+                error = e
+                time.sleep(1)
+
+        if error:
+            raise error
+        return response
 
     def finalize_response(self, response):
         if response.get('isError') == True:
@@ -118,10 +145,21 @@ class GizmoSetPointsToUser(BaseGizmoService):
     log_response = False
 
     def run_service(self):
-        return self.fetch(path_params={
-            "user_id": self.kwargs.get('user_id'),
-            "amount": int(self.kwargs.get('amount')),
-        })
+        error = None
+        for i in range(0, 5):
+            try:
+                response = self.fetch(path_params={
+                    "user_id": self.kwargs.get('user_id'),
+                    "amount": int(self.kwargs.get('amount')),
+                })
+                error = None
+                break
+            except (ServiceNotFound, ServiceUnavailable) as e:
+                error = e
+
+        if error:
+            raise error
+        return response
 
     def finalize_response(self, response):
         if response.get('isError') == True:

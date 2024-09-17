@@ -37,9 +37,29 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'uuid', 'club_user', 'club_branch', 'computers', 'amount', 'is_cancelled', 'is_paid', 'created_at'
     )
     readonly_fields = (
+        'uuid',
+        'expiration_date',
         'club_branch',
         'club_user',
         'payment_card',
+    )
+    fields = (
+        'uuid',
+        'created_at',
+        'club_branch',
+        'club_user',
+        'status',
+        'use_balance',
+        'use_cashback',
+        'platform',
+        'amount',
+        'commission_amount',
+        'total_amount',
+        'payment_card',
+        'expiration_date',
+        'is_cancelled',
+        'is_starting_session',
+        'time_packet',
     )
 
     def computers(self, obj):

@@ -2,6 +2,7 @@ from django.db import models
 
 from apps.clubs import SoftwareTypes
 from apps.clubs.managers import HallTypesManager
+from apps.common.models import TimestampModel
 
 
 class HallTypesManagerMixin:
@@ -36,6 +37,9 @@ class Club(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_perk(self, code):
+        return self.perks.filter(code=code).first()
 
 
 class ClubBranchLegalEntity(models.Model):
@@ -92,6 +96,23 @@ class ClubBranch(models.Model):
         return self.club.software_type
 
 
+class ClubPerk(models.Model):
+    club = models.ForeignKey(
+        Club, related_name="perks",
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50)
+    value = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ("club", "code")
+
+    def __str__(self):
+        return f"{self.club}/{self.code}"
+
+
 class ClubComputerGroup(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")
     name = models.CharField(max_length=20)
@@ -105,6 +126,20 @@ class ClubComputerGroup(models.Model):
         verbose_name_plural = "Залы клубов"
 
 
+class ClubComputerLayoutGroup(models.Model):
+    club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="layout_groups")
+    name = models.CharField(max_length=20)
+    outer_id = models.IntegerField(null=True, blank=True)
+    is_available = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Layout Group"
+        verbose_name_plural = "Layout Groups"
+
+    def __str__(self):
+        return f"{self.club_branch} {self.name}"
+
+
 class ClubComputer(models.Model):
     outer_id = models.IntegerField(null=True, db_index=True)
     club_branch = models.ForeignKey(
@@ -114,7 +149,16 @@ class ClubComputer(models.Model):
         db_index=True
     )
     number = models.IntegerField()
-    group = models.ForeignKey(ClubComputerGroup, null=True, on_delete=models.SET_NULL, related_name="computers")
+    group = models.ForeignKey(
+        ClubComputerGroup,
+        null=True, on_delete=models.SET_NULL,
+        related_name="computers"
+    )
+    layout_group = models.ForeignKey(
+        ClubComputerLayoutGroup,
+        null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="computers"
+    )
     is_active_session = models.BooleanField(default=False)
     is_locked = models. BooleanField(default=False)
     is_broken = models.BooleanField(default=False)
@@ -211,6 +255,31 @@ class ClubTimePacket(models.Model):
         return self.display_name or self.gizmo_name
 
 
+class DelayedTimeSetting(TimestampModel):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name="delayed_times"
+    )
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="delayed_time_set",
+        null=True, blank=True
+    )
+    booking = models.ForeignKey(
+        "bookings.Booking",
+        on_delete=models.CASCADE,
+        related_name="delayed_time_set"
+    )
+    time_packet = models.ForeignKey(
+        ClubTimePacket,
+        on_delete=models.SET_NULL,
+        related_name="delayed_time_set",
+        null=True, blank=True
+    )
+
+
 class ClubBranchProperty(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="properties")
     group = models.ForeignKey(ClubComputerGroup, on_delete=models.SET_NULL, null=True, blank=True)
@@ -230,7 +299,7 @@ class ClubBranchPrice(models.Model):
     price = models.IntegerField()
 
 
-class ClubBranchUser(models.Model):
+class ClubBranchUser(TimestampModel):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="users")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="club_accounts", null=True, blank=True)
     outer_id = models.IntegerField(null=True, blank=True, db_index=True)

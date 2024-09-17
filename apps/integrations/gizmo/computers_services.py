@@ -62,6 +62,7 @@ class GizmoGetComputersService(BaseGizmoService):
                             "club_branch": self.instance.id,
                             "is_locked": bool(gizmo_computer['state'] == 2),
                             "is_broken": bool(gizmo_computer['state'] in [1, 3]),
+                            "is_deleted": gizmo_computer['isDeleted'],
                             "group": group_id,
                         }
                     )

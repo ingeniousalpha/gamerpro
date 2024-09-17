@@ -5,7 +5,7 @@ from rest_framework import serializers
 from apps.authentication.exceptions import UserNotFound
 from .models import (
     Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
-    ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback
+    ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup
 )
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
@@ -26,9 +26,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
 
     def get_balance(self, obj):
         if self.user:
-            club_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
-            if club_user and club_user.gizmo_id:
-                return get_cashback(user=club_user.user, club=obj.club)
+            return get_cashback(user=self.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
@@ -130,6 +128,45 @@ class ClubBranchInfoSerializer(serializers.ModelSerializer):
         ).data
 
 
+class ClubBranchLayoutInfoSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField()
+    hall_name = serializers.CharField(source='name')
+    properties = serializers.SerializerMethodField()
+    hardware = serializers.SerializerMethodField()
+    prices = serializers.SerializerMethodField()
+    computers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubComputerLayoutGroup
+        fields = (
+            'id',
+            'hall_name',
+            'prices',
+            'properties',
+            'hardware',
+            'computers'
+        )
+
+    def get_prices(self, obj):
+        return []
+
+    def get_properties(self, obj):
+        return []
+
+    def get_hardware(self, obj):
+        return []
+
+    def get_id(self, obj):
+        computer = obj.computers.filter(is_deleted=False).first()
+        if computer.group: return computer.group.id
+
+    def get_computers(self, obj):
+        return ClubComputerSerializer(
+            obj.computers.filter(is_deleted=False),
+            many=True
+        ).data
+
+
 class ClubComputerListSerializer(serializers.ModelSerializer):
     hall_name = serializers.SerializerMethodField()
     hall_id = serializers.SerializerMethodField()
@@ -161,7 +198,7 @@ class ClubComputerListSerializer(serializers.ModelSerializer):
 class ClubBranchDetailSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
-    halls_info = ClubBranchInfoSerializer(source='computer_groups', many=True)
+    halls_info = serializers.SerializerMethodField()
     computers = serializers.SerializerMethodField()
 
     class Meta:
@@ -182,8 +219,24 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
 
     def get_computers(self, obj):
         return ClubComputerListSerializer(
-            obj.computers.filter(is_deleted=False, group__isnull=False),
-            many=True,
+            obj.computers.filter(is_deleted=False, group__isnull=False), many=True,
+        ).data
+
+    def get_halls_info(self, obj):
+        if obj.layout_groups.filter(
+            computers__isnull=False,
+            computers__is_deleted=False,
+            is_available=True
+        ).distinct().exists():
+            return ClubBranchLayoutInfoSerializer(
+                obj.layout_groups.filter(
+                    computers__isnull=False,
+                    computers__is_deleted=False,
+                    is_available=True
+                ).distinct(), many=True
+            ).data
+        return ClubBranchInfoSerializer(
+            obj.computer_groups.filter(is_deleted=False), many=True
         ).data
 
     # def get_vip(self, obj):
@@ -220,17 +273,46 @@ class ClubComputerGroupLanding(serializers.ModelSerializer):
         )
 
     def get_computers_total(self, obj):
-        return obj.club_branch.computers.filter(group_id=obj.id).count()
+        return obj.club_branch.computers.filter(group_id=obj.id, is_deleted=False).count()
 
     def get_computers_free(self, obj):
-        return obj.club_branch.computers.filter(group_id=obj.id, is_active_session=False, is_locked=False).count()
+        return obj.club_branch.computers.filter(
+            group_id=obj.id,
+            is_deleted=False,
+            is_active_session=False,
+            is_locked=False
+        ).count()
+
+
+class ClubComputerLayoutGroupLanding(serializers.ModelSerializer):
+    hall_name = serializers.CharField(source='name')
+    computers_total = serializers.SerializerMethodField()
+    computers_free = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubComputerLayoutGroup
+        fields = (
+            'hall_name',
+            'computers_total',
+            'computers_free',
+        )
+
+    def get_computers_total(self, obj):
+        return obj.computers.filter(is_deleted=False).count()
+
+    def get_computers_free(self, obj):
+        return obj.computers.filter(
+            is_deleted=False,
+            is_active_session=False,
+            is_locked=False
+        ).count()
 
 
 class ClubBranchListSerializer(ClubUserSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_favorite = serializers.BooleanField(default=False)
-    landing = ClubComputerGroupLanding(source='computer_groups', many=True)
+    landing = serializers.SerializerMethodField()
 
     class Meta:
         model = ClubBranch
@@ -254,11 +336,22 @@ class ClubBranchListSerializer(ClubUserSerializer):
     def get_description(self, obj):
         return obj.club.description
 
-    # def get_landing(self, obj):
-    #     halls = []
-    #     for group in obj.computer_groups.all():
-    #         halls.append(ClubComputerGroupLanding(obj, context={"group_name": group.name}).data)
-    #     return halls
+    def get_landing(self, obj):
+        if obj.layout_groups.filter(
+            computers__isnull=False,
+            computers__is_deleted=False,
+            is_available=True
+        ).distinct().exists():
+            return ClubComputerLayoutGroupLanding(
+                obj.layout_groups.filter(
+                    computers__isnull=False,
+                    computers__is_deleted=False,
+                    is_available=True
+                ).distinct(), many=True
+            ).data
+        return ClubComputerGroupLanding(
+            obj.computer_groups.filter(is_deleted=False), many=True
+        ).data
 
 
 class ClubTimePacketListSerializer(serializers.ModelSerializer):

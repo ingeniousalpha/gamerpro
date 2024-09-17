@@ -1,3 +1,5 @@
+import pytz
+from datetime import time
 from django.db.models import Q, F
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -44,6 +46,7 @@ class BROClubBranchlistView(PublicJSONRendererMixin, ListAPIView):
 class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     queryset = ClubBranch.objects.all()
     serializer_class = ClubBranchDetailSerializer
+
     def retrieve(self, request, *args, **kwargs):
         _sync_gizmo_computers_state_of_club_branch(self.get_object())
         return super().retrieve(request, *args, **kwargs)
@@ -57,11 +60,13 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     def get_queryset(self):
         return super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=timezone.now().weekday() + 1,
+            is_active=True, available_days__number=timezone.now().astimezone().weekday() + 1,
         ).filter(
-            (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(available_time_end__gte=timezone.now().astimezone().time())) |
+            (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(
+                available_time_end__gte=timezone.now().astimezone().time())) |
             (Q(available_time_start__gte=F('available_time_end')) & (
-                Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(available_time_start__lte=timezone.now().astimezone().time()))
+                    Q(available_time_end__gte=timezone.now().astimezone().time()) | Q(
+                available_time_start__lte=timezone.now().astimezone().time()))
              )
         ).order_by('priority')
 

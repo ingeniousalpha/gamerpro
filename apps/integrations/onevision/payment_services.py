@@ -49,6 +49,7 @@ class OVRecurrentPaymentService(BaseOneVisionService):
     method = "POST"
     save_serializer = None
     instance: 'Booking'
+    timeout = 300
 
     def run_service(self):
         is_repl = self.kwargs.get('is_replenishment', False)
