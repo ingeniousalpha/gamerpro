@@ -4,7 +4,6 @@ from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
 from apps.bot.tasks import bot_approve_user_from_admin_task
-admin.site.register(ClubComputerGroup)
 
 
 class FilterByClubMixin:
