@@ -128,7 +128,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         ).run()
 
     # create in all other BRO branches
-    for branch in ClubBranch.objects.filter(club=club_branch.club).exclude(id__in=[club_branch.id]):
+    for branch in ClubBranch.objects.filter(club=club_branch.club, is_turned_on=True).exclude(id__in=[club_branch.id]):
         branch_club_user = ClubBranchUser.objects.filter(club_branch=branch, login=club_user.login).first()
 
         if not branch_club_user:
@@ -178,15 +178,18 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
         payments__status=PaymentStatuses.PAYMENT_APPROVED
     ).order_by('-created_at')
     booking = successful_bookings.last()
-    print(f"booking of new user: {club_user}, booking: {booking}, booking.status: {booking.status}")
+    is_own_booking = True
     if not booking:
+        is_own_booking = False
         booking = Booking.objects.filter(
             club_user__login=club_user.login,
             payments__status=PaymentStatuses.PAYMENT_APPROVED
         ).order_by('-created_at').last()
 
     if booking:
-        gizmo_bro_add_time_and_set_booking_expiration(
-            booking_uuid=str(booking.uuid),
-            check_status=bool(successful_bookings.count() != 1)
-        )
+        print(f"booking of new user: {club_user}, booking: {booking}, booking.status: {booking.status}")
+        if is_own_booking:
+            gizmo_bro_add_time_and_set_booking_expiration(
+                booking_uuid=str(booking.uuid),
+                check_status=bool(successful_bookings.count() != 1)
+            )
