@@ -219,7 +219,12 @@ def dashboard_view(request):
 
 
 def reports_view(request):
-    payments_reports_table = Payment.objects.select_related('booking__club_branch').annotate(
+    payments_reports_table = (
+        Payment.objects
+        .select_related('booking', 'booking__club_branch')
+        .filter(booking__use_cashback=False)
+    )
+    payments_reports_table = payments_reports_table.annotate(
         club_branch=F('booking__club_branch__name'),
         payment_uuid=F('uuid'),
         payment_amount=F('amount'),
@@ -248,7 +253,6 @@ def reports_view(request):
     end_time = end_time + ':00'
     end_time = timezone.datetime.strptime(end_time, '%H:%M:%S').time()'''
 
-
     if start_date:
         payments_reports_table = payments_reports_table.filter(payment_created_at__date__gte=start_date)
     if start_time:
@@ -260,7 +264,7 @@ def reports_view(request):
     if club_branch:
         payments_reports_table = payments_reports_table.filter(club_branch__icontains=club_branch)
 
-
+    total_amount = payments_reports_table.aggregate(total_amount=Sum('payment_amount')).get('total_amount')
     club_branches = ClubBranch.objects.values_list('name', flat=True).distinct()
 
     return render(request, 'reports.html', {
@@ -271,9 +275,8 @@ def reports_view(request):
         'end_time': end_time,
         'club_branch': club_branch,
         'club_branches': club_branches,
-
+        'total_amount': total_amount,
     })
-
 
 
 def stats_view(request):
