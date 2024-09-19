@@ -8,6 +8,8 @@
         <a href="javascript:run_bot_approve_user_from_admin()" class="historylink" style="margin-right: 10px">Показал Удос</a>
     {% elif opts.model_name == "clubbranch" %}
         <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
+    {% elif opts.model_name == "booking" %}
+        <a href="javascript:run_set_time_packet()" class="historylink" style="margin-right: 10px">Закинуть пакет</a>
     {% endif %}
     <a href="{% add_preserved_filters history_url %}" class="historylink">History</a>
 </li>
@@ -19,6 +21,10 @@
     function run_sync_gizmo() {
         $('#clubbranch_form').append('<input type="hidden" name="sync_gizmo" value="" />');
         $('#clubbranch_form').submit()
+    }
+    function run_set_time_packet() {
+        $('#booking_form').append('<input type="hidden" name="set_time_packet" value="" />');
+        $('#booking_form').submit()
     }
 </script>
 {% if has_absolute_url %}<li><a href="{{ absolute_url }}" class="viewsitelink">{% translate "View on site" %}</a></li>{% endif %}
