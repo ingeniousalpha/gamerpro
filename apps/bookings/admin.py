@@ -1,7 +1,9 @@
 from django.contrib import admin
+from django.http import HttpResponseRedirect
 from django.utils.safestring import mark_safe
 from apps.clubs.admin import FilterByClubMixin
 from .models import Booking, BookedComputer
+from .tasks import gizmo_bro_add_time_and_set_booking_expiration
 from ..payments import PaymentStatuses
 from ..payments.models import Payment
 
@@ -61,6 +63,13 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_starting_session',
         'time_packet',
     )
+
+    def response_change(self, request, obj):
+        if "set_time_packet" in request.POST:
+            gizmo_bro_add_time_and_set_booking_expiration.delay(str(obj.uuid))
+            self.message_user(request, "Task gizmo_bro_add_time_and_set_booking_expiration запущен")
+            return HttpResponseRedirect(".")
+        return super().response_change(request, obj)
 
     def computers(self, obj):
         return ", ".join([str(comp.computer.number) for comp in obj.computers.all()])
