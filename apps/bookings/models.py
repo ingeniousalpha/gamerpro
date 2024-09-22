@@ -55,6 +55,7 @@ class Booking(UUIDModel, TimestampModel):
     expiration_date = models.DateTimeField(auto_now=True)
     is_cancelled = models.BooleanField(default=False)
     is_starting_session = models.BooleanField(default=False)
+    is_time_packet_set = models.BooleanField(default=False)
     time_packet = models.ForeignKey(
         "clubs.ClubTimePacket",
         on_delete=models.SET_NULL,
