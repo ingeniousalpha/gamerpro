@@ -44,6 +44,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'club_branch',
         'club_user',
         'payment_card',
+        'is_time_packet_set',
     )
     fields = (
         'uuid',
@@ -62,12 +63,16 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_cancelled',
         'is_starting_session',
         'time_packet',
+        'is_time_packet_set',
     )
 
     def response_change(self, request, obj):
         if "set_time_packet" in request.POST:
-            gizmo_bro_add_time_and_set_booking_expiration.delay(str(obj.uuid))
-            self.message_user(request, "Task gizmo_bro_add_time_and_set_booking_expiration запущен")
+            if obj.is_time_packet_set:
+                self.message_user(request, "Task gizmo_bro_add_time_and_set_booking_expiration уже запускался")
+            else:
+                gizmo_bro_add_time_and_set_booking_expiration.delay(str(obj.uuid))
+                self.message_user(request, "Task gizmo_bro_add_time_and_set_booking_expiration запущен")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 

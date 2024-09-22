@@ -167,6 +167,8 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
     )
+    booking.is_time_packet_set = True
+    booking.save()
 
 
 @cel_app.task
