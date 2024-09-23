@@ -39,6 +39,9 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             txn_date = request.GET.get('txn_date')
             account = request.GET.get('account')
             sum = request.GET.get('sum')
+            print("Kaspi webhook hanlded")
+            print(f"Command: {command}, txn_id: {txn_id}, , txn_date: {txn_date}, account: {account}, sum: {sum}")
+            print(request.GET)
         except Exception as e:
             print("KaspiCallbackHandlerView error: ", str(e))
             return Response({
