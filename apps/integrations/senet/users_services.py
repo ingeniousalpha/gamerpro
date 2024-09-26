@@ -15,13 +15,12 @@ class SenetGetUsersService(BaseSenetService):
         })
 
     def save(self, response):
-        resp_data = response['results']
-
-        if self.kwargs.get('offset', 0) > 0:
+        if self.kwargs.get('offset') is not None:
             return
-
+        offset = 0
+        resp_data = response['results']
         while response.get('next'):
-            offset = self.kwargs.get('offset', 0) + 500
+            offset = offset + 500
             response = SenetGetUsersService(instance=self.instance, offset=offset).run()
             resp_data += response['results']
 
