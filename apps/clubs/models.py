@@ -60,12 +60,22 @@ class ClubBranchLegalEntity(models.Model):
 class ClubBranch(OuterServiceLogHistory):
     outer_id = models.CharField("Внешний ID точки в системе партнера", null=True, blank=True, max_length=20)
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
+    main_club_branch = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='siblings',
+        verbose_name="Основной филиал"
+    )
     name = models.CharField(max_length=50)
     trader_name = models.CharField(max_length=256, default="")
     address = models.CharField(max_length=255)
     api_host = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
     api_user = models.CharField("Логин для API филиала", max_length=20, null=True)
     api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
+    cashbox_user = models.CharField("Логин для кассы филиала", max_length=20, null=True, blank=True)
+    cashbox_password = models.CharField("Пароль для кассы филиала", max_length=20, null=True, blank=True)
     gizmo_payment_method = models.IntegerField(default=2)  # payment method - online payment
     gizmo_points_method = models.IntegerField(default=-4)  # payment method - points payment
     is_active = models.BooleanField(default=False)

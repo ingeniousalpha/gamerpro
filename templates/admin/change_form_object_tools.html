@@ -8,7 +8,7 @@
         <a href="javascript:run_undelete_club_user()" class="historylink" style="margin-right: 10px">Undelete gizmo user</a>
         <a href="javascript:run_bot_approve_user_from_admin()" class="historylink" style="margin-right: 10px">Показал Удос</a>
     {% elif opts.model_name == "clubbranch" %}
-        <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
+        <a href="javascript:run_sync_branch()" class="historylink" style="margin-right: 10px">Sync branch</a>
     {% elif opts.model_name == "booking" %}
         <a href="javascript:run_set_time_packet()" class="historylink" style="margin-right: 10px">Закинуть пакет</a>
     {% endif %}
@@ -23,8 +23,8 @@
         $('#clubbranchuser_form').append('<input type="hidden" name="undelete_club_user" value="" />');
         $('#clubbranchuser_form').submit()
     }
-    function run_sync_gizmo() {
-        $('#clubbranch_form').append('<input type="hidden" name="sync_gizmo" value="" />');
+    function run_sync_branch() {
+        $('#clubbranch_form').append('<input type="hidden" name="sync_branch" value="" />');
         $('#clubbranch_form').submit()
     }
     function run_set_time_packet() {

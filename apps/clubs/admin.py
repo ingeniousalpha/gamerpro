@@ -5,7 +5,7 @@ from django.forms import TextInput, NumberInput
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
 from django.http import HttpResponseRedirect
-from .tasks import synchronize_gizmo_club_branch
+from .tasks import synchronize_club_branch
 from .models import *
 from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task, bot_create_gizmo_user_task
 from ..payments.models import Payment
@@ -224,6 +224,7 @@ class ClubPerkAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'club',
+        'main_club_branch',
         'name',
         'outer_id',
         'trader_name',
@@ -231,8 +232,8 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         'address',
         'city',
         'api_host',
-        'api_user',
-        'api_password',
+        ('api_user', 'api_password'),
+        ('cashbox_user', 'cashbox_password'),
         'gizmo_payment_method',
         'gizmo_points_method',
         'is_active',
@@ -268,10 +269,9 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     }
 
     def response_change(self, request, obj):
-        if "sync_gizmo" in request.POST:
-            print('sync_gizmo')
-            synchronize_gizmo_club_branch.delay(obj.id)
-            self.message_user(request, "Synchronizing GIZMO club info")
+        if "sync_branch" in request.POST:
+            synchronize_club_branch.delay(obj.id)
+            self.message_user(request, "Club branch synchronization started")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 

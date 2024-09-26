@@ -20,7 +20,7 @@ class BaseSenetService(ServiceLoggingMixin, BaseService):
 
     def __init__(self, instance=None, **kwargs):
         super().__init__(instance, **kwargs)
-        self.headers["Authorization"] = self.get_auth_token()
+        self.headers["Authorization"] = f'Token {self.get_auth_token()}'
 
     def get_url(self, path_params) -> str:
         self.host = self.instance.api_host
@@ -35,7 +35,7 @@ class BaseSenetService(ServiceLoggingMixin, BaseService):
 
     def set_new_auth_token(self):
         senet_token = GetSenetAuthTokenService(instance=self.instance).run()
-        cache.set(f"SENET_AUTH_TOKEN_{self.instance.id}", senet_token, expires=24*60*60)
+        cache.set(f"SENET_AUTH_TOKEN_{self.instance.id}", senet_token, timeout=24*60*60)
         return senet_token
 
     @abstractmethod
@@ -48,7 +48,7 @@ class BaseSenetService(ServiceLoggingMixin, BaseService):
         try:
             return self.run_request()
         except UnauthorizedError:
-            self.headers["Authorization"] = self.set_new_auth_token()
+            self.headers["Authorization"] = f'Token {self.set_new_auth_token()}'
             return self.run_request()
         except Exception as e:
             raise e
