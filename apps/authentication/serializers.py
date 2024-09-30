@@ -265,9 +265,9 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         if not club_user or not club_user.is_verified:
             raise NeedToInputUserLogin
-        elif not club_user.user:
-            club_user.user = user
-            club_user.save(update_fields=['user'])
+
+        club_user.user = user
+        club_user.save(update_fields=['user'])
 
         # if not club_user.is_verified:
         #     if club_branch.club.name.lower() == "bro":
