@@ -61,6 +61,10 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="use_cashback" class="col-sm-3 col-form-label">Оплата бонусами:</label>
+                        <input type="checkbox" align="center" id="use_cashback" name="use_cashback"{% if use_cashback %} checked{% endif %}>
+                    </div>
+                    <div class="form-group row">
                         <div class="col-sm-12 text-center">
                             <button type="submit" class="btn btn-primary mt-4">Применить</button>
                         </div>
@@ -71,41 +75,37 @@
     </div>
     <div class="row">
         <div class="col">
-            <div class="card shadow">
-                <div class="card-body">
-                    <div class="table-respopnsive">
-                        <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
-                            <tbody>
-                                <tr>
-                                    <td style="border: 5px solid #dee2e6;">Общая сумма</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ total_amount }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Филиал</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">UUID брони</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Дата создания брони</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Сумма платежа</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in payments %}
-                                <tr>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.club_branch_name }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_uuid }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_created_at }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_total_amount }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.get_status_display }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="table-respopnsive">
+                <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
+                    <tbody>
+                        <tr>
+                            <td style="border: 5px solid #dee2e6;">Общая сумма</td>
+                            <td style="border: 5px solid #dee2e6;">{{ total_amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col" style="border: 5px solid #dee2e6;">Филиал</th>
+                            <th scope="col" style="border: 5px solid #dee2e6;">UUID брони</th>
+                            <th scope="col" style="border: 5px solid #dee2e6;">Дата создания брони</th>
+                            <th scope="col" style="border: 5px solid #dee2e6;">Сумма платежа</th>
+                            <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in payments %}
+                        <tr>
+                            <td style="border: 5px solid #dee2e6;">{{ row.club_branch_name }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ row.booking_uuid }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ row.booking_created_at }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ row.booking_total_amount }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ row.get_status_display }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
