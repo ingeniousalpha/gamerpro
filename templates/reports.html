@@ -109,13 +109,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for row in payments_reports_table %}
+                                {% for row in payments %}
                                 <tr>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.club_branch }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_uuid }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_amount }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_status }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.payment_created_at }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.club_branch_name }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.uuid }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.amount }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.status }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.created_at }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
