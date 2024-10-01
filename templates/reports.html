@@ -40,34 +40,34 @@
                     <div class="card-body">
                             <form method="GET" action="">
                                 <div class="form-group row">
-                                    <label for="start_date" class="col-sm-3 col-form-label">Start Date:</label>
+                                    <label for="start_date" class="col-sm-3 col-form-label">Дата от:</label>
                                     <div class="col-sm-9">
                                         <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="start_time" class="col-sm-3 col-form-label">Start Time:</label>
+                                    <label for="start_time" class="col-sm-3 col-form-label">Время от:</label>
                                     <div class="col-sm-9">
                                         <input type="time" step="1", class="form-control" id="start_time" name="start_time" value="{{ start_time }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="end_date" class="col-sm-3 col-form-label">End Date:</label>
+                                    <label for="end_date" class="col-sm-3 col-form-label">Дата до:</label>
                                     <div class="col-sm-9">
                                         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="end_time" class="col-sm-3 col-form-label">End Time:</label>
+                                    <label for="end_time" class="col-sm-3 col-form-label">Время до:</label>
                                     <div class="col-sm-9">
                                         <input type="time" step="1" class="form-control" id="end_time" name="end_time" value="{{ end_time }}">
                                     </div>
                                 </div>
                                 <div class="form-row mt-2">
                                     <div class="col">
-                                        <label for="club_branch">Club Branch:</label>
+                                        <label for="club_branch">Филиал:</label>
                                         <select class="form-control" id="club_branch" name="club_branch">
-                                            <option value="">Select Club Branch</option>
+                                            <option value="">Выберите филиал</option>
                                             {% for cb in club_branches %}
                                                 <option value="{{ cb }}" {% if cb == club_branch %}selected{% endif %}>{{ cb }}</option>
                                             {% endfor %}
@@ -76,7 +76,7 @@
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-12 text-center">
-                                        <button type="submit" class="btn btn-primary mt-4">Apply Filters</button>
+                                        <button type="submit" class="btn btn-primary mt-4">Применить</button>
                                     </div>
                                 </div>
                             </form>
@@ -93,29 +93,29 @@
                         <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
                             <tbody>
                                 <tr>
-                                    <td style="border: 5px solid #dee2e6;">Total amount</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ total_amount }}</td>
+                                    <td style="border: 5px solid #dee2e6;">Общая сумма</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ total_amount_sum }}</td>
                                 </tr>
                             </tbody>
                         </table>
                         <table class="table table-bordered table-striped mt-4" style="border: 5px solid #dee2e6;">
                             <thead class="thead-light">
                                 <tr>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Club Branch</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment UUID</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Amount</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Status</th>
-                                    <th scope="col" style="border: 5px solid #dee2e6;">Payment Created At</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Филиал</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">UUID брони</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Дата создания брони</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Сумма платежа</th>
+                                    <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in payments %}
                                 <tr>
                                     <td style="border: 5px solid #dee2e6;">{{ row.club_branch_name }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.uuid }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.amount }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.status }}</td>
-                                    <td style="border: 5px solid #dee2e6;">{{ row.created_at }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_uuid }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_created_at }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.booking_total_amount }}</td>
+                                    <td style="border: 5px solid #dee2e6;">{{ row.get_payment_status_display }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

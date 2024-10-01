@@ -1,23 +1,16 @@
-from datetime import timedelta
-
-from django.db.models import Sum, Count, Q, F, Func, Value
-from django.db.models.functions import Concat
+from django.db.models import Sum, Count, Q, F, Func
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView, GenericAPIView
-from django.conf import settings
 from django.utils import timezone
+from rest_framework.generics import ListAPIView, GenericAPIView
+from rest_framework.response import Response
 
 from apps.common.mixins import PublicJSONRendererMixin
-from rest_framework.response import Response
 from .models import Document, AppVersion, City
-from .services import str_to_datetime
 from .serializers import DocumentListSerializer, CitiesListSerializer
 from ..bookings.models import Booking, BookingStatuses
 from ..clubs.models import ClubBranch
 from ..payments.models import Payment, PaymentStatuses
 from ..users.models import User
-
-from urllib.parse import unquote
 
 MONTHS_NAMES = {
     "1": "Январь",
@@ -224,18 +217,30 @@ def reports_view(request):
     start_time = request.GET.get('start_time')
     end_date = request.GET.get('end_date')
     end_time = request.GET.get('end_time')
-    filter_conditions = Q()
+    conditions = Q()
     if club_branch:
-        filter_conditions = filter_conditions & Q(booking__club_branch__name=club_branch)
+        conditions = conditions & Q(club_branch_name=club_branch)
     if start_date:
-        filter_conditions = filter_conditions & Q(created_at__date__gte=start_date)
+        conditions = conditions & Q(booking_created_at__date__gte=start_date)
         if start_time:
-            filter_conditions = filter_conditions & Q(created_at__time__gte=start_time)
+            conditions = conditions & Q(booking_created_at__time__gte=start_time)
     if end_date:
-        filter_conditions = filter_conditions & Q(created_at__date__lte=end_date)
+        conditions = conditions & Q(booking_created_at__date__lte=end_date)
         if end_time:
-            filter_conditions = filter_conditions & Q(created_at__time__lte=end_time)
-    payments = Payment.objects.select_related('booking', 'booking__club_branch').filter(filter_conditions)
+            conditions = conditions & Q(booking_created_at__time__lte=end_time)
+    payments = (
+        Payment.objects
+        .select_related('booking', 'booking__club_branch')
+        .annotate(
+            club_branch_name=F('booking__club_branch__name'),
+            booking_uuid=F('booking__uuid'),
+            booking_created_at=F('booking__created_at'),
+            booking_total_amount=F('booking__total_amount'),
+            payment_status=F('status')
+        )
+        .filter(conditions)
+        .order_by('booking_created_at', 'club_branch_name', 'created_at')
+    )
     return render(
         request=request,
         template_name='reports.html',
@@ -246,16 +251,13 @@ def reports_view(request):
             "start_time": start_time,
             "end_date": end_date,
             "end_time": end_time,
-            "total_amount": payments.aggregate(total_amount=Sum('amount')).get('total_amount'),
-            "payments": (
-                payments.annotate(club_branch_name=F('booking__club_branch__name'))
-                .values(
-                    'club_branch_name',
-                    'uuid',
-                    'amount',
-                    'status',
-                    'created_at'
-                )
+            "total_amount": payments.aggregate(total_amount_sum=Sum('booking_total_amount')).get('total_amount_sum'),
+            "bookings": payments.values(
+                'club_branch_name',
+                'booking_uuid',
+                'booking_created_at',
+                'booking_total_amount',
+                'payment_status'
             )
         }
     )
