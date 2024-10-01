@@ -217,6 +217,7 @@ def reports_view(request):
     club_branch = request.GET.get('club_branch')
     start_datetime = request.GET.get('start_datetime')
     end_datetime = request.GET.get('end_datetime')
+    use_cashback = request.GET.get('use_cashback') == 'on'
     conditions = Q()
     if club_branch:
         conditions = conditions & Q(club_branch_name=club_branch)
@@ -224,6 +225,8 @@ def reports_view(request):
         conditions = conditions & Q(booking_created_at__gte=start_datetime)
     if end_datetime:
         conditions = conditions & Q(booking_created_at__lte=end_datetime)
+    if not use_cashback:
+        conditions = conditions & ~Q(booking__use_cashback=True)
     payments = (
         Payment.objects
         .select_related('booking', 'booking__club_branch')
@@ -244,6 +247,7 @@ def reports_view(request):
             "club_branch": club_branch,
             "start_datetime": start_datetime,
             "end_datetime": end_datetime,
+            "use_cashback": use_cashback,
             "payments": payments,
             "total_amount": payments.aggregate(total_amount_sum=Sum('booking_total_amount')).get('total_amount_sum'),
         }
