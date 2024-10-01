@@ -235,8 +235,7 @@ def reports_view(request):
             club_branch_name=F('booking__club_branch__name'),
             booking_uuid=F('booking__uuid'),
             booking_created_at=F('booking__created_at'),
-            booking_total_amount=F('booking__total_amount'),
-            payment_status=F('status')
+            booking_total_amount=F('booking__total_amount')
         )
         .filter(conditions)
         .order_by('booking_created_at', 'club_branch_name', 'created_at')
@@ -252,12 +251,12 @@ def reports_view(request):
             "end_date": end_date,
             "end_time": end_time,
             "total_amount": payments.aggregate(total_amount_sum=Sum('booking_total_amount')).get('total_amount_sum'),
-            "bookings": payments.values(
+            "payments": payments.values(
                 'club_branch_name',
                 'booking_uuid',
                 'booking_created_at',
                 'booking_total_amount',
-                'payment_status'
+                'status'
             )
         }
     )
