@@ -226,7 +226,7 @@ def reports_view(request):
     if end_datetime:
         conditions = conditions & Q(booking_created_at__lte=end_datetime)
     if not use_cashback:
-        conditions = conditions & ~Q(booking__use_cashback=True)
+        conditions = conditions & Q(booking__use_cashback=False)
     payments = (
         Payment.objects
         .select_related('booking', 'booking__club_branch')
