@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Sum, Count, Q, F, Func
+from django.db.models import Sum, Count, Q, F, Func, Value
 from django.db.models.functions import Concat
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView, GenericAPIView
@@ -219,64 +219,46 @@ def dashboard_view(request):
 
 
 def reports_view(request):
-    payments_reports_table = (
-        Payment.objects
-        .select_related('booking', 'booking__club_branch')
-        .filter(booking__use_cashback=False)
-    )
-    payments_reports_table = payments_reports_table.annotate(
-        club_branch=F('booking__club_branch__name'),
-        payment_uuid=F('uuid'),
-        payment_amount=F('amount'),
-        payment_status=F('status'),
-        payment_created_at=F('created_at')
-        ).values(
-            'club_branch',
-            'payment_uuid',
-            'payment_amount',
-            'payment_status',
-            'payment_created_at'
-            )
-    
-    start_date = request.GET.get('start_date', '')
-    start_time = request.GET.get('start_time', '')
-    end_date = request.GET.get('end_date', '')
-    end_time = request.GET.get('end_time', '')
-    club_branch = request.GET.get('club_branch', '')
-    
-    '''start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
-    end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d').date()
-
-    start_time = start_time + ':00'
-    start_time = timezone.datetime.strptime(start_time, '%H:%M:%S').time()
-
-    end_time = end_time + ':00'
-    end_time = timezone.datetime.strptime(end_time, '%H:%M:%S').time()'''
-
-    if start_date:
-        payments_reports_table = payments_reports_table.filter(payment_created_at__date__gte=start_date)
-    if start_time:
-        payments_reports_table = payments_reports_table.filter(payment_created_at__time__gte=start_time)
-    if end_date:
-        payments_reports_table = payments_reports_table.filter(payment_created_at__date__lte=end_date)
-    if end_time:
-        payments_reports_table = payments_reports_table.filter(payment_created_at__time__lte=end_time)
+    club_branch = request.GET.get('club_branch')
+    start_date = request.GET.get('start_date')
+    start_time = request.GET.get('start_time')
+    end_date = request.GET.get('end_date')
+    end_time = request.GET.get('end_time')
+    filter_conditions = Q()
     if club_branch:
-        payments_reports_table = payments_reports_table.filter(club_branch__icontains=club_branch)
-
-    total_amount = payments_reports_table.aggregate(total_amount=Sum('payment_amount')).get('total_amount')
-    club_branches = ClubBranch.objects.values_list('name', flat=True).distinct()
-
-    return render(request, 'reports.html', {
-        'payments_reports_table': payments_reports_table,
-        'start_date': start_date,
-        'start_time': start_time,
-        'end_date': end_date,
-        'end_time': end_time,
-        'club_branch': club_branch,
-        'club_branches': club_branches,
-        'total_amount': total_amount,
-    })
+        filter_conditions = filter_conditions & Q(booking__club_branch__name=club_branch)
+    if start_date:
+        filter_conditions = filter_conditions & Q(created_at__date__gte=start_date)
+        if start_time:
+            filter_conditions = filter_conditions & Q(created_at__time__gte=start_time)
+    if end_date:
+        filter_conditions = filter_conditions & Q(created_at__date__lte=end_date)
+        if end_time:
+            filter_conditions = filter_conditions & Q(created_at__time__lte=end_time)
+    payments = Payment.objects.select_related('booking', 'booking__club_branch').filter(filter_conditions)
+    return render(
+        request=request,
+        template_name='reports.html',
+        context={
+            "club_branches": ClubBranch.objects.order_by('name').values_list('name', flat=True),
+            "club_branch": club_branch,
+            "start_date": start_date,
+            "start_time": start_time,
+            "end_date": end_date,
+            "end_time": end_time,
+            "total_amount": payments.aggregate(total_amount=Sum('amount')).get('total_amount'),
+            "payments": (
+                payments.annotate(club_branch_name=F('booking__club_branch__name'))
+                .values(
+                    'club_branch_name',
+                    'uuid',
+                    'amount',
+                    'status',
+                    'created_at'
+                )
+            )
+        }
+    )
 
 
 def stats_view(request):
