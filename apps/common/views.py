@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db.models import Sum, Count, Q, F, Func
 from django.shortcuts import render
 from django.utils import timezone
@@ -213,21 +215,15 @@ def dashboard_view(request):
 
 def reports_view(request):
     club_branch = request.GET.get('club_branch')
-    start_date = request.GET.get('start_date')
-    start_time = request.GET.get('start_time')
-    end_date = request.GET.get('end_date')
-    end_time = request.GET.get('end_time')
+    start_datetime = request.GET.get('start_datetime')
+    end_datetime = request.GET.get('end_datetime')
     conditions = Q()
     if club_branch:
         conditions = conditions & Q(club_branch_name=club_branch)
-    if start_date:
-        conditions = conditions & Q(booking_created_at__date__gte=start_date)
-        if start_time:
-            conditions = conditions & Q(booking_created_at__time__gte=start_time)
-    if end_date:
-        conditions = conditions & Q(booking_created_at__date__lte=end_date)
-        if end_time:
-            conditions = conditions & Q(booking_created_at__time__lte=end_time)
+    if start_datetime:
+        conditions = conditions & Q(booking_created_at__gte=start_datetime)
+    if end_datetime:
+        conditions = conditions & Q(booking_created_at__lte=end_datetime)
     payments = (
         Payment.objects
         .select_related('booking', 'booking__club_branch')
@@ -246,10 +242,8 @@ def reports_view(request):
         context={
             "club_branches": ClubBranch.objects.order_by('name').values_list('name', flat=True),
             "club_branch": club_branch,
-            "start_date": start_date,
-            "start_time": start_time,
-            "end_date": end_date,
-            "end_time": end_time,
+            "start_datetime": start_datetime,
+            "end_datetime": end_datetime,
             "payments": payments,
             "total_amount": payments.aggregate(total_amount_sum=Sum('booking_total_amount')).get('total_amount_sum'),
         }
