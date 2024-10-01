@@ -36,52 +36,36 @@
     <div class="container mt-4">
         <div class="row justify-content-center">
             <div class="col-xl-6">
-                <div class="card shadow">
-                    <div class="card-body">
-                            <form method="GET" action="">
-                                <div class="form-group row">
-                                    <label for="start_date" class="col-sm-3 col-form-label">Дата от:</label>
-                                    <div class="col-sm-9">
-                                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="start_time" class="col-sm-3 col-form-label">Время от:</label>
-                                    <div class="col-sm-9">
-                                        <input type="time" step="1", class="form-control" id="start_time" name="start_time" value="{{ start_time }}">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="end_date" class="col-sm-3 col-form-label">Дата до:</label>
-                                    <div class="col-sm-9">
-                                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="end_time" class="col-sm-3 col-form-label">Время до:</label>
-                                    <div class="col-sm-9">
-                                        <input type="time" step="1" class="form-control" id="end_time" name="end_time" value="{{ end_time }}">
-                                    </div>
-                                </div>
-                                <div class="form-row mt-2">
-                                    <div class="col">
-                                        <label for="club_branch">Филиал:</label>
-                                        <select class="form-control" id="club_branch" name="club_branch">
-                                            <option value="">Выберите филиал</option>
-                                            {% for cb in club_branches %}
-                                                <option value="{{ cb }}" {% if cb == club_branch %}selected{% endif %}>{{ cb }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-12 text-center">
-                                        <button type="submit" class="btn btn-primary mt-4">Применить</button>
-                                    </div>
-                                </div>
-                            </form>
+                <form method="GET" action="">
+                    <div class="form-group row">
+                        <label for="club_branch" class="col-sm-3 col-form-label">Филиал:</label>
+                        <div class="col-sm-9">
+                            <select class="form-control" id="club_branch" name="club_branch">
+                                <option value="">Выберите филиал</option>
+                                {% for cb in club_branches %}
+                                    <option value="{{ cb }}" {% if cb == club_branch %}selected{% endif %}>{{ cb }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                </div>
+                    <div class="form-group row">
+                        <label for="start_datetime" class="col-sm-3 col-form-label">Дата от:</label>
+                        <div class="col-sm-9">
+                            <input type="datetime-local" class="form-control" id="start_datetime" name="start_datetime" value="{{ start_datetime }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="end_datetime" class="col-sm-3 col-form-label">Дата до:</label>
+                        <div class="col-sm-9">
+                            <input type="datetime-local" class="form-control" id="end_datetime" name="end_datetime" value="{{ end_datetime }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-12 text-center">
+                            <button type="submit" class="btn btn-primary mt-4">Применить</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
