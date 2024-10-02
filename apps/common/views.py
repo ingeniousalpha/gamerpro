@@ -1,6 +1,8 @@
 from datetime import datetime
+from decimal import Decimal
 
 from django.db.models import Sum, Count, Q, F, Func, Case, When, DecimalField, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, GenericAPIView
@@ -239,12 +241,14 @@ def reports_view(request):
                 default=Value(0),
                 output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
-            payments_sum=Sum(
-                'payments__amount',
-                filter=Q(payments__status=PaymentStatuses.PAYMENT_APPROVED),
-                distinct=True
+            payments_sum=Coalesce(
+                Sum(
+                    'payments__amount',
+                    filter=Q(payments__status=PaymentStatuses.PAYMENT_APPROVED),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ), Decimal(0)
             ),
-            sum=F('cashback_sum') + F('payments_sum')
+            total_sum=F('cashback_sum') + F('payments_sum')
         )
         .order_by('created_at', 'club_branch__name')
     )
@@ -258,11 +262,9 @@ def reports_view(request):
             "end_datetime": end_datetime,
             "use_cashback": use_cashback,
             "bookings": bookings,
-            "total_amount": (
-                bookings
-                .aggregate(total_sum=Sum('sum'))
-                .get('total_sum')
-            ),
+            "total_amount": bookings.aggregate(
+                total=Sum('total_sum', output_field=DecimalField(max_digits=8, decimal_places=2))
+            ).get('total')
         }
     )
 

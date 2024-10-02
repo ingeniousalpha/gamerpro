@@ -91,7 +91,7 @@
                             <th scope="col" style="border: 5px solid #dee2e6;">UUID брони</th>
                             <th scope="col" style="border: 5px solid #dee2e6;">Дата создания брони</th>
                             <th scope="col" style="border: 5px solid #dee2e6;">Сумма платежа</th>
-<!--                            <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>-->
+                            <th scope="col" style="border: 5px solid #dee2e6;">Использовались бонусы</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,7 +101,7 @@
                             <td style="border: 5px solid #dee2e6;">{{ booking.uuid }}</td>
                             <td style="border: 5px solid #dee2e6;">{{ booking.created_at }}</td>
                             <td style="border: 5px solid #dee2e6;">{{ booking.sum }}</td>
-<!--                            <td style="border: 5px solid #dee2e6;">{{ row.get_status_display }}</td>-->
+                            <td style="border: 5px solid #dee2e6;">{{ booking.use_cashback }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
