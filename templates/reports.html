@@ -91,17 +91,17 @@
                             <th scope="col" style="border: 5px solid #dee2e6;">UUID брони</th>
                             <th scope="col" style="border: 5px solid #dee2e6;">Дата создания брони</th>
                             <th scope="col" style="border: 5px solid #dee2e6;">Сумма платежа</th>
-                            <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>
+<!--                            <th scope="col" style="border: 5px solid #dee2e6;">Статус платежа</th>-->
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in payments %}
+                        {% for booking in bookings %}
                         <tr>
-                            <td style="border: 5px solid #dee2e6;">{{ row.club_branch_name }}</td>
-                            <td style="border: 5px solid #dee2e6;">{{ row.booking_uuid }}</td>
-                            <td style="border: 5px solid #dee2e6;">{{ row.booking_created_at }}</td>
-                            <td style="border: 5px solid #dee2e6;">{{ row.booking_total_amount }}</td>
-                            <td style="border: 5px solid #dee2e6;">{{ row.get_status_display }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ booking.club_branch.name }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ booking.uuid }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ booking.created_at }}</td>
+                            <td style="border: 5px solid #dee2e6;">{{ booking.sum }}</td>
+<!--                            <td style="border: 5px solid #dee2e6;">{{ row.get_status_display }}</td>-->
                         </tr>
                         {% endfor %}
                     </tbody>
