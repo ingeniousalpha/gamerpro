@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.db.models import Sum, Count, Q, F, Func
+from django.db.models import Sum, Count, Q, F, Func, Case, When, DecimalField, Value
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, GenericAPIView
@@ -220,24 +220,33 @@ def reports_view(request):
     use_cashback = request.GET.get('use_cashback') == 'on'
     conditions = Q()
     if club_branch:
-        conditions = conditions & Q(club_branch_name=club_branch)
+        conditions = conditions & Q(club_branch__name=club_branch)
     if start_datetime:
-        conditions = conditions & Q(booking_created_at__gte=start_datetime)
+        conditions = conditions & Q(created_at__gte=start_datetime)
     if end_datetime:
-        conditions = conditions & Q(booking_created_at__lte=end_datetime)
+        conditions = conditions & Q(created_at__lte=end_datetime)
     if not use_cashback:
-        conditions = conditions & Q(booking__use_cashback=False)
-    payments = (
-        Payment.objects
-        .select_related('booking', 'booking__club_branch')
-        .annotate(
-            club_branch_name=F('booking__club_branch__name'),
-            booking_uuid=F('booking__uuid'),
-            booking_created_at=F('booking__created_at'),
-            booking_total_amount=F('booking__total_amount')
-        )
+        conditions = conditions & Q(use_cashback=False)
+    bookings = (
+        Booking.objects
+        .select_related('club_branch')
         .filter(conditions)
-        .order_by('booking_created_at', 'club_branch_name', 'created_at')
+        .prefetch_related('payments')
+        .filter(Q(use_cashback=True) | Q(payments__status=PaymentStatuses.PAYMENT_APPROVED))
+        .annotate(
+            cashback_sum=Case(
+                When(use_cashback=True, then=F('total_amount')),
+                default=Value(0),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            payments_sum=Sum(
+                'payments__amount',
+                filter=Q(payments__status=PaymentStatuses.PAYMENT_APPROVED),
+                distinct=True
+            ),
+            sum=F('cashback_sum') + F('payments_sum')
+        )
+        .order_by('created_at', 'club_branch__name')
     )
     return render(
         request=request,
@@ -248,8 +257,12 @@ def reports_view(request):
             "start_datetime": start_datetime,
             "end_datetime": end_datetime,
             "use_cashback": use_cashback,
-            "payments": payments,
-            "total_amount": payments.aggregate(total_amount_sum=Sum('booking_total_amount')).get('total_amount_sum'),
+            "bookings": bookings,
+            "total_amount": (
+                bookings
+                .aggregate(total_sum=Sum('sum'))
+                .get('total_sum')
+            ),
         }
     )
 
