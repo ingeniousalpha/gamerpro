@@ -17,6 +17,7 @@ from apps.clubs.serializers import ClubBranchSerializer
 from apps.clubs.services import get_cashback
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.common.services import date_format_with_t
+from apps.integrations.kaspi.payment_services import KaspiRetrievePaymentDeeplinkService
 from apps.payments import PAYMENT_STATUSES_MAPPER, PaymentStatuses
 from apps.payments.exceptions import OVRecurrentPaymentFailed
 from apps.integrations.onevision.payer_services import OVCreatePayerService
@@ -209,6 +210,26 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
 class CreateBookingByTimePacketPaymentSerializer(CreateBookingByPaymentSerializer):
     class Meta(CreateBookingByPaymentSerializer.Meta):
         fields = CreateBookingByPaymentSerializer.Meta.fields + ('time_packet',)
+
+
+class CreateBookingByTimePacketKaspiSerializer(CreateBookingByPaymentSerializer):
+    class Meta(CreateBookingByPaymentSerializer.Meta):
+        fields = CreateBookingByPaymentSerializer.Meta.fields + ('time_packet',)
+
+    def extra_task(self, instance, validated_data):
+        try:
+            deeplink_url = KaspiRetrievePaymentDeeplinkService(
+                instance=instance,
+                club_branch=instance.club_branch,
+            ).run()
+            if deeplink_url:
+                if config.INTEGRATIONS_TURNED_ON:
+                    gizmo_lock_computers(str(instance.uuid))
+                self.context['payment_url'] = deeplink_url
+            else:
+                raise Exception("There is no payment_url")
+        except Exception as e:
+            logger.error(f"CreateBookingByTimePacketKaspiSerializer Error: {str(e)}")
 
 
 class CreateBookingByTimePacketCardPaymentSerializer(CreateBookingByCardPaymentSerializer):

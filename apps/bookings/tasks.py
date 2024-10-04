@@ -268,7 +268,9 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
 
 
-def gizmo_lock_computers(booking_uuid):
+def gizmo_lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
+    """unlock_after - in minutes"""
+
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking:
         return
@@ -281,7 +283,7 @@ def gizmo_lock_computers(booking_uuid):
 
     gizmo_unlock_computers.apply_async(
         (str(booking.uuid), True),
-        countdown=config.PAYMENT_EXPIRY_TIME*60
+        countdown=unlock_after*60
     )
 
 
