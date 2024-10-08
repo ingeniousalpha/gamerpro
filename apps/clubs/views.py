@@ -1,13 +1,13 @@
-import pytz
-from datetime import time
 from django.db.models import Q, F
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback
-from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, \
-    ClubTimePacketListSerializer, ClubUserCashbackSerializer
-from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
+from apps.clubs.serializers import (
+    ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
+    ClubUserCashbackSerializer
+)
+from apps.clubs.tasks import _sync_club_branch_computers
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from apps.common.pagination import ClubsPagination
 
@@ -48,7 +48,7 @@ class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     serializer_class = ClubBranchDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        _sync_gizmo_computers_state_of_club_branch(self.get_object())
+        _sync_club_branch_computers(self.get_object())
         return super().retrieve(request, *args, **kwargs)
 
 

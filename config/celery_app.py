@@ -13,8 +13,8 @@ cel_app.config_from_object("django.conf:settings", namespace="CELERY")
 cel_app.autodiscover_tasks()
 
 cel_app.conf.beat_schedule = {
-    'synchronize-gizmo-computers-state': {
-        'task': 'apps.clubs.tasks.synchronize_gizmo_computers_state',
+    'synchronize-all-computers': {
+        'task': 'apps.clubs.tasks.synchronize_all_computers',
         'schedule': crontab(minute='*')
     },
 }

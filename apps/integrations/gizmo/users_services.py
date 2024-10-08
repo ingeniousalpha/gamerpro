@@ -231,14 +231,14 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
             if len(resp_data) > 0:
                 ClubComputer.objects.filter(
-                    gizmo_id__in=[r['hostId'] for r in resp_data],
+                    outer_id__in=[r['hostId'] for r in resp_data],
                     club_branch_id=self.instance.id,
                     is_active_session=False
                 ).update(is_active_session=True)
 
             # when resp_data is [], then it updates all computers
             ClubComputer.objects.filter(club_branch_id=self.instance.id)\
-                .exclude(gizmo_id__in=[r['hostId'] for r in resp_data],)\
+                .exclude(outer_id__in=[r['hostId'] for r in resp_data],)\
                 .filter(is_active_session=True)\
                 .update(is_active_session=False)
 
@@ -258,7 +258,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
             )
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
             for booking in uncompleted_bookings:
-                if booking.club_user.gizmo_id not in active_users_ids:
+                if booking.club_user.outer_id not in active_users_ids:
                     booking.status = BookingStatuses.COMPLETED
                     booking.save(update_fields=['status'])
                     send_push_about_booking_status(booking.uuid, BookingStatuses.COMPLETED)
@@ -266,7 +266,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
             # Bookings where computer is turning on...
             starting_bookings = Booking.objects.filter(club_branch_id=self.instance.id, is_starting_session=True)
             for booking in starting_bookings:
-                if booking.club_user.gizmo_id in active_users_ids:
+                if booking.club_user.outer_id in active_users_ids:
                     booking.is_starting_session = False
                     booking.save(update_fields=['is_starting_session'])
 

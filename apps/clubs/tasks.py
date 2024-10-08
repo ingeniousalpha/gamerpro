@@ -10,6 +10,7 @@ from apps.integrations.gizmo.users_services import GizmoGetUsersService, GizmoUp
 from apps.integrations.senet.computers_services import (
     SenetGetComputerZonesService, SenetGetComputersWithSessionsService
 )
+from apps.integrations.senet.time_packets_services import SenetGetTimePacketsService
 from apps.integrations.senet.users_services import SenetGetUsersService
 from config.celery_app import cel_app
 
@@ -25,15 +26,16 @@ def synchronize_club_branch(club_branch_id):
         GizmoGetComputerGroupsService(instance=club_branch).run()
         GizmoGetTimePacketGroupsService(instance=club_branch).run()
         GizmoGetTimePacketsService(instance=club_branch).run()
-        _sync_gizmo_computers_state_of_club_branch(club_branch)
+        _sync_club_branch_computers(club_branch)
         return True
     elif software_type == SoftwareTypes.SENET:
         if club_branch.main_club_branch is None:
             SenetGetUsersService(instance=club_branch).run()
         else:
             logger.info(f"SENET users must be synchronized through the main club branch")
-        # SenetGetComputerZonesService(instance=club_branch).run()
-        # _sync_gizmo_computers_state_of_club_branch(club_branch)
+        SenetGetComputerZonesService(instance=club_branch).run()
+        SenetGetTimePacketsService(instance=club_branch).run()
+        _sync_club_branch_computers(club_branch)
         return True
     else:
         logger.error(f"Unknown software type: {software_type}")
@@ -41,19 +43,19 @@ def synchronize_club_branch(club_branch_id):
 
 
 @cel_app.task
-def synchronize_gizmo_computers_state():
+def synchronize_all_computers():
     for club_branch in ClubBranch.objects.select_related('club').filter(is_active=True):
-        _sync_gizmo_computers_state_of_club_branch(club_branch)
+        _sync_club_branch_computers(club_branch)
 
 
-def _sync_gizmo_computers_state_of_club_branch(club_branch):
+def _sync_club_branch_computers(club_branch):
+    software_type = club_branch.club.software_type
     try:
-        if club_branch.software_type == "GIZMO":
+        if software_type == SoftwareTypes.GIZMO:
             GizmoGetComputersService(instance=club_branch).run()
             GizmoUpdateComputerStateByUserSessionsService(instance=club_branch).run()
-        elif club_branch.software_type == "SENET":
+        elif software_type == SoftwareTypes.SENET:
             SenetGetComputersWithSessionsService(instance=club_branch).run()
-
         if not club_branch.is_turned_on:
             club_branch.is_turned_on = True
             club_branch.save(update_fields=['is_turned_on'])

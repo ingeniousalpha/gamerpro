@@ -6,7 +6,7 @@ from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs.models import ClubBranch
 from apps.clubs.services import add_cashback, subtract_cashback
-from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
+from apps.clubs.tasks import _sync_club_branch_computers
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
 from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
@@ -241,7 +241,7 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
         ).run()
         cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
 
-    _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
+    _sync_club_branch_computers(booking.club_branch)
 
 
 @cel_app.task
@@ -265,7 +265,7 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
         else:
             cache.set(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}', True, config.MULTIBOOKING_LAUNCHING_TIME*60)
 
-    _sync_gizmo_computers_state_of_club_branch(booking.club_branch)
+    _sync_club_branch_computers(booking.club_branch)
 
 
 def gizmo_lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):

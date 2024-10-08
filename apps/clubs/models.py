@@ -231,8 +231,8 @@ class ClubTimePacketGroup(models.Model):
 
 
 class ClubTimePacket(models.Model):
-    gizmo_id = models.IntegerField(null=True)
-    gizmo_name = models.CharField(max_length=255)
+    outer_id = models.IntegerField(null=True)
+    outer_name = models.CharField(max_length=255)
     display_name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
@@ -240,19 +240,20 @@ class ClubTimePacket(models.Model):
     packet_group = models.ForeignKey(
         ClubTimePacketGroup,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="packets"
     )
     club_computer_group = models.ForeignKey(
         ClubComputerGroup,
-        related_name="time_packets_group",
-        null=True, blank=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="time_packets_group"
     )
     priority = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
-    available_days = models.ManyToManyField(
-        DayModel, related_name="time_packets",
-    )
+    available_days = models.ManyToManyField(DayModel, related_name="time_packets")
     available_time_start = models.TimeField(null=True, blank=True)
     available_time_end = models.TimeField(null=True, blank=True)
 
@@ -349,7 +350,9 @@ class ClubBranchUser(TimestampModel):
     def __str__(self):
         if self.outer_phone:
             return f"{self.login}({self.outer_phone})"
-        return f"{self.login}({self.user.mobile_phone})"
+        if self.user and self.user.mobile_phone:
+            return f"{self.login}({self.user.mobile_phone})"
+        return self.login
 
     class Meta:
         verbose_name = "Юзер в гизмо"

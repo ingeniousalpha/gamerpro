@@ -18,11 +18,13 @@ class OuterComputersSaveSerializer(serializers.ModelSerializer):
         model = ClubComputer
         fields = (
             'outer_id',
-            'number',
-            'outer_hostname',
-            'is_locked',
             'club_branch',
+            'number',
             'group',
+            'is_active_session',
+            'is_locked',
+            'is_broken',
+            'outer_hostname',
         )
 
 
