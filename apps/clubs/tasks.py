@@ -10,7 +10,7 @@ from apps.integrations.gizmo.users_services import GizmoGetUsersService, GizmoUp
 from apps.integrations.senet.computers_services import (
     SenetGetComputerZonesService, SenetGetComputersWithSessionsService
 )
-from apps.integrations.senet.time_packets_services import SenetGetTimePacketsService
+from apps.integrations.senet.time_packets_services import SenetGetTimePacketsV1Service, SenetGetTimePacketsV2Service
 from apps.integrations.senet.users_services import SenetGetUsersService
 from config.celery_app import cel_app
 
@@ -34,7 +34,8 @@ def synchronize_club_branch(club_branch_id):
         else:
             logger.info(f"SENET users must be synchronized through the main club branch")
         SenetGetComputerZonesService(instance=club_branch).run()
-        SenetGetTimePacketsService(instance=club_branch).run()
+        # SenetGetTimePacketsV1Service(instance=club_branch).run()
+        SenetGetTimePacketsV2Service(instance=club_branch).run()
         _sync_club_branch_computers(club_branch)
         return True
     else:

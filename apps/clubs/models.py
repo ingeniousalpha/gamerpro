@@ -236,7 +236,14 @@ class ClubTimePacket(models.Model):
     display_name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
-    minutes = models.IntegerField(default=0)
+    minutes = models.IntegerField(default=0, null=True, blank=True)
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="time_packets"
+    )
     packet_group = models.ForeignKey(
         ClubTimePacketGroup,
         on_delete=models.CASCADE,
@@ -249,7 +256,7 @@ class ClubTimePacket(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="time_packets_group"
+        related_name="time_packets"
     )
     priority = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
@@ -262,7 +269,12 @@ class ClubTimePacket(models.Model):
         verbose_name_plural = "Пакеты"
 
     def __str__(self):
-        return f"{self.packet_group}({self.name})"
+        if self.club_computer_group:
+            return f"{self.club_computer_group} ({self.name})"
+        if self.packet_group:
+            return f"{self.packet_group.computer_group} ({self.name})"
+        if self.club:
+            return f"{self.club} ({self.name})"
 
     @property
     def name(self):

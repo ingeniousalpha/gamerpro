@@ -1,8 +1,10 @@
+from decimal import Decimal
+
 from apps.integrations.senet.base import BaseSenetService
 from apps.integrations.senet.serializers import SenetTimePacketCreateSerializer
 
 
-class SenetGetTimePacketsService(BaseSenetService):
+class SenetGetTimePacketsV1Service(BaseSenetService):
     endpoint = "/api/v2/ticket/?office_id={office_id}"
     save_serializer = SenetTimePacketCreateSerializer
     method = "GET"
@@ -29,5 +31,32 @@ class SenetGetTimePacketsService(BaseSenetService):
                     )
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
+            except Exception as e:
+                self.log_error(e)
+
+
+class SenetGetTimePacketsV2Service(BaseSenetService):
+    endpoint = "/bonus_systems/additional_refill/?paginate=false"
+    save_serializer = SenetTimePacketCreateSerializer
+    method = "GET"
+
+    def run_request(self):
+        return self.fetch()
+
+    def save(self, response):
+        for time_packet in response:
+            try:
+                name = f"{int(float(time_packet['from_amount']))} + {int(float(time_packet['amount']))}"
+                serializer = self.save_serializer(
+                    data={
+                        "outer_id": time_packet['id'],
+                        "outer_name": name,
+                        "display_name": name,
+                        "price": Decimal(time_packet['from_amount']),
+                        "club": self.instance.club_id
+                    }
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
             except Exception as e:
                 self.log_error(e)
