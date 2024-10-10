@@ -16,7 +16,9 @@ from apps.bot.tasks import bot_notify_about_new_user_task
 from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin, NeedToInputUserMobilePhone
 from ..clubs.models import ClubBranch, ClubBranchUser
 from ..common.exceptions import InvalidInputData
-from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService, GizmoUpdateUserByIDService
+from ..integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
+from ..integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUsersService, \
+    GizmoUpdateUserByIDService, GizmoGetUserIDByUsernameService, GizmoGetUserByUsernameService
 
 User = get_user_model()
 
@@ -220,7 +222,7 @@ class SigninWithOTPSerializer(serializers.Serializer):
         if not attrs['club_branch']:
             raise ClubBranchNotFound
         # when there is tg_user - send code
-        # when there is not tg_user - send tg url
+        # when there is no tg_user - send tg url
         tg_user = TGAuthUser.objects.filter(mobile_phone=str(attrs['mobile_phone'])).first()
         if not tg_user:
             return {"telegram_auth_url": f"https://t.me/{settings.TG_AUTH_BOT_USERNAME}"}
@@ -250,14 +252,14 @@ class VerifyOTPSerializer(serializers.Serializer):
         if not tg_auth_verify(**attrs):
             raise InvalidOTP
 
+        user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
         VerifiedOTP.objects.create(
             mobile_phone=attrs['mobile_phone'],
-            otp_code=attrs['otp_code']
+            otp_code=attrs['otp_code'],
+            user=user,
         )
 
-        user, _ = get_or_create_user_by_phone(attrs['mobile_phone'])
-
-        GizmoGetUsersService(instance=club_branch).run()
+        # GizmoGetUsersService(instance=club_branch).run()
         club_user = ClubBranchUser.objects.filter(
             gizmo_phone=attrs['mobile_phone'],
             club_branch=club_branch
@@ -265,9 +267,20 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         if not club_user or not club_user.is_verified:
             raise NeedToInputUserLogin
+        else:
+            try:
+                gizmo_user_id = GizmoGetUserIDByUsernameService(
+                    instance=club_branch, username=club_user.login
+                ).run()
+                if club_user.gizmo_id != gizmo_user_id:
+                    club_user.gizmo_id = gizmo_user_id
+                    club_user.save(update_fields=['gizmo_id'])
+            except UserNotFound:
+                raise NeedToInputUserLogin
 
-        club_user.user = user
-        club_user.save(update_fields=['user'])
+        if not club_user.user and club_user.user != user:
+            club_user.user = user
+            club_user.save(update_fields=['user'])
 
         # if not club_user.is_verified:
         #     if club_branch.club.name.lower() == "bro":
@@ -380,14 +393,25 @@ class RegisterV2Serializer(serializers.ModelSerializer):
                 first_name=validated_data.get('first_name'),
             )
         else:
-            gizmo_user_id = GizmoCreateUserService(
-                instance=validated_data['club_branch'],
-                login=validated_data["login"],
-                first_name=validated_data["first_name"],
-                mobile_phone=validated_data["mobile_phone"],
-            ).run()
-            club_user.gizmo_id = gizmo_user_id
-            club_user.save(update_fields=['gizmo_id'])
+            try:
+                gizmo_user_id = GizmoCreateUserService(
+                    instance=validated_data['club_branch'],
+                    login=validated_data["login"],
+                    first_name=validated_data["first_name"],
+                    mobile_phone=validated_data["mobile_phone"],
+                ).run()
+                club_user.gizmo_id = gizmo_user_id
+                club_user.save(update_fields=['gizmo_id'])
+            except GizmoLoginAlreadyExistsError as e:
+                club_user = GizmoGetUserByUsernameService(
+                    instance=validated_data['club_branch'], username=club_user.login, mobile_phone=club_user.gizmo_phone
+                ).run()
+                GizmoUpdateUserByIDService(
+                    instance=validated_data['club_branch'],
+                    user_id=club_user.gizmo_id,
+                    mobile_phone=club_user.gizmo_phone,
+                    first_name=club_user.first_name
+                ).run()
         return user
 
     def to_representation(self, instance):

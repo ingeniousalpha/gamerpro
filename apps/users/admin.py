@@ -6,6 +6,7 @@ from django.template.loader import get_template
 from apps.authentication.services import validate_password_in_forms
 
 from .models import User, UserPerk
+from ..authentication.admin import VerifiedOTPInline
 from ..clubs.admin import ClubBranchUserInline, ClubUserCashbackInline
 
 
@@ -54,7 +55,8 @@ class UserAdmin(BaseUserAdmin):
     inlines = [
         ClubUserCashbackInline,
         ClubBranchUserInline,
-        UserPerkInline
+        UserPerkInline,
+        VerifiedOTPInline,
     ]
     readonly_fields = ('club_user_cashback_inline',)
 

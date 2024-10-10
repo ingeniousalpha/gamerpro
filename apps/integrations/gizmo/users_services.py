@@ -1,7 +1,7 @@
 import urllib
 import urllib.parse
 from django.contrib.auth import get_user_model
-
+from django.db.models import Count, Case, When, Value, F
 from apps.authentication.exceptions import UserNotFound
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
@@ -42,6 +42,77 @@ class GizmoGetUsersService(BaseGizmoService):
                     serializer.save()
                 except Exception as e:
                     self.log_error(e)
+
+
+class GizmoSyncUsersService(BaseGizmoService):
+    """
+    Extended version of GizmoGetUsersService
+    but takes longer time to execute
+    """
+    endpoint = "/api/users"
+    method = "GET"
+    save_serializer = None
+    log_execution_time = True
+
+    def finalize_response(self, response):
+        if response.get('result') and isinstance(response['result'], list):
+            resp_data = response['result']
+
+            # DELETE DUPLICATES
+            club_users = ClubBranchUser.objects.filter(club_branch=self.instance)
+            duplicate_logins = club_users.values('login').annotate(count=Count('id')).filter(count__gt=1)
+            ClubBranchUser.objects.filter(
+                club_branch=self.instance,
+                login__in=duplicate_logins.values_list('login', flat=True)
+            ).filter(bookings__isnull=True).delete()
+
+            existed_logins = list(club_users.values_list('login', flat=True))
+            non_existent_logins = list(filter(lambda i: i['username'] not in existed_logins, resp_data))
+
+            # SYNCHRONIZE DATA FOR EXISTING USERS
+            gizmo_map = {item['username']: item for item in resp_data if item['username'] and item['id']}
+            users_to_update = club_users.filter(login__in=gizmo_map.keys())
+            users_to_update_list = []
+
+            for user in users_to_update:
+                need_update = False
+
+                if user.gizmo_id != gizmo_map[user.login]['id']:
+                    user.gizmo_id = gizmo_map[user.login]['id']
+                    need_update = True
+
+                gizmo_phone = get_correct_phone(gizmo_map[user.login]['phone'], gizmo_map[user.login]['mobilePhone'])
+                if user.gizmo_phone is None and gizmo_phone:
+                    user.gizmo_phone = gizmo_phone
+                    need_update = True
+
+                if user.first_name is None and gizmo_map[user.login]['firstName']:
+                    user.first_name = gizmo_map[user.login]['firstName']
+                    need_update = True
+
+                if need_update:
+                    users_to_update_list.append(user)
+
+            if users_to_update_list:
+                ClubBranchUser.objects.bulk_update(users_to_update_list, ['gizmo_id', 'first_name', 'gizmo_phone'])
+
+            # CREATE NON EXISTENT USERS
+            users_to_create_list = []
+            for gizmo_user in non_existent_logins:
+                try:
+                    gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
+                    users_to_create_list.append(
+                        ClubBranchUser(
+                            gizmo_id=gizmo_user['id'],
+                            gizmo_phone=gizmo_phone,
+                            login=gizmo_user['username'],
+                            first_name=gizmo_user['firstName'],
+                            club_branch=self.instance
+                        )
+                    )
+                except Exception as e:
+                    self.log_error(e)
+            ClubBranchUser.objects.bulk_create(users_to_create_list)
 
 
 class GizmoGetUserByUsernameService(BaseGizmoService):
@@ -96,6 +167,27 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
 
         except Exception as e:
             self.log_error(e)
+
+
+class GizmoGetUserIDByUsernameService(BaseGizmoService):
+    endpoint = "/api/users/{username}/userid"
+    save_serializer = None
+    method = "GET"
+    log_response = True
+
+    def run_service(self):
+        # print("self.kwargs.get('username'): ", self.kwargs.get('username'))
+        return self.fetch(path_params={
+            "username": self.kwargs.get('username')
+        })
+
+    def finalize_response(self, response):
+        user_id = response.get('result')
+
+        if not user_id:
+            raise UserNotFound
+
+        return user_id
 
 
 class GizmoGetUserBalanceService(BaseGizmoService):
@@ -263,3 +355,23 @@ class GizmoUpdateUserByIDService(BaseGizmoService):
             self.log_error(error_msg)
             return False
         return True
+
+
+class GizmoUndeleteUserByIDService(BaseGizmoService):
+    endpoint = "/api/users/{userId}/undelete"
+    save_serializer = None
+    method = "POST"
+
+    def run_service(self):
+        # print("self.kwargs.get('username'): ", self.kwargs.get('username'))
+        return self.fetch(path_params={
+            "username": self.kwargs.get('username')
+        })
+
+    def finalize_response(self, response):
+        user_id = response.get('result')
+
+        if not user_id:
+            raise UserNotFound
+
+        return user_id

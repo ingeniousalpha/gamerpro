@@ -8,7 +8,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from apps.clubs.models import ClubBranchUser, ClubBranch, ClubBranchAdmin
 from apps.integrations.gizmo.exceptions import GizmoLoginAlreadyExistsError
 from apps.integrations.gizmo.users_services import GizmoCreateUserService, GizmoGetUserByUsernameService, \
-    GizmoUpdateUserByIDService
+    GizmoUpdateUserByIDService, GizmoUndeleteUserByIDService
 from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
 from django.conf import settings
@@ -84,6 +84,16 @@ def bot_approve_user_from_admin_task(club_branch_user_id):
         club_user.first_name,
         approved=True
     )
+
+@cel_app.task
+def undelete_club_user_task(club_branch_user_id):
+    club_user = ClubBranchUser.objects.filter(id=club_branch_user_id).first()
+    if not club_user or club_user.is_verified:
+        return
+
+    GizmoUndeleteUserByIDService(
+        instance=club_user.club_branch, username=club_user.login
+    ).run()
 
 
 @cel_app.task

@@ -5,6 +5,7 @@
     {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
 
     {% if opts.model_name == "clubbranchuser" %}
+        <a href="javascript:run_undelete_club_user()" class="historylink" style="margin-right: 10px">Undelete gizmo user</a>
         <a href="javascript:run_bot_approve_user_from_admin()" class="historylink" style="margin-right: 10px">Показал Удос</a>
     {% elif opts.model_name == "clubbranch" %}
         <a href="javascript:run_sync_gizmo()" class="historylink" style="margin-right: 10px">Sync GIZMO</a>
@@ -16,6 +17,10 @@
 <script>
     function run_bot_approve_user_from_admin() {
         $('#clubbranchuser_form').append('<input type="hidden" name="bot_approve_user_from_admin" value="" />');
+        $('#clubbranchuser_form').submit()
+    }
+    function run_undelete_club_user() {
+        $('#clubbranchuser_form').append('<input type="hidden" name="undelete_club_user" value="" />');
         $('#clubbranchuser_form').submit()
     }
     function run_sync_gizmo() {

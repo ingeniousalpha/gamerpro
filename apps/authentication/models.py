@@ -48,3 +48,9 @@ class TGAuthUser(models.Model):
 class VerifiedOTP(TimestampModel):
     mobile_phone = models.CharField(max_length=12)
     otp_code = models.CharField(max_length=6)
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="user_logins",
+        null=True, blank=True
+    )

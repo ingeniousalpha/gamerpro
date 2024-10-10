@@ -30,6 +30,7 @@ class BaseService(ABC):
     log_headers: bool = False
     log_request: bool = False
     log_response: bool = False
+    log_execution_time: bool = False
 
     headers: dict = None
     url: str = None
@@ -173,6 +174,8 @@ class BaseService(ABC):
         ...
 
     def run(self):
+        start = time.perf_counter()
+
         response_data = None
         skip_task = self.skip_task()
 
@@ -207,7 +210,12 @@ class BaseService(ABC):
         finally:
             self.log_save()
 
-        return self.finalize_response(response_data)
+        finalized_response = self.finalize_response(response_data)
+        if self.log_execution_time:
+            exec_time = time.perf_counter() - start
+            logger.info(f"Total execution time of {self.__class__.__name__} is {exec_time}")
+
+        return finalized_response
 
     def log_save(self, instance=None):
         if not instance:

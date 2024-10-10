@@ -3,8 +3,7 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
-from apps.bot.tasks import bot_approve_user_from_admin_task
-
+from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task
 
 
 class FilterByClubMixin:
@@ -196,6 +195,10 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
             print('bot_approve_user_from_admin')
             bot_approve_user_from_admin_task(obj.id)
             self.message_user(request, "Верифицируем и создаем аккаунт юзера...")
+            return HttpResponseRedirect(".")
+        elif "undelete_club_user" in request.POST:
+            undelete_club_user_task.delay(obj.id)
+            self.message_user(request, "Отменяем удаление юзеру в Гизме")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 
