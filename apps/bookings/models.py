@@ -5,10 +5,12 @@ from apps.bookings import BookingStatuses, PlatformTypes
 from apps.clubs.models import ClubComputer
 from apps.common.models import UUIDModel, TimestampModel
 from constance import config
+
+from apps.integrations.models import OuterServiceLogHistory
 from apps.payments import PaymentStatuses
 
 
-class Booking(UUIDModel, TimestampModel):
+class Booking(UUIDModel, TimestampModel, OuterServiceLogHistory):
     club_branch = models.ForeignKey(
         "clubs.ClubBranch",
         on_delete=models.CASCADE,

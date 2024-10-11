@@ -1,6 +1,7 @@
 from constance import config
 
 from apps.integrations.kaspi.base import BaseKaspiService
+from apps.payments.models import Payment
 
 
 class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
@@ -9,8 +10,10 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
     save_serializer = None
 
     def run_service(self):
+        # TODO: Initialize Payment with PaymentStatuses.CREATED status
+        payment = Payment.objects.create(amount=self.instance.total_amount)
         return self.fetch(data={
-            "TranId": "212695001",
+            "TranId": str(payment.uuid),
             "OrderId": str(self.instance.uuid),
             "Amount": int(self.instance.total_amount*100),
             "Service": config.KASPI_PAYMENT_SERVICE_CODE,

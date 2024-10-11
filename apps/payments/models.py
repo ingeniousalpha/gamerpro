@@ -2,6 +2,7 @@ from django.db import models
 from django.db.transaction import atomic
 
 from apps.common.models import UUIDModel, TimestampModel
+from apps.integrations.models import OuterServiceLogHistory
 from apps.payments import PaymentStatuses
 
 
@@ -46,11 +47,12 @@ class PaymentCard(TimestampModel):
         return f"Карта #{self.id}"
 
 
-class Payment(UUIDModel, TimestampModel):
+class Payment(UUIDModel, TimestampModel, OuterServiceLogHistory):
     outer_id = models.CharField(
         "ID в платежной системе",
         unique=True,
-        max_length=16
+        max_length=16,
+        null=True
     )
     status = models.CharField(
         max_length=20,

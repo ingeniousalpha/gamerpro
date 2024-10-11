@@ -1,6 +1,7 @@
 from django.db import models
 from apps.clubs.managers import HallTypesManager
 from apps.common.models import TimestampModel
+from apps.integrations.models import OuterServiceLogHistory
 
 
 class HallTypesManagerMixin:
@@ -51,7 +52,7 @@ class ClubBranchLegalEntity(models.Model):
         verbose_name_plural = "ИПшки"
 
 
-class ClubBranch(models.Model):
+class ClubBranch(OuterServiceLogHistory):
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
     trader_name = models.CharField(max_length=256, default="")
@@ -231,8 +232,7 @@ class ClubTimePacket(models.Model):
     priority = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     available_days = models.ManyToManyField(
-        DayModel, null=True, blank=True,
-        related_name="time_packets",
+        DayModel, related_name="time_packets",
     )
     available_time_start = models.TimeField(null=True, blank=True)
     available_time_end = models.TimeField(null=True, blank=True)

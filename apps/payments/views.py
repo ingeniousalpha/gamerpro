@@ -34,19 +34,24 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
 class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
     def get(self, request):
         try:
+            print(request.GET)
             command = request.GET.get('command')
             txn_id = request.GET.get('txn_id')
             txn_date = request.GET.get('txn_date')
-            account = request.GET.get('account')
-            sum = request.GET.get('sum')
+            booking_uuid = request.GET.get('account')
+            # TODO: fetch payment and check sum
+            sum = "{:.2f}".format(request.GET.get('sum'))
             print("Kaspi webhook hanlded")
-            print(f"Command: {command}, txn_id: {txn_id}, , txn_date: {txn_date}, account: {account}, sum: {sum}")
-            print(request.GET)
+            print(f"Command: {command}, txn_id: {txn_id}, , txn_date: {txn_date}, booking_uuid: {booking_uuid}, sum: {sum}")
+            if command == "check":
+                pass
+            elif command == "pay":
+                pass
         except Exception as e:
             print("KaspiCallbackHandlerView error: ", str(e))
             return Response({
                 "txn_id": txn_id,
-                "sum": 500,
+                "sum": sum,
                 "comment": "",
                 "result": 3,
                 "error_msg_code": "internal_server_error"
@@ -54,7 +59,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
         return Response({
             "txn_id": txn_id,
             "result": 0,
-            "sum": 500,
+            "sum": sum,
             "comment": "",
         })
 
