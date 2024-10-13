@@ -11,7 +11,11 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
 
     def run_service(self):
         # TODO: Initialize Payment with PaymentStatuses.CREATED status
-        payment = Payment.objects.create(amount=self.instance.total_amount)
+        payment = Payment.objects.create(
+            booking=self.instance,
+            user=self.instance.user,
+            amount=self.instance.total_amount,
+        )
         return self.fetch(data={
             "TranId": str(payment.uuid),
             "OrderId": str(self.instance.uuid),

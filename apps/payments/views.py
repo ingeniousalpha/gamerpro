@@ -1,7 +1,9 @@
 import logging
 import urllib
+from datetime import datetime
 
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
@@ -11,10 +13,19 @@ from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, Publi
 from apps.payments.models import PaymentCard
 from apps.payments.services import handle_ov_response
 from apps.common.utils import b64_decode
+from . import PaymentStatuses
 from .serializers import PaymentCardListSerializer, DepositReplenishmentSerializer
+from ..bookings.models import Booking
 from ..clubs.models import ClubBranch
 
 logger = logging.getLogger("onevision")
+
+KASPI_ERROR_CODES = {
+    "booking_not_found": 1,
+    "booking_already_paid": 2,
+    "internal_server_error": 3,
+    "booking_already_expired": 4,
+}
 
 
 class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
@@ -23,7 +34,7 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
         success = Response(status=status.HTTP_200_OK)
         try:
             webhook_data = b64_decode(urllib.parse.unquote_plus(request.data.get('data')))
-            print('This is webhook')
+            print('OV webhook handled')
             print(webhook_data)
             handle_ov_response(webhook_data)
         except Exception as e:
@@ -33,35 +44,54 @@ class OVWebhookHandlerView(PublicJSONRendererMixin, GenericAPIView):
 
 class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
     def get(self, request):
+        resp_data = {
+            "txn_id": "",
+            "result": 0,
+            "sum": 0,
+            "comment": "",
+        }
         try:
-            print(request.GET)
             command = request.GET.get('command')
-            txn_id = request.GET.get('txn_id')
+            resp_data["txn_id"] = request.GET.get('txn_id')
             txn_date = request.GET.get('txn_date')
             booking_uuid = request.GET.get('account')
-            # TODO: fetch payment and check sum
-            sum = "{:.2f}".format(request.GET.get('sum'))
-            print("Kaspi webhook hanlded")
-            print(f"Command: {command}, txn_id: {txn_id}, , txn_date: {txn_date}, booking_uuid: {booking_uuid}, sum: {sum}")
+            print("Kaspi webhook handled")
+            print(
+                f"Command: {command}, txn_id: {resp_data["txn_id"]}, txn_date: {txn_date}, "
+                f"booking_uuid: {booking_uuid}, sum: {sum}"
+            )
+
+            booking = Booking.objects.filter(uuid=booking_uuid).first()
+            if not booking:
+                resp_data["error_msg_code"] = "booking_not_found"
+            elif booking.expiration_date <= timezone.now():
+                resp_data["error_msg_code"] = "booking_already_expired"
+            elif booking.payments.exists() and booking.payments.last().status != PaymentStatuses.CREATED:
+                # TODO: rewrite
+                resp_data["error_msg_code"] = "booking_already_paid"
+
+            if "error_msg_code" in resp_data:
+                resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
+                return Response(resp_data)
+
+            payment = booking.payments.last()
+            resp_data["sum"] = "{:.2f}".format(payment.amount)
+
             if command == "check":
-                pass
+                payment.outer_id = resp_data["txn_id"]
+                payment.save(update_fields=['outer_id'])
             elif command == "pay":
-                pass
+                resp_data["prv_txn_id"] = str(payment.uuid)
+                resp_data["comment"] = "OK"
+                # payment.updated_at = datetime.strptime(txn_date, "%Y%m%d%H%M%S")
+                payment.status = PaymentStatuses.PAYMENT_APPROVED
+                payment.save(update_fields=["status", "updated_at"])
         except Exception as e:
             print("KaspiCallbackHandlerView error: ", str(e))
-            return Response({
-                "txn_id": txn_id,
-                "sum": sum,
-                "comment": "",
-                "result": 3,
-                "error_msg_code": "internal_server_error"
-            })
-        return Response({
-            "txn_id": txn_id,
-            "result": 0,
-            "sum": sum,
-            "comment": "",
-        })
+            resp_data["error_msg_code"] = "internal_server_error"
+            resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
+
+        return Response(resp_data)
 
 
 class PaymentCardListView(JSONRendererMixin, ListAPIView):
