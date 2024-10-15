@@ -141,13 +141,13 @@ def dashboard_view(request):
 
     if period == 'last_year':
         dates = bookings_total.annotate(month_year=MonthYear('created_at')).values(group_by_field).annotate(
-            bookings_count=Count('id')).order_by(group_by_field)
+            bookings_count=Count('id')).order_by('created_at__year', 'created_at__month')
         payments_dates = Payment.objects.filter(
             status=PaymentStatuses.PAYMENT_APPROVED, created_at__gte=filter_period
         ).annotate(month_year=MonthYear('created_at')).values(group_by_field).annotate(
-            payments_count=Count('id')).order_by(group_by_field)
+            payments_count=Count('id')).order_by('created_at__year', 'created_at__month')
         users_dates = users_total.annotate(month_year=MonthYear('created_at')).values(group_by_field).annotate(
-            users_count=Count('id')).order_by(group_by_field)
+            users_count=Count('id')).order_by('created_at__year', 'created_at__month')
     else:
         dates = bookings_total.values(group_by_field).annotate(bookings_count=Count('id')).order_by(group_by_field)
         payments_dates = Payment.objects.filter(
