@@ -1,8 +1,7 @@
-from datetime import datetime
 from decimal import Decimal
 
 from django.db.models import Sum, Count, Q, F, Func, Case, When, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, GenericAPIView
@@ -106,9 +105,8 @@ class MonthYear(Func):
     template = "%(function)s(EXTRACT(YEAR FROM %(expressions)s), '.', EXTRACT(MONTH FROM %(expressions)s))"
 
 
-def get_month_str(month_dot_year):
-    year, month = month_dot_year.split('.')
-    return f"{MONTHS_NAMES.get(month)} {year}"
+def get_readable_month_and_year(annotated_booking):
+    return f'{MONTHS_NAMES.get(annotated_booking["month"])} {annotated_booking["year"]}'
 
 
 def dashboard_view(request):
@@ -140,8 +138,13 @@ def dashboard_view(request):
     )['total_amount__sum'] or 0
 
     if period == 'last_year':
-        dates = bookings_total.annotate(month_year=MonthYear('created_at')).values(group_by_field).annotate(
-            bookings_count=Count('id')).order_by('created_at__year', 'created_at__month')
+        dates = (
+            bookings_total
+            .annotate(month=ExtractMonth('created_at'), year=ExtractYear('created_at'))
+            .values('month', 'year')
+            .annotate(bookings_count=Count('id'))
+            .order_by('year', 'month')
+        )
         payments_dates = Payment.objects.filter(
             status=PaymentStatuses.PAYMENT_APPROVED, created_at__gte=filter_period
         ).annotate(month_year=MonthYear('created_at')).values(group_by_field).annotate(
@@ -158,19 +161,19 @@ def dashboard_view(request):
     bookings_dates_list = []
     bookings_count_list = []
     for item in dates:
-        bookings_dates_list.append(get_month_str(item[group_by_field]) if period=="last_year" else item[group_by_field])
+        bookings_dates_list.append(get_readable_month_and_year(item) if period == "last_year" else item[group_by_field])
         bookings_count_list.append(item['bookings_count'])
 
     payments_dates_list = []
     payments_count_list = []
     for item in payments_dates:
-        payments_dates_list.append(get_month_str(item[group_by_field]) if period=="last_year" else item[group_by_field])
+        payments_dates_list.append(get_readable_month_and_year(item) if period == "last_year" else item[group_by_field])
         payments_count_list.append(item['payments_count'])
 
     users_dates_list = []
     users_count_list = []
     for item in users_dates:
-        users_dates_list.append(get_month_str(item[group_by_field]) if period=="last_year" else item[group_by_field])
+        users_dates_list.append(get_readable_month_and_year(item) if period == "last_year" else item[group_by_field])
         users_count_list.append(item['users_count'])
 
     bookings_summary_table = (Booking.objects
