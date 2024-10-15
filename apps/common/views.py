@@ -106,7 +106,7 @@ class MonthYear(Func):
 
 
 def get_readable_month_and_year(annotated_booking):
-    return f'{MONTHS_NAMES.get(annotated_booking["month"])} {annotated_booking["year"]}'
+    return f'{MONTHS_NAMES.get(str(annotated_booking["month"]))} {annotated_booking["year"]}'
 
 
 def dashboard_view(request):
