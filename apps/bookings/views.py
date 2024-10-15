@@ -174,7 +174,7 @@ class BookingProlongByTimePacketView(JSONRendererMixin, BookingMixin, GenericAPI
         return Response({})
 
 
-class CheckBookingsPaymentStatus(JSONRendererMixin, BookingMixin, GenericAPIView):
+class CheckBookingsPaymentStatusView(JSONRendererMixin, BookingMixin, GenericAPIView):
     queryset = Booking.objects.all()
 
     def get(self, request, booking_uuid):
