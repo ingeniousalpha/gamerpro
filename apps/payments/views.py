@@ -57,7 +57,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             booking_uuid = request.GET.get('account')
             print("Kaspi webhook handled")
             print(
-                f"Command: {command}, txn_id: {resp_data["txn_id"]}, txn_date: {txn_date}, "
+                f"Command: {command}, txn_id: {resp_data['txn_id']}, txn_date: {txn_date}, "
                 f"booking_uuid: {booking_uuid}, sum: {sum}"
             )
 

@@ -174,6 +174,22 @@ class BookingProlongByTimePacketView(JSONRendererMixin, BookingMixin, GenericAPI
         return Response({})
 
 
+class CheckBookingsPaymentStatus(JSONRendererMixin, BookingMixin, GenericAPIView):
+    queryset = Booking.objects.all()
+
+    def get(self, request, booking_uuid):
+        booking = self.get_object()
+
+        payment_status = "NO_PAYMENT_YET"
+        payment = booking.payments.last()
+        if payment:
+            payment_status = payment.status
+        elif booking.use_cashback:
+            payment_status = "CASHBACK_APPROVED"
+
+        return Response({"payment_status": payment_status})
+
+
 class ComputerSessionFinishView(JSONRendererMixin, BookingMixin, GenericAPIView):
     queryset = Booking.objects.all()
 
