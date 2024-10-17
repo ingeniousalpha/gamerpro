@@ -13,13 +13,13 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
         # TODO: Initialize Payment with PaymentStatuses.CREATED status
         payment = Payment.objects.create(
             booking=self.instance,
-            user=self.instance.user,
+            user=self.instance.club_branch.user,
             amount=self.instance.total_amount,
         )
         return self.fetch(data={
             "TranId": str(payment.uuid),
             "OrderId": str(self.instance.uuid),
-            "Amount": int(self.instance.total_amount*100),
+            "Amount": int(payment.amount*100),
             "Service": config.KASPI_PAYMENT_SERVICE_CODE,
             "returnUrl": config.KASPI_PAYMENT_DEEPLINK_HOST,
             "refererHost": "server.gamerpro.kz",
