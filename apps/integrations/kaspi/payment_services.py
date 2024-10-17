@@ -13,7 +13,7 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
         # TODO: Initialize Payment with PaymentStatuses.CREATED status
         payment = Payment.objects.create(
             booking=self.instance,
-            user=self.instance.club_branch.user,
+            user=self.instance.club_user.user,
             amount=self.instance.total_amount,
         )
         return self.fetch(data={
