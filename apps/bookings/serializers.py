@@ -17,6 +17,7 @@ from apps.clubs.serializers import ClubBranchSerializer
 from apps.clubs.services import get_cashback
 from apps.common.serializers import RequestUserPropertyMixin
 from apps.common.services import date_format_with_t
+from apps.integrations.kaspi.exceptions import KaspiServiceError
 from apps.integrations.kaspi.payment_services import KaspiRetrievePaymentDeeplinkService
 from apps.payments import PAYMENT_STATUSES_MAPPER, PaymentStatuses
 from apps.payments.exceptions import OVRecurrentPaymentFailed
@@ -112,6 +113,7 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
         fields = BaseCreateBookingSerializer.Meta.fields + ('amount',)
 
     def extra_task(self, instance, validated_data):
+        # TODO: refactor to respond error when error happens
         try:
             if not instance.club_user.onevision_payer_id:
                 OVCreatePayerService(
@@ -230,6 +232,7 @@ class CreateBookingByTimePacketKaspiSerializer(CreateBookingByPaymentSerializer)
                 raise Exception("There is no payment_url")
         except Exception as e:
             logger.error(f"CreateBookingByTimePacketKaspiSerializer Error: {str(e)}")
+            raise KaspiServiceError
 
 
 class CreateBookingByTimePacketCardPaymentSerializer(CreateBookingByCardPaymentSerializer):
