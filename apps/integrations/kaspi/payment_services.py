@@ -8,6 +8,8 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
     endpoint = "/online"
     instance: 'Booking'
     save_serializer = None
+    log_request = True
+    log_response = True
 
     def run_service(self):
         # TODO: Initialize Payment with PaymentStatuses.CREATED status
