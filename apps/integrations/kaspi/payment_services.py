@@ -7,6 +7,7 @@ from apps.payments.models import Payment
 class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
     endpoint = "/online"
     instance: 'Booking'
+    method = "POST"
     save_serializer = None
     log_request = True
     log_response = True
