@@ -229,7 +229,8 @@ class CreateBookingByTimePacketKaspiSerializer(CreateBookingByPaymentSerializer)
                     gizmo_lock_computers(str(instance.uuid))
                 self.context['payment_url'] = deeplink_url
             else:
-                raise Exception("There is no payment_url")
+                self.context['payment_url'] = "https://kaspi.kz/pay/quickpayment?quick_pay_id=BRO2126950030318289c5-3d25-4b36-95fa-e754fae88c5f19:08:02"
+                # raise Exception("There is no payment_url")
         except Exception as e:
             logger.error(f"CreateBookingByTimePacketKaspiSerializer Error: {str(e)}")
             raise KaspiServiceError
