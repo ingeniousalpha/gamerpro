@@ -2,6 +2,7 @@ import logging
 import urllib
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
@@ -86,6 +87,9 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
                 # payment.updated_at = datetime.strptime(txn_date, "%Y%m%d%H%M%S")
                 payment.status = PaymentStatuses.PAYMENT_APPROVED
                 payment.save(update_fields=["status", "updated_at"])
+        except ValidationError:
+            resp_data["error_msg_code"] = "booking_not_found"
+            resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
         except Exception as e:
             print("KaspiCallbackHandlerView error: ", str(e))
             resp_data["error_msg_code"] = "internal_server_error"
