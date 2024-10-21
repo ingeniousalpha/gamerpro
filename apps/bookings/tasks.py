@@ -13,8 +13,8 @@ from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransact
 from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
     GizmoSetPointsToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
-from apps.integrations.senet.computers_services import SenetLockComputersService, SenetUnlockComputersService
-from apps.integrations.senet.deposits_services import SenetReplenishUserBalanceService
+from apps.integrations.senet.computer_services import SenetLockComputersService, SenetUnlockComputersService
+from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
@@ -341,18 +341,18 @@ def send_push_about_booking_status(booking_uuid, status):
     )
 
 
-# def senet_replenish_user_balance(booking_uuid):
-#     booking = (
-#         Booking.objects
-#         .filter(uuid=booking_uuid)
-#         .select_related('club_user', 'club_branch__club')
-#         .first()
-#     )
-#     if not (booking and booking.club_branch.club.software_type == SoftwareTypes.SENET):
-#         return False
-#     SenetReplenishUserBalanceService(
-#         instance=booking.club_branch,
-#         cashdesk_id=,
-#         account_id=booking.club_user.outer_id,
-#         amount=booking.amount
-#     ).run()
+@cel_app.task
+def senet_replenish_user_balance(booking_uuid):
+    booking = (
+        Booking.objects
+        .filter(uuid=booking_uuid)
+        .select_related('club_user', 'club_branch__club')
+        .first()
+    )
+    if not (booking and booking.club_branch.club.software_type == SoftwareTypes.SENET):
+        return False
+    SenetReplenishUserBalanceService(
+        instance=booking.club_branch,
+        account_id=booking.club_user.outer_id,
+        amount=booking.amount
+    ).run()

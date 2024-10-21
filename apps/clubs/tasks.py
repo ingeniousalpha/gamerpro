@@ -7,10 +7,11 @@ from apps.clubs.models import ClubBranch
 from apps.integrations.gizmo.computers_services import GizmoGetComputerGroupsService, GizmoGetComputersService
 from apps.integrations.gizmo.time_packets_services import GizmoGetTimePacketGroupsService, GizmoGetTimePacketsService
 from apps.integrations.gizmo.users_services import GizmoGetUsersService, GizmoUpdateComputerStateByUserSessionsService
-from apps.integrations.senet.computers_services import (
+from apps.integrations.senet.computer_services import (
     SenetGetComputerZonesService, SenetGetComputersWithSessionsService
 )
-from apps.integrations.senet.time_packets_services import SenetGetTimePacketsV1Service, SenetGetTimePacketsV2Service
+from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
+from apps.integrations.senet.time_packet_services import SenetGetTimePacketsV1Service, SenetGetTimePacketsV2Service
 from apps.integrations.senet.users_services import SenetGetUsersService
 from config.celery_app import cel_app
 

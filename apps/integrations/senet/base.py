@@ -57,6 +57,18 @@ class BaseSenetService(ServiceLoggingMixin, BaseService):
         logger.info(f"{self.__class__.__name__} Error: {e}")
 
 
+class BaseSenetCashboxService(BaseSenetService):
+
+    def get_auth_token(self):
+        senet_token = cache.get(f"SENET_CASHBOX_AUTH_TOKEN_{self.instance.id}")
+        return senet_token if senet_token else self.set_new_auth_token()
+
+    def set_new_auth_token(self):
+        senet_token = GetSenetAuthTokenService(instance=self.instance, is_cashbox=True).run()
+        cache.set(f"SENET_CASHBOX_AUTH_TOKEN_{self.instance.id}", senet_token, timeout=24*60*60)
+        return senet_token
+
+
 class GetSenetAuthTokenService(ServiceLoggingMixin, BaseService):
     endpoint = "/api/v2/user/admin_auth/"
     instance: ClubBranch
@@ -66,15 +78,21 @@ class GetSenetAuthTokenService(ServiceLoggingMixin, BaseService):
         return super().get_url(path_params)
 
     def run_service(self):
+        if self.kwargs.get('is_cashbox'):
+            username = self.instance.cashbox_user
+            password = self.instance.cashbox_password
+        else:
+            username = self.instance.api_user
+            password = self.instance.api_password
         return self.fetch(json={
-            "username": self.instance.api_user,
-            "password": self.instance.api_password,
+            "username": username,
+            "password": password,
             "grant_type": "password",
             "client_id": "test"
         })
 
     def finalize_response(self, response):
-        if not response.get('token'):
-            self.log_error(str(response))
-
-        return response['token']
+        token = response.get('token')
+        if not token:
+            logger.error(str(response))
+        return token

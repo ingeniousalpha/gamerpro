@@ -3,6 +3,7 @@ import traceback
 import logging
 from copy import deepcopy
 from abc import ABC, abstractmethod
+from json import JSONDecodeError
 from typing import Optional, Type, Tuple, Union, Any
 
 from requests import Session
@@ -156,8 +157,9 @@ class BaseService(ABC):
         try:
             return response.json()
         except Exception as e:
-            logger.info("JSON PARSE ERROR body %s, status_code %s" % (response.text, str(response.status_code)))
-            raise e
+            if response.status_code != 200:
+                logger.info("JSON PARSE ERROR body %s, status_code %s" % (response.text, str(response.status_code)))
+                raise e
 
     def get_instance(self):
         return self.instance
