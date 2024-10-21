@@ -7,6 +7,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from .managers import UserManager
 from apps.bookings.models import Booking
+from ..clubs import SoftwareTypes
 from ..clubs.models import ClubPerk
 from ..common.models import TimestampModel
 
@@ -99,7 +100,11 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.is_active
 
     def get_club_account(self, club_branch):
-        return self.club_accounts.filter(club_branch=club_branch).first()
+        software_type = club_branch.club.software_type
+        if software_type == SoftwareTypes.GIZMO:
+            return self.club_accounts.filter(club_branch=club_branch).first()
+        elif software_type == SoftwareTypes.SENET:
+            return self.club_accounts.filter(club_branch=(club_branch.main_club_branch or club_branch)).first()
 
 
 class UserOneVisionPayer(models.Model):

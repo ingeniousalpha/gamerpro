@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
+from apps.clubs import SoftwareTypes
 from apps.clubs.models import ClubBranch
 from apps.clubs.services import add_cashback, subtract_cashback
 from apps.clubs.tasks import _sync_club_branch_computers
@@ -12,6 +13,8 @@ from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransact
 from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
     GizmoSetPointsToUser
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
+from apps.integrations.senet.computers_services import SenetLockComputersService, SenetUnlockComputersService
+from apps.integrations.senet.deposits_services import SenetReplenishUserBalanceService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
 from config.celery_app import cel_app
@@ -195,22 +198,27 @@ def gizmo_start_user_session(booking_uuid):
 
 
 @cel_app.task
-def gizmo_cancel_booking(booking_uuid):
-    booking = Booking.objects.filter(uuid=booking_uuid).first()
+def cancel_booking(booking_uuid):
+    booking = (
+        Booking.objects
+        .filter(uuid=booking_uuid)
+        .select_related('club_user__user', 'club_branch__club')
+        .first()
+    )
     if not booking:
         return
 
-    gizmo_unlock_computers(booking.uuid)
-    club_branch = ClubBranch.objects.filter(id=booking.club_branch_id).first()
-    if booking.club_user.is_verified:
+    unlock_computers(booking.uuid)
+    if booking.club_branch.club.software_type == SoftwareTypes.GIZMO and booking.club_user.is_verified:
         GizmoEndUserSessionService(
-            instance=club_branch,
+            instance=booking.club_branch,
             user_id=booking.club_user.gizmo_id
         ).run()
     # cel_app.send_task(
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
     #     args=[booking.uuid],
     # )
+
 
 @cel_app.task
 def gizmo_unlock_computers_and_booking_expire(booking_uuid):
@@ -220,13 +228,19 @@ def gizmo_unlock_computers_and_booking_expire(booking_uuid):
 
     booking.status = BookingStatuses.EXPIRED
     booking.save(update_fields=['status'])
-    gizmo_unlock_computers(booking_uuid, False)
+    unlock_computers(booking_uuid, False)
 
 
 
 @cel_app.task
-def gizmo_unlock_computers(booking_uuid, check_payment=False):
-    booking = Booking.objects.filter(uuid=booking_uuid).first()
+def unlock_computers(booking_uuid, check_payment=False):
+    booking = (
+        Booking.objects
+        .filter(uuid=booking_uuid)
+        .select_related('club_branch__club')
+        .prefetch_related('computers')
+        .first()
+    )
     if not booking:
         return
 
@@ -234,12 +248,22 @@ def gizmo_unlock_computers(booking_uuid, check_payment=False):
     if check_payment and (booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists() or booking.use_cashback):
         return
 
-    for booked_computer in booking.computers.all():
-        GizmoUnlockComputerService(
-            instance=booking.club_branch,
-            computer_id=booked_computer.computer.gizmo_id
-        ).run()
-        cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+    software_type = booking.club_branch.club.software_type
+    booked_computers = booking.computers.all().select_related('computer')
+    if software_type == SoftwareTypes.GIZMO:
+        for booked_computer in booked_computers:
+            GizmoUnlockComputerService(
+                instance=booking.club_branch,
+                computer_id=booked_computer.computer.outer_id
+            ).run()
+            cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
+    elif software_type == SoftwareTypes.SENET:
+        for booked_computer in booked_computers:
+            SenetUnlockComputersService(
+                instance=booking.club_branch,
+                computers=[booked_computer.computer.outer_id]
+            ).run()
+            cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
 
     _sync_club_branch_computers(booking.club_branch)
 
@@ -268,23 +292,35 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     _sync_club_branch_computers(booking.club_branch)
 
 
-def gizmo_lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
+def lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
     """unlock_after - in minutes"""
 
-    booking = Booking.objects.filter(uuid=booking_uuid).first()
+    booking = (
+        Booking.objects
+        .filter(uuid=booking_uuid)
+        .select_related('club_branch__club')
+        .prefetch_related('computers')
+        .first()
+    )
     if not booking:
         return
 
-    for booked_computer in booking.computers.all():
-        GizmoLockComputerService(
+    software_type = booking.club_branch.club.software_type
+    booked_computers = booking.computers.all().select_related('computer')
+    is_locked = False
+    if software_type == SoftwareTypes.GIZMO:
+        for booked_computer in booked_computers:
+            GizmoLockComputerService(instance=booking.club_branch, computer_id=booked_computer.computer.outer_id).run()
+        is_locked = True
+    elif software_type == SoftwareTypes.SENET:
+        SenetLockComputersService(
             instance=booking.club_branch,
-            computer_id=booked_computer.computer.gizmo_id
+            computers=[booked_computer.computer.outer_id for booked_computer in booked_computers]
         ).run()
+        is_locked = True
 
-    gizmo_unlock_computers.apply_async(
-        (str(booking.uuid), True),
-        countdown=unlock_after*60
-    )
+    if is_locked:
+        unlock_computers.apply_async((str(booking.uuid), True), countdown=unlock_after * 60)
 
 
 @cel_app.task
@@ -303,3 +339,20 @@ def send_push_about_booking_status(booking_uuid, status):
             "body": BOOKING_STATUS_TRANSITION_PUSH_TEXT[status]["body"],
         }
     )
+
+
+# def senet_replenish_user_balance(booking_uuid):
+#     booking = (
+#         Booking.objects
+#         .filter(uuid=booking_uuid)
+#         .select_related('club_user', 'club_branch__club')
+#         .first()
+#     )
+#     if not (booking and booking.club_branch.club.software_type == SoftwareTypes.SENET):
+#         return False
+#     SenetReplenishUserBalanceService(
+#         instance=booking.club_branch,
+#         cashdesk_id=,
+#         account_id=booking.club_user.outer_id,
+#         amount=booking.amount
+#     ).run()

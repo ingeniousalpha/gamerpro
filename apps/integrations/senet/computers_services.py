@@ -108,3 +108,14 @@ class SenetLockComputersService(SenetWorkstationCommandService):
 
 class SenetUnlockComputersService(SenetWorkstationCommandService):
     command_type = "release"
+
+
+class SenetGetCashdeskIDService(BaseSenetService):
+    endpoint = "/api/v2/cashdesk_office/?paginate=false"
+    method = "GET"
+    save_serializer = None
+
+    def run_request(self):
+        return self.fetch()
+
+    # def finalize_response(self, response):

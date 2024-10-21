@@ -6,8 +6,8 @@ from apps.integrations.senet.serializers import SenetTimePacketCreateSerializer
 
 class SenetGetTimePacketsV1Service(BaseSenetService):
     endpoint = "/api/v2/ticket/?office_id={office_id}"
-    save_serializer = SenetTimePacketCreateSerializer
     method = "GET"
+    save_serializer = SenetTimePacketCreateSerializer
 
     def run_request(self):
         return self.fetch(path_params={"office_id": self.instance.outer_id})
@@ -37,8 +37,8 @@ class SenetGetTimePacketsV1Service(BaseSenetService):
 
 class SenetGetTimePacketsV2Service(BaseSenetService):
     endpoint = "/bonus_systems/additional_refill/?paginate=false"
-    save_serializer = SenetTimePacketCreateSerializer
     method = "GET"
+    save_serializer = SenetTimePacketCreateSerializer
 
     def run_request(self):
         return self.fetch()
