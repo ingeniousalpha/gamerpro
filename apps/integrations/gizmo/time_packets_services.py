@@ -56,8 +56,8 @@ class GizmoGetTimePacketsService(BaseGizmoService):
                     ).first()
                     if packet_group:
                         serializer = self.save_serializer(data={
-                            "gizmo_id": time_packet['id'],
-                            "gizmo_name": time_packet['name'],
+                            "outer_id": time_packet['id'],
+                            "outer_name": time_packet['name'],
                             "display_name": time_packet['name'],
                             "description": time_packet.get('description'),
                             "price": time_packet['price'],

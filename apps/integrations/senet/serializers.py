@@ -6,4 +6,10 @@ from apps.clubs.models import ClubTimePacket
 class SenetTimePacketCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacket
-        fields = '__all__'
+        fields = (
+            "outer_id",
+            "outer_name",
+            "display_name",
+            "price",
+            "club"
+        )

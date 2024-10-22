@@ -78,7 +78,7 @@ class GetSenetAuthTokenService(ServiceLoggingMixin, BaseService):
         return super().get_url(path_params)
 
     def run_service(self):
-        if self.kwargs.get('is_cashbox'):
+        if self.kwargs and self.kwargs.get('is_cashbox'):
             username = self.instance.cashbox_user
             password = self.instance.cashbox_password
         else:

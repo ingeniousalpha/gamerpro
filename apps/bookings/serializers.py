@@ -231,7 +231,7 @@ class CreateBookingByTimePacketKaspiSerializer(CreateBookingByPaymentSerializer)
             ).run()
             if deeplink_url:
                 if config.INTEGRATIONS_TURNED_ON:
-                    gizmo_lock_computers(str(instance.uuid))
+                    lock_computers(str(instance.uuid))
                 self.context['payment_url'] = deeplink_url
             else:
                 # self.context['payment_url'] = "https://kaspi.kz/pay/quickpayment?quick_pay_id=BRO2126950030318289c5-3d25-4b36-95fa-e754fae88c5f19:08:02"

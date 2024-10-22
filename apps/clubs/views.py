@@ -2,7 +2,8 @@ from django.db.models import Q, F
 from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback
+from apps.clubs import SoftwareTypes
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubComputerGroup
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
     ClubUserCashbackSerializer
@@ -58,11 +59,23 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        today = timezone.now().astimezone().weekday() + 1
-        res_queryset = super().get_queryset().filter(
-            club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=today,
-        ).filter(
+        hall = (
+            ClubComputerGroup.objects
+            .filter(id=self.kwargs.get('hall_id'))
+            .select_related("club_branch__club")
+            .first()
+        )
+        if not hall:
+            return ClubTimePacket.objects.none()
+        queryset = super().get_queryset().filter(
+            is_active=True,
+            available_days__number=timezone.now().astimezone().weekday() + 1
+        )
+        if hall.club_branch.club.software_type == SoftwareTypes.SENET:
+            queryset = queryset.filter(club=hall.club_branch.club)
+        else:
+            queryset = queryset.filter(club_computer_group_id=self.kwargs.get('hall_id'))
+        return queryset.filter(
             (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(
                 available_time_end__gte=timezone.now().astimezone().time())) |
             (Q(available_time_start__gte=F('available_time_end')) & (
