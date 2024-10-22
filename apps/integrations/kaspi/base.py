@@ -9,6 +9,8 @@ logger = logging.getLogger("kaspi")
 class BaseKaspiService(ServiceLoggingMixin, BaseService):
     headers = {
         "Content-Type": "application/json",
+        "User-Agent": "server.gamerpro.kz",
+        "Host": "kaspi.kz"
     }
     # instance = Payment
     host = "https://kaspi.kz"
