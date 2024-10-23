@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
-
+from constance import config
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, PublicAPIMixin
 from apps.payments.models import PaymentCard
 from apps.payments.services import handle_ov_response
@@ -65,7 +65,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             booking = Booking.objects.filter(uuid=booking_uuid).first()
             if not booking:
                 resp_data["error_msg_code"] = "booking_not_found"
-            elif booking.expiration_date <= timezone.now():
+            elif booking.created_at + timezone.timedelta(minutes=config.PAYMENT_EXPIRY_TIME) <= timezone.now():
                 resp_data["error_msg_code"] = "booking_already_expired"
             elif booking.payments.exists() and booking.payments.last().status != PaymentStatuses.CREATED:
                 # TODO: rewrite
