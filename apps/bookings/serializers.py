@@ -79,9 +79,9 @@ class BaseCreateBookingSerializer(
     def create(self, validated_data):
         with transaction.atomic():
             computers = validated_data.pop('computers')
-            expiration_date = timezone.now() + timezone.timedelta(minutes=config.PAYMENT_EXPIRY_TIME)
-            validated_data['expiration_date'] = expiration_date
             booking = super().create(validated_data)
+            booking.expiration_date = timezone.now() + timezone.timedelta(minutes=config.PAYMENT_EXPIRY_TIME)
+            booking.save()
             for computer in computers:
                 BookedComputer.objects.create(booking=booking, computer=computer)
                 if 'payment_card' not in validated_data:
