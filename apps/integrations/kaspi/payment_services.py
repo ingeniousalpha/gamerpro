@@ -19,7 +19,7 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
             user=self.instance.club_user.user,
             amount=self.instance.total_amount,
         )
-        return self.fetch(data={
+        return self.fetch(json={
             "TranId": str(payment.uuid),
             "OrderId": str(self.instance.uuid),
             "Amount": int(payment.amount*100),

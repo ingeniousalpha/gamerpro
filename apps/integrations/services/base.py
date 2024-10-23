@@ -95,6 +95,7 @@ class BaseService(ABC):
 
         if self.log_request:
             print("self.url: ", self.url)
+            print()
         response_raw = self.session.request(
             method=self.method,
             url=self.url,
