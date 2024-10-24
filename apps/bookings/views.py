@@ -181,6 +181,11 @@ class CheckBookingsPaymentStatusView(JSONRendererMixin, BookingMixin, GenericAPI
         booking = self.get_object()
 
         payment_status = "NO_PAYMENT_YET"
+
+        if booking.status == BookingStatuses.EXPIRED:
+            payment_status = BookingStatuses.EXPIRED
+            return Response({"payment_status": payment_status})
+
         payment = booking.payments.last()
         if payment:
             payment_status = payment.status

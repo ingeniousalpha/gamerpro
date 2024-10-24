@@ -16,6 +16,7 @@ from apps.payments.services import handle_ov_response
 from apps.common.utils import b64_decode
 from . import PaymentStatuses
 from .serializers import PaymentCardListSerializer, DepositReplenishmentSerializer
+from ..bookings import BookingStatuses
 from ..bookings.models import Booking
 from ..clubs.models import ClubBranch
 
@@ -63,10 +64,13 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             )
 
             booking = Booking.objects.filter(uuid=booking_uuid).first()
+            payment = booking.payments.last()
             if not booking:
                 resp_data["error_msg_code"] = "booking_not_found"
             elif booking.created_at + timezone.timedelta(minutes=config.PAYMENT_EXPIRY_TIME) <= timezone.now():
                 resp_data["error_msg_code"] = "booking_already_expired"
+                # booking.status = BookingStatuses.EXPIRED
+                # booking.save()
             elif booking.payments.exists() and booking.payments.last().status != PaymentStatuses.CREATED:
                 # TODO: rewrite
                 resp_data["error_msg_code"] = "booking_already_paid"
@@ -75,7 +79,6 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
                 resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
                 return Response(resp_data)
 
-            payment = booking.payments.last()
             resp_data["sum"] = "{:.2f}".format(payment.amount)
 
             if command == "check":
@@ -91,7 +94,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             resp_data["error_msg_code"] = "booking_not_found"
             resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
         except Exception as e:
-            print("KaspiCallbackHandlerView error: ", str(e))
+            print("KaspiCallbackHandlerView internal_server_error: ", str(e))
             resp_data["error_msg_code"] = "internal_server_error"
             resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])
 
