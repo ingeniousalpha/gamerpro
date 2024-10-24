@@ -288,7 +288,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
     def get_payment_status(self, obj):
         if obj.payments.exists():
-            return PAYMENT_STATUSES_MAPPER.get(int(obj.payments.last().status))
+            return obj.payment_status
         elif obj.use_cashback:
             return "CASHBACK_APPROVED"
         return "NOT_PAID"

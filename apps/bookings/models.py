@@ -7,7 +7,7 @@ from apps.common.models import UUIDModel, TimestampModel
 from constance import config
 
 from apps.integrations.models import OuterServiceLogHistory
-from apps.payments import PaymentStatuses
+from apps.payments import PaymentStatuses, PAYMENT_STATUSES_MAPPER
 
 
 class Booking(UUIDModel, TimestampModel, OuterServiceLogHistory):
@@ -86,6 +86,11 @@ class Booking(UUIDModel, TimestampModel, OuterServiceLogHistory):
     def get_commission_amount(amount):
         # here will be calculations based on amount
         return Decimal(config.GAMER_PRO_COMMISSION)
+
+    @property
+    def payment_status(self):
+        if self.payments.exists():
+            return PAYMENT_STATUSES_MAPPER.get(int(self.payments.last().status))
 
 
 class BookedComputer(models.Model):

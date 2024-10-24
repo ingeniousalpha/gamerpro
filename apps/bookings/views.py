@@ -188,7 +188,7 @@ class CheckBookingsPaymentStatusView(JSONRendererMixin, BookingMixin, GenericAPI
 
         payment = booking.payments.last()
         if payment:
-            payment_status = payment.status
+            payment_status = booking.payment_status
         elif booking.use_cashback:
             payment_status = "CASHBACK_APPROVED"
 
