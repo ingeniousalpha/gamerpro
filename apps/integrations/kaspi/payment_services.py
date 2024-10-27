@@ -1,6 +1,7 @@
 from constance import config
 
 from apps.integrations.kaspi.base import BaseKaspiService
+from apps.payments import PaymentProviders
 from apps.payments.models import Payment
 
 
@@ -18,6 +19,7 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
             booking=self.instance,
             user=self.instance.club_user.user,
             amount=self.instance.total_amount,
+            provider=PaymentProviders.KASPI
         )
         return self.fetch(json={
             "TranId": str(payment.uuid),

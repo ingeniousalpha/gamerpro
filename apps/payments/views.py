@@ -18,6 +18,7 @@ from . import PaymentStatuses
 from .serializers import PaymentCardListSerializer, DepositReplenishmentSerializer
 from ..bookings import BookingStatuses
 from ..bookings.models import Booking
+from ..bookings.tasks import gizmo_book_computers, gizmo_bro_add_time_and_set_booking_expiration
 from ..clubs.models import ClubBranch
 
 logger = logging.getLogger("onevision")
@@ -90,6 +91,12 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
                 # payment.updated_at = datetime.strptime(txn_date, "%Y%m%d%H%M%S")
                 payment.status = PaymentStatuses.PAYMENT_APPROVED
                 payment.save(update_fields=["status", "updated_at"])
+
+                if booking.club_branch.club.name.lower() == "bro" and booking.club_user.is_verified:
+                    gizmo_bro_add_time_and_set_booking_expiration.delay(booking_uuid)
+                elif booking.club_branch.club.name.lower() != "bro":
+                    gizmo_book_computers(booking_uuid)
+
         except ValidationError:
             resp_data["error_msg_code"] = "booking_not_found"
             resp_data["result"] = KASPI_ERROR_CODES.get(resp_data["error_msg_code"])

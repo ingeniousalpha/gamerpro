@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from apps.clubs.admin import FilterByClubMixin
 from .models import Booking, BookedComputer
 from .tasks import gizmo_bro_add_time_and_set_booking_expiration
-from ..payments import PaymentStatuses
+from ..payments import PaymentStatuses, PaymentProviders
 from ..payments.models import Payment
 
 
@@ -23,6 +23,7 @@ class BookingPaymentInline(admin.TabularInline):
         'status',
         'status_reason',
         'amount',
+        'provider',
         'card',
         'replenishment',
     )
@@ -81,6 +82,8 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
 
     def is_paid(self, obj):
          if obj.payments.exists() and obj.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists():
+             if obj.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).first().provider == PaymentProviders.KASPI:
+                 return mark_safe(f'<div style="background:#52C135;">Оплачено KASPI</div>')
              return mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
          if obj.use_cashback:
              return mark_safe(f'<div style="background:#52C135;">Оплачено Бонусами</div>')

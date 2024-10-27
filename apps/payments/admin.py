@@ -34,6 +34,7 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
         'created_at',
         'status',
         'amount',
+        'provider',
         'card',
         'booking',
         'user',
@@ -42,6 +43,7 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
         'created_at',
         'user',
         'status',
+        'provider',
     )
     date_hierarchy = 'created_at'
     inlines = [PaymentWebhookInline]

@@ -3,7 +3,7 @@ from django.db.transaction import atomic
 
 from apps.common.models import UUIDModel, TimestampModel
 from apps.integrations.models import OuterServiceLogHistory
-from apps.payments import PaymentStatuses
+from apps.payments import PaymentStatuses, PaymentProviders
 
 
 class PaymentCard(TimestampModel):
@@ -94,6 +94,11 @@ class Payment(UUIDModel, TimestampModel, OuterServiceLogHistory):
         "users.User",
         on_delete=models.CASCADE,
         related_name="payments"
+    )
+    provider = models.CharField(
+        max_length=20,
+        choices=PaymentProviders.choices,
+        default=PaymentProviders.ONE_VISION
     )
 
     class Meta:

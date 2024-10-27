@@ -22,3 +22,8 @@ PAYMENT_STATUSES_MAPPER = {
     8: "IN_PROGRESS",
     99: "FAILED"
 }
+
+
+class PaymentProviders(TextChoices):
+    ONE_VISION = "ONE_VISION", "ONE_VISION"
+    KASPI = "KASPI", "KASPI"
