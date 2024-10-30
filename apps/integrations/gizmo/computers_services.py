@@ -40,6 +40,7 @@ class GizmoGetComputersService(BaseGizmoService):
         # print(response.get('result'))
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
+            ClubComputer.objects.exclude(gizmo_id__in=[r['id'] for r in resp_data]).update(is_deleted=True)
             for gizmo_computer in resp_data:
                 computer = ClubComputer.objects.filter(
                     gizmo_id=gizmo_computer['id'],
@@ -47,13 +48,11 @@ class GizmoGetComputersService(BaseGizmoService):
                 ).first()
 
                 if computer:
-                    if gizmo_computer['isDeleted']:
-                        computer.is_deleted = True
-                    else:
-                        computer.is_locked = bool(gizmo_computer['state'] == 2)
-                        computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
-                        computer.number = gizmo_computer['number']
-                        computer.gizmo_hostname = gizmo_computer['hostname']
+                    computer.is_deleted = gizmo_computer['isDeleted']
+                    computer.is_locked = bool(gizmo_computer['state'] == 2)
+                    computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
+                    computer.number = gizmo_computer['number']
+                    computer.gizmo_hostname = gizmo_computer['hostname']
 
                     if not computer.group:
                         group = ClubComputerGroup.objects.filter(

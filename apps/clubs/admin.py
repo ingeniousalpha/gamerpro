@@ -1,9 +1,11 @@
+from django import forms
+from django.forms import TextInput
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
-from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task
+from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task, bot_create_gizmo_user_task
 
 
 class FilterByClubMixin:
@@ -185,10 +187,43 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         return super().response_change(request, obj)
 
 
+class ClubBranchUserForm(forms.ModelForm):
+    class Meta:
+        model = ClubBranchUser
+        fields = ['first_name', 'login', 'gizmo_phone', ]
+        widgets = {
+            'gizmo_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        print("args: ", args)
+        print("kwargs: ", kwargs)
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        print("request: ", self.request)
+        # instance.created_by = self.request.user
+        instance.club_branch = ClubBranch.objects.filter(club=self.request.user.club).first()
+
+        if commit:
+            instance.save()
+
+        # bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch_id)
+        return instance
+
+
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
     list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch', 'created_at',)
+    # form = ClubBranchUserForm
+
+    # def get_form(self, request, obj=None, **kwargs):
+    #     # kwargs['form'] = self.form
+    #     # kwargs['request'] = request
+    #     return super().get_form(request, obj, **kwargs)
 
     def response_change(self, request, obj):
         if "bot_approve_user_from_admin" in request.POST:
@@ -205,6 +240,7 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
 
 class ClubBranchUserInline(admin.TabularInline):
     model = ClubBranchUser
+    fk_name = 'user'
     extra = 0
     fields = (
         "club_branch",
