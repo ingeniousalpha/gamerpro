@@ -90,10 +90,10 @@ class GizmoGetComputersService(BaseGizmoService):
                             serializer.save()
                         except Exception as e:
                             self.log_error(e)
-                ClubComputer.objects.exclude(
-                    club_branch_id=self.instance.id,
-                    gizmo_id__in=[r['id'] for r in resp_data],
-                ).update(is_deleted=True)
+                # ClubComputer.objects.exclude(
+                #     club_branch_id=self.instance.id,
+                #     gizmo_id__in=[r['id'] for r in resp_data],
+                # ).update(is_deleted=True)
 
 
 class GizmoLockComputerService(BaseGizmoService):
