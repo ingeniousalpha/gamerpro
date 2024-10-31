@@ -42,6 +42,17 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_filter = FilterByClubMixin.list_filter + ('is_deleted',)
 
 
+@admin.register(ClubComputerLayoutGroup)
+class ClubComputerLayoutGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
+    list_display = (
+        'club_branch',
+        'name',
+        'outer_id',
+        'is_available',
+    )
+    list_filter = ('club_branch',)
+
+
 class ClubBranchInline(FilterByClubMixin, admin.TabularInline):
     model = ClubBranch
     extra = 0
