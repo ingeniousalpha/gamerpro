@@ -340,11 +340,19 @@ class ClubComputerGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_filter = (
         'club_branch',
     )
+    list_display = (
+        'id',
+        'name',
+        'gizmo_id',
+        'is_deleted',
+        'club_branch',
+    )
 
 
 @admin.register(ClubBranchLegalEntity)
 class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'name',
         'code',
         'branches_amount',
