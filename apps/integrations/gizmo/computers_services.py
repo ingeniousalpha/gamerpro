@@ -42,7 +42,7 @@ class GizmoGetComputersService(BaseGizmoService):
         # print(response.get('result'))
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            with transaction.atomic:
+            with transaction.atomic():
                 for gizmo_computer in resp_data:
                     computer = ClubComputer.objects.filter(
                         gizmo_id=gizmo_computer['id'],
