@@ -56,7 +56,15 @@ class GizmoTimePacketGroupSaveSerializer(serializers.ModelSerializer):
 class GizmoTimePacketSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacket
-        fields = '__all__'
+        fields = (
+            "gizmo_id",
+            "gizmo_name",
+            "display_name",
+            "description",
+            "price",
+            "minutes",
+            "packet_group",
+        )
 
     def create(self, validated_data):
         display_name = validated_data.pop('display_name', "")
