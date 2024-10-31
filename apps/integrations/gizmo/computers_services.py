@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
@@ -40,54 +42,58 @@ class GizmoGetComputersService(BaseGizmoService):
         # print(response.get('result'))
         if response and response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            ClubComputer.objects.exclude(gizmo_id__in=[r['id'] for r in resp_data]).update(is_deleted=True)
-            for gizmo_computer in resp_data:
-                computer = ClubComputer.objects.filter(
-                    gizmo_id=gizmo_computer['id'],
-                    club_branch_id=self.instance.id
-                ).first()
+            with transaction.atomic:
+                for gizmo_computer in resp_data:
+                    computer = ClubComputer.objects.filter(
+                        gizmo_id=gizmo_computer['id'],
+                        club_branch_id=self.instance.id
+                    ).first()
 
-                if computer:
-                    computer.is_deleted = gizmo_computer['isDeleted']
-                    computer.is_locked = bool(gizmo_computer['state'] == 2)
-                    computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
-                    computer.number = gizmo_computer['number']
-                    computer.gizmo_hostname = gizmo_computer['hostname']
+                    if computer:
+                        computer.is_deleted = gizmo_computer['isDeleted']
+                        computer.is_locked = bool(gizmo_computer['state'] == 2)
+                        computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
+                        computer.number = gizmo_computer['number']
+                        computer.gizmo_hostname = gizmo_computer['hostname']
 
-                    if not computer.group:
-                        group = ClubComputerGroup.objects.filter(
-                            gizmo_id=gizmo_computer['hostGroupId'],
-                            club_branch_id=self.instance.id
-                        ).first()
-                        if group:
-                            computer.group = group
+                        if not computer.group:
+                            group = ClubComputerGroup.objects.filter(
+                                gizmo_id=gizmo_computer['hostGroupId'],
+                                club_branch_id=self.instance.id
+                            ).first()
+                            if group:
+                                computer.group = group
 
-                    computer.save()
+                        computer.save()
 
-                else:
-                    group_id = None
-                    if group := ClubComputerGroup.objects.filter(
-                            gizmo_id=gizmo_computer['hostGroupId'],
-                            club_branch_id=self.instance.id
-                    ).first():
-                        group_id = group.id
-                    serializer = self.save_serializer(
-                        data={
-                            "gizmo_id": gizmo_computer['id'],
-                            "number": gizmo_computer['number'],
-                            "gizmo_hostname": gizmo_computer['hostname'],
-                            "club_branch": self.instance.id,
-                            "is_locked": bool(gizmo_computer['state'] == 2),
-                            "is_broken": bool(gizmo_computer['state'] in [1, 3]),
-                            "is_deleted": gizmo_computer['isDeleted'],
-                            "group": group_id,
-                        }
-                    )
-                    try:
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                    except Exception as e:
-                        self.log_error(e)
+                    else:
+                        group_id = None
+                        if group := ClubComputerGroup.objects.filter(
+                                gizmo_id=gizmo_computer['hostGroupId'],
+                                club_branch_id=self.instance.id
+                        ).first():
+                            group_id = group.id
+                        serializer = self.save_serializer(
+                            data={
+                                "gizmo_id": gizmo_computer['id'],
+                                "number": gizmo_computer['number'],
+                                "gizmo_hostname": gizmo_computer['hostname'],
+                                "club_branch": self.instance.id,
+                                "is_locked": bool(gizmo_computer['state'] == 2),
+                                "is_broken": bool(gizmo_computer['state'] in [1, 3]),
+                                "is_deleted": gizmo_computer['isDeleted'],
+                                "group": group_id,
+                            }
+                        )
+                        try:
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save()
+                        except Exception as e:
+                            self.log_error(e)
+                ClubComputer.objects.exclude(
+                    club_branch_id=self.instance.id,
+                    gizmo_id__in=[r['id'] for r in resp_data],
+                ).update(is_deleted=True)
 
 
 class GizmoLockComputerService(BaseGizmoService):
