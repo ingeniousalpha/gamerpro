@@ -154,6 +154,8 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         )
 
     print(f"BRO booking({str(booking.uuid)}) time_packet activated")
+    booking.is_time_packet_set = True
+    booking.save()
 
     bot_notify_about_booking_task.delay(
         club_branch_id=booking.club_branch.id,
@@ -167,8 +169,6 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
     )
-    booking.is_time_packet_set = True
-    booking.save()
 
 
 @cel_app.task
