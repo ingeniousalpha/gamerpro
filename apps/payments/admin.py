@@ -49,6 +49,11 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
     inlines = [PaymentWebhookInline]
     club_filter_field = "booking__club_branch"
 
+    def lookup_allowed(self, lookup, value):
+        if lookup == 'booking__club_branch':
+            return True
+        return super().lookup_allowed(lookup, value)
+
 
 @admin.register(PaymentCard)
 class PaymentCardAdmin(admin.ModelAdmin):
