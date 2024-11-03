@@ -287,7 +287,10 @@ class ClubBranchUserForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean_login(self):
+
         login = self.cleaned_data.get('login')
+        if "bot_approve_user_from_admin" in self.request.POST or "undelete_club_user" in self.request.POST:
+            return login
 
         # Check if a user with this login already exists
         if ClubBranchUser.objects.filter(login=login).exists():
