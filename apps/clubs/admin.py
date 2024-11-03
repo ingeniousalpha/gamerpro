@@ -302,7 +302,7 @@ class ClubBranchUserForm(forms.ModelForm):
         if commit:
             instance.save()
 
-        # bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch.id)
+        bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch.id)
         return instance
 
 
