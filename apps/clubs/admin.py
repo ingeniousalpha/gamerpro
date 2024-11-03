@@ -244,6 +244,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         ClubBranchPriceInline,
         ClubBranchComputerInline,
     ]
+    list_filter = ()
     club_filter_field = "id"
     list_editable = ('priority', 'is_active', 'is_ready',)
     list_display = (
