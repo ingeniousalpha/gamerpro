@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from .tasks import synchronize_gizmo_club_branch
 from .models import *
 from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task, bot_create_gizmo_user_task
+from ..payments.models import Payment
 
 
 class ClubBranchListFilter(admin.SimpleListFilter):
@@ -23,6 +24,8 @@ class ClubBranchListFilter(admin.SimpleListFilter):
             if club_branches.count() > 1:
                 if model_admin.model == ClubTimePacket:
                     self.parameter_name = "club_computer_group__club_branch"
+                elif model_admin.model == Payment:
+                    self.parameter_name = "booking__club_branch"
                 return [(branch.id, branch.name) for branch in club_branches]
         return []
 
