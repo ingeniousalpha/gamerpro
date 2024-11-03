@@ -30,7 +30,7 @@ class ClubBranchListFilter(admin.SimpleListFilter):
         # Filter the queryset based on the selected value
         if self.value():
             print("parameter_name: ", self.parameter_name)
-            return queryset.filter(club_computer_group__club_branch_id=self.value())
+            return queryset.filter(**{f"{self.parameter_name}_id": self.value()})
         return queryset
 
 
