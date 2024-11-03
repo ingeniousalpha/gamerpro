@@ -300,16 +300,16 @@ class ClubBranchUserForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.created_by = self.request.user
-        club_branch = self.request.user.club_branches.first()
-        if not club_branch:
-            club_branch = ClubBranch.objects.filter(is_bro_chain=True).first()
-        instance.club_branch = club_branch
+
+        if not instance.club_branch:
+            instance.club_branch = (self.request.user.club_branches.first() or
+                           ClubBranch.objects.filter(is_bro_chain=True).first())
+            instance.created_by = self.request.user
 
         if commit:
             instance.save()
 
-        bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch.id)
+        bot_create_gizmo_user_task.delay(self.cleaned_data["login"], instance.club_branch.id)
         return instance
 
 
@@ -348,17 +348,17 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
                 'created_by',
             )
 
-    def response_change(self, request, obj):
-        if "bot_approve_user_from_admin" in request.POST:
-            print('bot_approve_user_from_admin')
-            bot_approve_user_from_admin_task(obj.id)
-            self.message_user(request, "Верифицируем и создаем аккаунт юзера...")
-            return HttpResponseRedirect(".")
-        elif "undelete_club_user" in request.POST:
-            undelete_club_user_task.delay(obj.id)
-            self.message_user(request, "Отменяем удаление юзеру в Гизме")
-            return HttpResponseRedirect(".")
-        return super().response_change(request, obj)
+    # def response_change(self, request, obj):
+    #     if "bot_approve_user_from_admin" in request.POST:
+    #         print('bot_approve_user_from_admin')
+    #         bot_approve_user_from_admin_task(obj.id)
+    #         self.message_user(request, "Верифицируем и создаем аккаунт юзера...")
+    #         return HttpResponseRedirect(".")
+    #     elif "undelete_club_user" in request.POST:
+    #         undelete_club_user_task.delay(obj.id)
+    #         self.message_user(request, "Отменяем удаление юзеру в Гизме")
+    #         return HttpResponseRedirect(".")
+    #     return super().response_change(request, obj)
 
 
 class ClubBranchUserInline(admin.TabularInline):
