@@ -39,7 +39,7 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
         'booking',
         'user',
     )
-    list_filter = (
+    list_filter = FilterByClubMixin.list_filter + (
         'created_at',
         'status',
         'provider',
@@ -47,7 +47,7 @@ class PaymentAdmin(FilterByClubMixin, admin.ModelAdmin):
     )
     date_hierarchy = 'created_at'
     inlines = [PaymentWebhookInline]
-    club_filter_field = "booking__club_branch__club"
+    club_filter_field = "booking__club_branch"
 
 
 @admin.register(PaymentCard)

@@ -8,20 +8,93 @@ from .models import *
 from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task, bot_create_gizmo_user_task
 
 
+class ClubBranchListFilter(admin.SimpleListFilter):
+    title = 'club branch'  # The title that will be displayed in the admin UI
+    parameter_name = 'club_branch'  # The parameter used in the URL
+
+    def lookups(self, request, model_admin):
+        if not request.user.club_branches.exists():
+            return []
+
+        if model_admin.model == ClubPerk:
+            self.parameter_name = "club"
+        else:
+            club_branches = request.user.club_branches.all()
+            if club_branches.count() > 1:
+                if model_admin.model == ClubTimePacket:
+                    self.parameter_name = "club_computer_group__club_branch"
+                return [(branch.id, branch.name) for branch in club_branches]
+        return []
+
+    def queryset(self, request, queryset):
+        # Filter the queryset based on the selected value
+        if self.value():
+            print("parameter_name: ", self.parameter_name)
+            return queryset.filter(club_computer_group__club_branch_id=self.value())
+        return queryset
+
+
 class FilterByClubMixin:
-    club_filter_field = "club_branch__club"
-    list_filter = ('club_branch',)
+    club_filter_field = "club_branch"
+    list_filter = (ClubBranchListFilter,)
 
     def get_queryset(self, request):
+        print('FilterByClubMixin')
         queryset = super().get_queryset(request)
 
-        filter_data = {
-            self.club_filter_field: request.user.club
-        }
-
-        if request.user.club:
+        if request.user.club_branches.exists():
+            filter_data = {
+                f"{self.club_filter_field}": request.user.club_branches.first().club
+            } if self.club_filter_field == "club" else {
+                f"{self.club_filter_field}__in": request.user.club_branches.all()
+            }
             queryset = queryset.filter(**filter_data)
+
         return queryset
+
+
+@admin.register(ClubTimePacketGroup)
+class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
+    list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
+    list_editable = ('is_active',)
+
+
+@admin.register(ClubTimePacket)
+class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
+    list_display = (
+        'id',
+        'gizmo_id',
+        'display_name',
+        'packet_group',
+        'club_computer_group',
+        'minutes',
+        'price',
+        'priority',
+        'days_available',
+        # 'available_time_start',
+        # 'available_time_end',
+        'time_available',
+        'is_active',
+    )
+    list_editable = ('priority', 'is_active', 'price',)
+    ordering = ('priority',)
+    club_filter_field = "packet_group__club_branch"
+
+    def lookup_allowed(self, lookup, value):
+        if lookup == 'club_computer_group__club_branch':
+            return True
+        return super().lookup_allowed(lookup, value)
+
+    def days_available(self, obj):
+        days = obj.available_days.values_list('name', flat=True)
+        days_str = ", ".join(days)
+        return days_str if days_str else '-'
+
+    def time_available(self, obj):
+        if obj.available_time_start and obj.available_time_end:
+            return '{0}-{1}'.format(obj.available_time_start, obj.available_time_end)
+
+        return '-'
 
 
 @admin.register(ClubComputer)
@@ -50,7 +123,6 @@ class ClubComputerLayoutGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
         'outer_id',
         'is_available',
     )
-    list_filter = ('club_branch',)
 
 
 class ClubBranchInline(FilterByClubMixin, admin.TabularInline):
@@ -137,10 +209,9 @@ class ClubAdmin(admin.ModelAdmin):
 
 
 @admin.register(ClubPerk)
-class ClubAdmin(FilterByClubMixin, admin.ModelAdmin):
+class ClubPerkAdmin(FilterByClubMixin, admin.ModelAdmin):
     club_filter_field = "club"
     list_display = ('club', 'code', 'name')
-    list_filter = ('club',)
 
 
 @admin.register(ClubBranch)
@@ -173,8 +244,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         ClubBranchPriceInline,
         ClubBranchComputerInline,
     ]
-    club_filter_field = "club"
-    list_filter = ('club',)
+    club_filter_field = "id"
     list_editable = ('priority', 'is_active', 'is_ready',)
     list_display = (
         'id',
@@ -207,21 +277,32 @@ class ClubBranchUserForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        print("args: ", args)
-        print("kwargs: ", kwargs)
+        print("form args: ", args)
+        print("form kwargs: ", kwargs)
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
+    def clean_login(self):
+        login = self.cleaned_data.get('login')
+
+        # Check if a user with this login already exists
+        if ClubBranchUser.objects.filter(login=login).exists():
+            raise forms.ValidationError("Игрок с таким ИИН уже существует. Найдите его в поисковике")
+
+        return login
+
     def save(self, commit=True):
         instance = super().save(commit=False)
-        print("request: ", self.request)
-        # instance.created_by = self.request.user
-        instance.club_branch = ClubBranch.objects.filter(club=self.request.user.club).first()
+        instance.created_by = self.request.user
+        club_branch = self.request.user.club_branches.first()
+        if not club_branch:
+            club_branch = ClubBranch.objects.filter(is_bro_chain=True).first()
+        instance.club_branch = club_branch
 
         if commit:
             instance.save()
 
-        # bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch_id)
+        # bot_create_gizmo_user_task.delay(self.cleaned_data["login"], club_branch.id)
         return instance
 
 
@@ -229,12 +310,36 @@ class ClubBranchUserForm(forms.ModelForm):
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
     list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch', 'created_at',)
-    # form = ClubBranchUserForm
+    form = ClubBranchUserForm
 
-    # def get_form(self, request, obj=None, **kwargs):
-    #     # kwargs['form'] = self.form
-    #     # kwargs['request'] = request
-    #     return super().get_form(request, obj, **kwargs)
+    def get_form(self, request, obj=None, **kwargs):
+        # Get the default form
+        Form = super().get_form(request, obj, **kwargs)
+
+        # Create a new form class that includes the request
+        class FormWithRequest(Form):
+            def __init__(self, *args, **kws):
+                kws['request'] = request
+                super().__init__(*args, **kws)
+
+        # Return the new form class
+        return FormWithRequest
+
+    def get_fields(self, request, obj=None):
+        # Check if we are adding a new object or changing an existing one
+        if obj is None:  # This means we are in the "Add" view
+            return ('first_name', 'login', 'gizmo_phone')
+        else:  # This means we are in the "Change" view
+            return (
+                'created_at',
+                'club_branch',
+                'user',
+                'gizmo_id',
+                'gizmo_phone',
+                'login',
+                'first_name',
+                'created_by',
+            )
 
     def response_change(self, request, obj):
         if "bot_approve_user_from_admin" in request.POST:
@@ -272,47 +377,6 @@ class ClubUserCashbackInline(admin.TabularInline):
     )
 
 
-@admin.register(ClubTimePacketGroup)
-class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
-    list_editable = ('is_active',)
-
-
-@admin.register(ClubTimePacket)
-class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = (
-        'id',
-        'gizmo_id',
-        'display_name',
-        'packet_group',
-        'club_computer_group',
-        'minutes',
-        'price',
-        'priority',
-        'days_available',
-        #'available_time_start',
-        #'available_time_end',
-        'time_available',
-        'is_active',
-    )
-    list_filter = ('club_computer_group__club_branch',)
-    list_editable = ('priority', 'is_active', 'price',)
-    ordering = ('priority',)
-    club_filter_field = "packet_group__club_branch__club"
-
-    def days_available(self, obj):
-        days = obj.available_days.values_list('name', flat=True)
-        days_str = ", ".join(days)
-        return days_str if days_str else '-'
-    
-    
-    def time_available(self, obj):
-        if obj.available_time_start and obj.available_time_end:
-            return '{0}-{1}'.format(obj.available_time_start, obj.available_time_end)
-        
-        return '-'
-
-
 @admin.register(DayModel)
 class DayModelAdmin(admin.ModelAdmin):
     list_display = (
@@ -322,7 +386,7 @@ class DayModelAdmin(admin.ModelAdmin):
 
 
 @admin.register(ClubBranchAdmin)
-class ClubBranchAdminModelAdmin(admin.ModelAdmin):
+class ClubBranchAdminModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'mobile_phone',
         'tg_chat_id',
@@ -330,16 +394,10 @@ class ClubBranchAdminModelAdmin(admin.ModelAdmin):
         'is_active',
         'club_branch',
     )
-    list_filter = (
-        'club_branch',
-    )
 
 
 @admin.register(ClubComputerGroup)
 class ClubComputerGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_filter = (
-        'club_branch',
-    )
     list_display = (
         'id',
         'name',

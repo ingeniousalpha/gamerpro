@@ -362,7 +362,7 @@ class ClubBranchAdmin(models.Model):
     club_branch = models.ForeignKey(
         ClubBranch,
         on_delete=models.CASCADE,
-        related_name="admins",
+        related_name="telegram_admins",
         null=True, blank=True
     )
 

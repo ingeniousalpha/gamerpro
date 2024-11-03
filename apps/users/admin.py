@@ -49,7 +49,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_staff',)
     list_display_links = ('id', 'mobile_phone', 'email', 'is_staff',)
     search_fields = ('email', 'uuid', 'mobile_phone')
-    filter_horizontal = ('groups', 'user_permissions',)
+    filter_horizontal = ('groups', 'user_permissions', 'club_branches',)
     add_form = UserCreationForm
     ordering = ['-created_at']
     inlines = [
@@ -69,11 +69,11 @@ class UserAdmin(BaseUserAdmin):
                 'mobile_phone',
                 'email',
                 'password',
-                'club',
                 'is_superuser',
                 'is_active',
                 'is_staff',
                 'is_email_confirmed',
+                'club_branches',
                 'groups',
                 'user_permissions',
             )
@@ -86,9 +86,9 @@ class UserAdmin(BaseUserAdmin):
                 'email',
                 'password1',
                 'password2',
-                'club',
                 'is_superuser',
                 'is_staff',
+                'club_branches',
                 'groups',
                 'user_permissions',
             ),

@@ -22,12 +22,7 @@ class User(PermissionsMixin, AbstractBaseUser):
     full_name = models.CharField("Имя", max_length=256, null=True, blank=True)
     mobile_phone = PhoneNumberField("Моб. телефон", blank=True, null=True)
     secret_key = models.UUIDField("Секретный ключ", default=uuid_lib.uuid4, unique=True)
-    club = models.ForeignKey(
-        "clubs.Club",
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name="admins",
-    )
+    club_branches = models.ManyToManyField("clubs.ClubBranch", blank=True, related_name="admins")
 
     is_active = models.BooleanField("Активный", default=True)
     is_staff = models.BooleanField("Сотрудник", default=False)
