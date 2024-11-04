@@ -303,10 +303,10 @@ class ClubBranchUserForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
 
-        # if not instance.club_branch:
-        instance.club_branch = (self.request.user.club_branches.first() or
-                       ClubBranch.objects.filter(is_bro_chain=True).first())
-        instance.created_by = self.request.user
+        if not instance.club_branch:
+            instance.club_branch = (self.request.user.club_branches.first() or
+                           ClubBranch.objects.filter(is_bro_chain=True).first())
+            instance.created_by = self.request.user
 
         instance.save()
 
