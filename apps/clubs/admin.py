@@ -305,7 +305,7 @@ class ClubBranchUserForm(forms.ModelForm):
 
         print(instance)
         print(instance.__dict__)
-        if not instance.club_branch:
+        if instance.club_branch_id is None:
             instance.club_branch = (self.request.user.club_branches.first() or
                            ClubBranch.objects.filter(is_bro_chain=True).first())
             instance.created_by = self.request.user
