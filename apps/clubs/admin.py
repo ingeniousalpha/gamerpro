@@ -314,7 +314,7 @@ class ClubBranchUserForm(forms.ModelForm):
 
         elif "bot_approve_user_from_admin" in self.request.POST:
             print('bot_approve_user_from_admin')
-            bot_approve_user_from_admin_task(instance.id)
+            bot_approve_user_from_admin_task.delay(instance.id)
             self.message_user(self.request, "Верифицируем и создаем аккаунт юзера...")
             return HttpResponseRedirect(".")
         elif "undelete_club_user" in self.request.POST:

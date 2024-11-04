@@ -43,13 +43,13 @@ def bot_notify_about_booking_task(club_branch_id, booking_uuid, booking_created_
 @cel_app.task
 def bot_notify_about_new_user_task(club_branch_id, login, first_name, approved=False):
     club_branch = ClubBranch.objects.get(id=club_branch_id)
-    if not club_branch.admins.exists() or not settings.TELEGRAM_BOT_TOKEN:
+    if not club_branch.telegram_admins.exists() or not settings.TELEGRAM_BOT_TOKEN:
         return
 
     full_text = f"Новый пользователь:\n" \
                 f"login: {login}\n" \
                 f"name: {first_name}\n"
-    admin = club_branch.admins.filter(is_active=True).last()
+    admin = club_branch.telegram_admins.filter(is_active=True).last()
     bot = telegram.Bot(token=settings.TELEGRAM_BOT_TOKEN)
     if approved:
         bot.send_message(
