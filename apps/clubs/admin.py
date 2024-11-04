@@ -303,8 +303,6 @@ class ClubBranchUserForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
 
-        print(instance)
-        print(instance.__dict__)
         if instance.club_branch_id is None:
             instance.club_branch = (self.request.user.club_branches.first() or
                            ClubBranch.objects.filter(is_bro_chain=True).first())
@@ -341,6 +339,19 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
         if obj is None:  # This means we are in the "Add" view
             return ('first_name', 'login', 'gizmo_phone')
         else:  # This means we are in the "Change" view
+            return (
+                'created_at',
+                'club_branch',
+                'user',
+                'gizmo_id',
+                'gizmo_phone',
+                'login',
+                'first_name',
+                'created_by',
+            )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and request.user.club_branches.exists():
             return (
                 'created_at',
                 'club_branch',
