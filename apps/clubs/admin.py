@@ -311,6 +311,7 @@ class ClubBranchUserForm(forms.ModelForm):
         instance.save()
 
         bot_create_gizmo_user_task(self.cleaned_data["login"], instance.club_branch.id)
+        instance.refresh_from_db()
         return instance
 
 
