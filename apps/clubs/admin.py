@@ -308,10 +308,19 @@ class ClubBranchUserForm(forms.ModelForm):
                            ClubBranch.objects.filter(is_bro_chain=True).first())
             instance.created_by = self.request.user
 
-        instance.save()
+            instance.save()
+            bot_create_gizmo_user_task(self.cleaned_data["login"], instance.club_branch.id)
+            instance.refresh_from_db()
 
-        bot_create_gizmo_user_task(self.cleaned_data["login"], instance.club_branch.id)
-        instance.refresh_from_db()
+        elif "bot_approve_user_from_admin" in self.request.POST:
+            print('bot_approve_user_from_admin')
+            bot_approve_user_from_admin_task(instance.id)
+            self.message_user(self.request, "Верифицируем и создаем аккаунт юзера...")
+            return HttpResponseRedirect(".")
+        elif "undelete_club_user" in self.request.POST:
+            undelete_club_user_task.delay(instance.id)
+            self.message_user(self.request, "Отменяем удаление юзеру в Гизме")
+
         return instance
 
 
