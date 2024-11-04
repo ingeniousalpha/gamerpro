@@ -313,10 +313,11 @@ class ClubBranchUserForm(forms.ModelForm):
             instance.refresh_from_db()
 
         elif "bot_approve_user_from_admin" in self.request.POST:
-            print('bot_approve_user_from_admin')
+            print('bot_approve_user_from_admin user.id: ', instance.id)
             bot_approve_user_from_admin_task.delay(instance.id)
-            return HttpResponseRedirect(".")
         elif "undelete_club_user" in self.request.POST:
+            print('undelete_club_user user.id: ', instance.id)
+
             undelete_club_user_task.delay(instance.id)
 
         return instance
