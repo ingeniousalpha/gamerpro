@@ -293,7 +293,9 @@ class ClubBranchUserForm(forms.ModelForm):
             return login
 
         # Check if a user with this login already exists
-        if ClubBranchUser.objects.filter(login=login).exists():
+        if ClubBranchUser.objects.filter(
+                club_branch__in=self.request.user.club_branches.all(), login=login
+        ).exists():
             raise forms.ValidationError("Игрок с таким ИИН уже существует. Найдите его в поисковике")
 
         return login
