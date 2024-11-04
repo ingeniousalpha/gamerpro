@@ -308,8 +308,7 @@ class ClubBranchUserForm(forms.ModelForm):
                        ClubBranch.objects.filter(is_bro_chain=True).first())
         instance.created_by = self.request.user
 
-        if commit:
-            instance.save()
+        instance.save()
 
         bot_create_gizmo_user_task(self.cleaned_data["login"], instance.club_branch.id)
         return instance
