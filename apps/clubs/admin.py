@@ -303,6 +303,8 @@ class ClubBranchUserForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
 
+        print(instance)
+        print(instance.__dict__)
         if not instance.club_branch:
             instance.club_branch = (self.request.user.club_branches.first() or
                            ClubBranch.objects.filter(is_bro_chain=True).first())
