@@ -370,6 +370,7 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
                 'first_name',
                 'created_by',
             )
+        return ()
 
     # def response_change(self, request, obj):
     #     if "bot_approve_user_from_admin" in request.POST:
