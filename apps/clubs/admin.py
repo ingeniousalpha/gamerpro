@@ -327,7 +327,7 @@ class ClubBranchUserForm(forms.ModelForm):
         instance = super().save(commit=False)
 
         if instance.club_branch_id is None:
-            instance.club_branch = (self.request.user.club_branches.first() or
+            instance.club_branch = (self.request.user.club_branches.filter(is_bro_chain=True).first() or
                            ClubBranch.objects.filter(is_bro_chain=True).first())
             instance.created_by = self.request.user
 
