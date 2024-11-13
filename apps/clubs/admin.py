@@ -1,5 +1,7 @@
+import re
+
 from django import forms
-from django.forms import TextInput
+from django.forms import TextInput, NumberInput
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
 from django.http import HttpResponseRedirect
@@ -289,6 +291,10 @@ class ClubBranchUserForm(forms.ModelForm):
     def clean_login(self):
 
         login = self.cleaned_data.get('login')
+
+        if not login.isdigit() or len(login) > 12:
+            raise forms.ValidationError("Логин должен состоять только из цифр и  не длиннее 12 цифр")
+
         if "bot_approve_user_from_admin" in self.request.POST or "undelete_club_user" in self.request.POST:
             return login
 
@@ -299,6 +305,23 @@ class ClubBranchUserForm(forms.ModelForm):
             raise forms.ValidationError("Игрок с таким ИИН уже существует. Найдите его в поисковике")
 
         return login
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+
+        if not re.match(r'^[A-Za-zА-Яа-я]+$', first_name):
+            raise forms.ValidationError("Имя должно состоять только из букв")
+
+        return first_name
+
+    def clean_gizmo_phone(self):
+        gizmo_phone = self.cleaned_data.get('gizmo_phone')
+
+        # Validate gizmo_phone format +7XXXXXXXXXX
+        if not re.match(r'^\+\d\d{10}$', gizmo_phone):
+            raise forms.ValidationError("Телефон должен быть формата +7XXXXXXXXXX")
+
+        return gizmo_phone
 
     def save(self, commit=True):
         instance = super().save(commit=False)
