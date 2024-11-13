@@ -309,7 +309,7 @@ class ClubBranchUserForm(forms.ModelForm):
     def clean_first_name(self):
         first_name = self.cleaned_data.get('first_name')
 
-        if not re.match(r'^[A-Za-zА-Яа-я]+$', first_name):
+        if not re.match(r'^[A-Za-z А-Яа-я]+$', first_name):
             raise forms.ValidationError("Имя должно состоять только из букв")
 
         return first_name
