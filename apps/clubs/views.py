@@ -58,9 +58,10 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return super().get_queryset().filter(
+        today = timezone.now().astimezone().weekday() + 1
+        res_queryset = super().get_queryset().filter(
             club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=timezone.now().astimezone().weekday() + 1,
+            is_active=True, available_days__number=today,
         ).filter(
             (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(
                 available_time_end__gte=timezone.now().astimezone().time())) |
@@ -69,6 +70,19 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
                 available_time_start__lte=timezone.now().astimezone().time()))
              )
         ).order_by('priority')
+
+        if today == 1:
+            extra_queryset = super().get_queryset().filter(
+                club_computer_group_id=self.kwargs.get('hall_id'),
+                is_active=True, available_days__number=7,
+            ).filter(Q(available_time_start__gte=F('available_time_end')))
+            minus_queryset = super().get_queryset().filter(
+                club_computer_group_id=self.kwargs.get('hall_id'),
+                is_active=True, available_days__number=today,
+            ).filter(Q(available_time_start__gte=F('available_time_end')))
+            return (res_queryset | extra_queryset).distinct().exclude(pk__in=minus_queryset.values('pk'))
+
+        return res_queryset
 
 
 class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):
