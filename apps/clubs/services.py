@@ -50,10 +50,10 @@ def add_cashback(user, club, from_amount: Decimal = None, amount: int = None):
 def subtract_cashback(user, club, amount: int = None):
     user_cb = ClubUserCashback.objects.filter(user=user, club=club).first()
     if not user_cb or user_cb.cashback_amount < amount:
-        return
-
+        return False
     user_cb.cashback_amount -= amount
     user_cb.save()
+    return True
 
 
 def get_cashback(user, club):

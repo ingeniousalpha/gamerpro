@@ -37,9 +37,9 @@ class GizmoCreateDepositTransactionService(BaseGizmoService):
             raise GizmoRequestError
 
         return DepositReplenishment.objects.create(
-            gizmo_id=response['result']['id'],
+            outer_id=response['result']['id'],
             club_branch=self.instance,
-            club_user=ClubBranchUser.objects.filter(gizmo_id=self.kwargs.get('user_gizmo_id')).first(),
+            club_user=ClubBranchUser.objects.filter(outer_id=self.kwargs.get('user_gizmo_id')).first(),
             user_received_amount=self.kwargs.get('user_received_amount', Decimal(0)),  # amount sent to user balance
             cashback_amount=self.kwargs.get('cashback_amount', Decimal(0)),
             commission_amount=self.kwargs.get('commission_amount'),

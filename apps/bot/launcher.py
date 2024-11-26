@@ -105,7 +105,7 @@ async def command_start_handler(message: Message) -> None:
     if message.from_user.is_bot:
         return
 
-    hey_msg = f"Привет, {hbold(message.from_user.full_name)}! \n\n" \
+    hey_msg = f"Привет, {hbold(message.from_user.name)}! \n\n" \
               f"Это <b>Gamer Pro Admin</b> Бот.\n" \
               f"Отправь cвой сотовый номер, и мы проверим тебя в базе"
 

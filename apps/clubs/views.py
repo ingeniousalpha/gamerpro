@@ -1,15 +1,23 @@
-import pytz
-from datetime import time
 from django.db.models import Q, F
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework import status
+from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
+from rest_framework.response import Response
 
-from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback
-from apps.clubs.serializers import ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, \
-    ClubTimePacketListSerializer, ClubUserCashbackSerializer
-from apps.clubs.tasks import _sync_gizmo_computers_state_of_club_branch
-from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
+from apps.authentication.services import validate_password
+from apps.clubs import SoftwareTypes
+from apps.clubs.exceptions import NeedToInputUserLogin
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubComputerGroup, ClubBranchUser
+from apps.clubs.serializers import (
+    ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
+    ClubUserCashbackSerializer
+)
+from apps.clubs.tasks import _sync_club_branch_computers
+from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, PrivateJSONRendererMixin
 from apps.common.pagination import ClubsPagination
+from apps.integrations.senet.exceptions import SenetIntegrationError
+from apps.integrations.senet.users_services import SenetCreateUserService, SenetSearchUserByUsernameService
 
 
 class ClublistView(PublicJSONRendererMixin, ListAPIView):
@@ -48,7 +56,7 @@ class ClubBranchDetailView(PublicJSONRendererMixin, RetrieveAPIView):
     serializer_class = ClubBranchDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        _sync_gizmo_computers_state_of_club_branch(self.get_object())
+        _sync_club_branch_computers(self.get_object())
         return super().retrieve(request, *args, **kwargs)
 
 
@@ -58,11 +66,23 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        today = timezone.now().astimezone().weekday() + 1
-        res_queryset = super().get_queryset().filter(
-            club_computer_group_id=self.kwargs.get('hall_id'),
-            is_active=True, available_days__number=today,
-        ).filter(
+        hall = (
+            ClubComputerGroup.objects
+            .filter(id=self.kwargs.get('hall_id'))
+            .select_related("club_branch__club")
+            .first()
+        )
+        if not hall:
+            return ClubTimePacket.objects.none()
+        queryset = super().get_queryset().filter(
+            is_active=True,
+            available_days__number=timezone.now().astimezone().weekday() + 1
+        )
+        if hall.club_branch.club.software_type == SoftwareTypes.SENET:
+            queryset = queryset.filter(club=hall.club_branch.club)
+        else:
+            queryset = queryset.filter(club_computer_group_id=self.kwargs.get('hall_id'))
+        return queryset.filter(
             (Q(available_time_start__lte=timezone.now().astimezone().time()) & Q(
                 available_time_end__gte=timezone.now().astimezone().time())) |
             (Q(available_time_start__gte=F('available_time_end')) & (
@@ -105,3 +125,97 @@ class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):
                 user=self.request.user,
             )
         return obj
+
+
+class SenetClubBranchUserRegisterView(PrivateJSONRendererMixin, GenericAPIView):
+    queryset = ClubBranchUser.objects.all()
+    serializer_class = None
+
+    def get_object(self):
+        return get_object_or_404(ClubBranch, pk=self.kwargs.get('pk'))
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        if not isinstance(username, str) or not username:
+            raise NeedToInputUserLogin
+        password = request.data.get('password')
+        validate_password(password)
+        club_branch = self.get_object()
+        if club_branch.main_club_branch:
+            club_branch = club_branch.main_club_branch
+        if ClubBranchUser.objects.filter(club_branch=club_branch, user=request.user).exists():
+            raise SenetIntegrationError(
+                "У Вас уже есть аккаунт в выбранном филиале клуба. "
+                "Пожалуйста, обратитесь к администратору или в службу поддержки."
+            )
+        response = SenetCreateUserService(
+            instance=club_branch,
+            username=username,
+            password=password,
+            mobile_phone=str(request.user.mobile_phone),
+            email=request.user.email
+        ).run()
+        ClubBranchUser.objects.create(
+            club_branch=club_branch,
+            user=request.user,
+            outer_id=response.get('account_id'),
+            outer_phone=response['dic_user'].get('phone'),
+            login=response['dic_user'].get('login'),
+            balance=response.get('account_amount')
+        )
+        return Response({}, status=status.HTTP_201_CREATED)
+
+
+class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
+    queryset = ClubBranchUser.objects.all()
+    serializer_class = None
+
+    def get_object(self):
+        return get_object_or_404(ClubBranch, pk=self.kwargs.get('pk'))
+
+    def post(self, request, *args, **kwargs):
+        exception_message = "{} Пожалуйста, обратитесь к администратору или в службу поддержки."
+        username = request.data.get('username')
+        if not isinstance(username, str) or not username:
+            raise NeedToInputUserLogin
+        club_branch = self.get_object()
+        if club_branch.main_club_branch:
+            club_branch = club_branch.main_club_branch
+        if (
+            ClubBranchUser.objects
+            .filter(club_branch=club_branch, user=request.user)
+            .exclude(login=username)
+            .exists()
+        ):
+            raise SenetIntegrationError(
+                exception_message.format("У Вас уже есть аккаунт в выбранном филиале клуба.")
+            )
+        response = SenetSearchUserByUsernameService(instance=club_branch, username=username).run()
+        if request.user.email != response['dic_user'].get('email'):
+            raise SenetIntegrationError(
+                exception_message.format("Ваш email не совпадает c закрепленным за аккаунтом.")
+            )
+        user_by_username = (
+            ClubBranchUser.objects
+            .filter(club_branch=club_branch, login=username)
+            .order_by('-created_at')
+            .first()
+        )
+        if user_by_username:
+            if not user_by_username.user:
+                user_by_username.user = request.user
+                user_by_username.save(update_fields=['user', 'updated_at'])
+            elif user_by_username.user != request.user:
+                raise SenetIntegrationError(
+                    exception_message.format("Аккаунт закреплен за другим пользователем.")
+                )
+        else:
+            ClubBranchUser.objects.create(
+                club_branch=club_branch,
+                user=request.user,
+                outer_id=response.get('account_id'),
+                outer_phone=response['dic_user'].get('phone'),
+                login=response['dic_user'].get('login'),
+                balance=response.get('account_amount')
+            )
+        return Response({}, status=status.HTTP_200_OK)

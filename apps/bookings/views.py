@@ -14,10 +14,12 @@ from apps.bookings.serializers import (
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
-from .tasks import gizmo_cancel_booking, gizmo_unlock_computers, gizmo_unlock_computers_and_start_user_session, \
+from .tasks import cancel_booking, unlock_computers, gizmo_unlock_computers_and_start_user_session, \
     send_push_about_booking_status
 from constance import config
 
+from ..clubs import SoftwareTypes
+from ..clubs.exceptions import UnavailableForSenet
 from ..clubs.models import DelayedTimeSetting
 from ..integrations.gizmo.users_services import GizmoUpdateComputerStateByUserSessionsService, \
     GizmoEndUserSessionService
@@ -29,7 +31,12 @@ from ..payments.serializers import BookingProlongSerializer, BookingProlongByTim
 
 class BookingMixin:
     def get_object(self):
-        obj = self.queryset.filter(uuid=self.kwargs.get('booking_uuid')).first()
+        obj = (
+            self.queryset
+            .filter(uuid=self.kwargs.get('booking_uuid'))
+            .select_related('club_user__user', 'club_branch__club')
+            .first()
+        )
         if not obj:
             raise BookingNotFound
         return obj
@@ -102,7 +109,7 @@ class CancelBookingView(JSONRendererMixin, BookingMixin, GenericAPIView):
         booking.is_cancelled = True
         booking.status = BookingStatuses.CANCELLED
         booking.save(update_fields=['is_cancelled', 'status'])
-        if not booking.club_user.is_verified:
+        if booking.club_branch.club.software_type == SoftwareTypes.GIZMO and not booking.club_user.is_verified:
             DelayedTimeSetting.objects.create(
                 booking=booking,
                 user=booking.club_user.user,
@@ -110,7 +117,7 @@ class CancelBookingView(JSONRendererMixin, BookingMixin, GenericAPIView):
                 time_packet=booking.time_packet,
             )
         if config.INTEGRATIONS_TURNED_ON:
-            gizmo_cancel_booking.delay(booking.uuid)
+            cancel_booking.delay(booking.uuid)
         send_push_about_booking_status.delay(booking.uuid, BookingStatuses.CANCELLED)
         return Response({})
 
@@ -139,13 +146,19 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
             booking.status = BookingStatuses.PLAYING
             booking.is_starting_session = True
             booking.save(update_fields=['status', 'is_starting_session'])
-            gizmo_unlock_computers_and_start_user_session(booking.uuid)
+            if booking.club_branch.club.software_type == SoftwareTypes.GIZMO:
+                gizmo_unlock_computers_and_start_user_session(booking.uuid)
+            elif booking.club_branch.club.software_type == SoftwareTypes.SENET:
+                unlock_computers.delay(booking.uuid)
             send_push_about_booking_status.delay(booking.uuid, BookingStatuses.PLAYING)
 
-        elif booking.status == BookingStatuses.SESSION_STARTED:
+        elif (
+            booking.status == BookingStatuses.SESSION_STARTED
+            and booking.club_branch.club.software_type == SoftwareTypes.GIZMO
+        ):
             booking.status = BookingStatuses.PLAYING
             booking.save(update_fields=['status'])
-            gizmo_unlock_computers.delay(booking.uuid)
+            unlock_computers.delay(booking.uuid)
 
         return Response({})
 
@@ -156,6 +169,8 @@ class BookingProlongView(JSONRendererMixin, BookingMixin, GenericAPIView):
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
+        if booking.club_branch.club.software_type == SoftwareTypes.SENET:
+            raise UnavailableForSenet
         serializer = self.get_serializer(data={**request.data, 'booking': booking.id})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -168,6 +183,8 @@ class BookingProlongByTimePacketView(JSONRendererMixin, BookingMixin, GenericAPI
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
+        if booking.club_branch.club.software_type == SoftwareTypes.SENET:
+            raise UnavailableForSenet
         serializer = self.get_serializer(data={**request.data, 'booking': booking.id})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -200,6 +217,8 @@ class ComputerSessionFinishView(JSONRendererMixin, BookingMixin, GenericAPIView)
 
     def post(self, request, booking_uuid):
         booking = self.get_object()
+        if booking.club_branch.club.software_type == SoftwareTypes.SENET:
+            raise UnavailableForSenet
         if booking.status not in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]:
             raise BookingStatusIsNotAppropriate
 
@@ -208,10 +227,10 @@ class ComputerSessionFinishView(JSONRendererMixin, BookingMixin, GenericAPIView)
         if config.INTEGRATIONS_TURNED_ON:
             GizmoEndUserSessionService(
                 instance=booking.club_branch,
-                user_id=booking.club_user.gizmo_id
+                user_id=booking.club_user.outer_id
             ).run()
             if booking.status == BookingStatuses.SESSION_STARTED:
-                gizmo_unlock_computers.delay(booking.uuid)
+                unlock_computers.delay(booking.uuid)
         return Response({})
 
 

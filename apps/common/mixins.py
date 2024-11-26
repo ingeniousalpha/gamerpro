@@ -45,3 +45,11 @@ class PublicAPIMixin:
 
 class PublicJSONRendererMixin(JSONRendererMixin, PublicAPIMixin):
     ...
+
+
+class PrivateAPIMixin:
+    permission_classes = [IsAuthenticated]
+
+
+class PrivateJSONRendererMixin(JSONRendererMixin, PrivateAPIMixin):
+    ...

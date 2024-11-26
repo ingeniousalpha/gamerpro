@@ -122,18 +122,18 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             instance=club_branch,
             login=club_user.login,
             first_name=club_user.first_name,
-            mobile_phone=club_user.gizmo_phone,
+            mobile_phone=club_user.outer_phone,
         ).run()
-        club_user.gizmo_id = gizmo_user_id
-        club_user.save(update_fields=['gizmo_id'])
+        club_user.outer_id = gizmo_user_id
+        club_user.save(update_fields=['outer_id'])
     except GizmoLoginAlreadyExistsError as e:
         club_user = GizmoGetUserByUsernameService(
-            instance=club_branch, username=club_user.login, mobile_phone=club_user.gizmo_phone
+            instance=club_branch, username=club_user.login, mobile_phone=club_user.outer_phone
         ).run()
         GizmoUpdateUserByIDService(
             instance=club_branch,
-            user_id=club_user.gizmo_id,
-            mobile_phone=club_user.gizmo_phone,
+            user_id=club_user.outer_id,
+            mobile_phone=club_user.outer_phone,
             first_name=club_user.first_name
         ).run()
 
@@ -146,8 +146,8 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
                 club_branch=branch,
                 login=club_user.login,
                 user=club_user.user,
-                gizmo_id=None,
-                gizmo_phone=club_user.gizmo_phone,
+                outer_id=None,
+                outer_phone=club_user.outer_phone,
                 first_name=club_user.first_name,
             )
 
@@ -155,30 +155,30 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
             branch_club_user.user = club_user.user
             branch_club_user.save()
 
-        if branch_club_user and not branch_club_user.gizmo_id:
+        if branch_club_user and not branch_club_user.outer_id:
             try:
                 gizmo_user_id = GizmoCreateUserService(
                     instance=branch,
                     login=club_user.login,
                     first_name=club_user.first_name,
-                    mobile_phone=club_user.gizmo_phone,
+                    mobile_phone=club_user.outer_phone,
                 ).run()
-                branch_club_user.gizmo_id = gizmo_user_id
-                branch_club_user.save(update_fields=['gizmo_id'])
+                branch_club_user.outer_id = gizmo_user_id
+                branch_club_user.save(update_fields=['outer_id'])
             except GizmoLoginAlreadyExistsError as e:
                 branch_club_user = GizmoGetUserByUsernameService(
-                    instance=branch, username=club_user.login, mobile_phone=club_user.gizmo_phone,
+                    instance=branch, username=club_user.login, mobile_phone=club_user.outer_phone,
                 ).run()
                 branch_club_user.user = club_user.user
 
                 GizmoUpdateUserByIDService(
                     instance=club_branch,
-                    user_id=branch_club_user.gizmo_id,
-                    mobile_phone=club_user.gizmo_phone,
+                    user_id=branch_club_user.outer_id,
+                    mobile_phone=club_user.outer_phone,
                     first_name=club_user.first_name
                 ).run()
 
-                branch_club_user.gizmo_phone = club_user.gizmo_phone
+                branch_club_user.outer_phone = club_user.outer_phone
                 branch_club_user.first_name = club_user.first_name
                 branch_club_user.save()
             except Exception:

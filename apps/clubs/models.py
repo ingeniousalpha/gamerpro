@@ -1,4 +1,6 @@
 from django.db import models
+
+from apps.clubs import SoftwareTypes
 from apps.clubs.managers import HallTypesManager
 from apps.common.models import TimestampModel
 from apps.integrations.models import OuterServiceLogHistory
@@ -28,6 +30,7 @@ class Club(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
+    software_type = models.CharField(choices=SoftwareTypes.choices, null=True, max_length=20)
 
     class Meta:
         verbose_name = "Клуб"
@@ -55,13 +58,24 @@ class ClubBranchLegalEntity(models.Model):
 
 
 class ClubBranch(OuterServiceLogHistory):
+    outer_id = models.CharField("Внешний ID точки в системе партнера", null=True, blank=True, max_length=20)
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
+    main_club_branch = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='siblings',
+        verbose_name="Основной филиал"
+    )
     name = models.CharField(max_length=50)
     trader_name = models.CharField(max_length=256, default="")
     address = models.CharField(max_length=255)
     api_host = models.URLField("Белый IP адрес филиала", default="http://127.0.0.1:8000")
     api_user = models.CharField("Логин для API филиала", max_length=20, null=True)
     api_password = models.CharField("Пароль для API филиала", max_length=20, null=True)
+    cashbox_user = models.CharField("Логин для кассы филиала", max_length=20, null=True, blank=True)
+    cashbox_password = models.CharField("Пароль для кассы филиала", max_length=20, null=True, blank=True)
     gizmo_payment_method = models.IntegerField(default=2)  # payment method - online payment
     gizmo_points_method = models.IntegerField(default=-4)  # payment method - points payment
     is_active = models.BooleanField(default=False)
@@ -91,6 +105,9 @@ class ClubBranch(OuterServiceLogHistory):
     def __str__(self):
         return f"{self.club} {self.name}"
 
+    def software_type(self):
+        return self.club.software_type
+
 
 class ClubPerk(models.Model):
     club = models.ForeignKey(
@@ -112,7 +129,7 @@ class ClubPerk(models.Model):
 class ClubComputerGroup(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")
     name = models.CharField(max_length=20)
-    gizmo_id = models.IntegerField(null=True)
+    outer_id = models.IntegerField(null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -138,6 +155,7 @@ class ClubComputerLayoutGroup(models.Model):
 
 
 class ClubComputer(models.Model):
+    outer_id = models.IntegerField(null=True, db_index=True)
     club_branch = models.ForeignKey(
         ClubBranch,
         on_delete=models.CASCADE,
@@ -159,12 +177,11 @@ class ClubComputer(models.Model):
     is_locked = models. BooleanField(default=False)
     is_broken = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
-    gizmo_id = models.IntegerField(null=True, db_index=True)
-    gizmo_hostname = models.CharField(max_length=10, null=True)
+    outer_hostname = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
-        if self.gizmo_hostname:
-            return self.gizmo_hostname
+        if self.outer_hostname:
+            return self.outer_hostname
         return f"Comp({self.number})"
 
     class Meta:
@@ -191,7 +208,7 @@ class DayModel(models.Model):
 
 
 class ClubTimePacketGroup(models.Model):
-    gizmo_id = models.IntegerField(null=True)
+    outer_id = models.IntegerField(null=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     club_branch = models.ForeignKey(
@@ -214,28 +231,36 @@ class ClubTimePacketGroup(models.Model):
 
 
 class ClubTimePacket(models.Model):
-    gizmo_id = models.IntegerField(null=True)
-    gizmo_name = models.CharField(max_length=255)
+    outer_id = models.IntegerField(null=True)
+    outer_name = models.CharField(max_length=255)
     display_name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
-    minutes = models.IntegerField(default=0)
+    minutes = models.IntegerField(default=0, null=True, blank=True)
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="time_packets"
+    )
     packet_group = models.ForeignKey(
         ClubTimePacketGroup,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="packets"
     )
     club_computer_group = models.ForeignKey(
         ClubComputerGroup,
-        related_name="time_packets_group",
-        null=True, blank=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="time_packets"
     )
     priority = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
-    available_days = models.ManyToManyField(
-        DayModel, related_name="time_packets",
-    )
+    available_days = models.ManyToManyField(DayModel, related_name="time_packets")
     available_time_start = models.TimeField(null=True, blank=True)
     available_time_end = models.TimeField(null=True, blank=True)
 
@@ -244,7 +269,12 @@ class ClubTimePacket(models.Model):
         verbose_name_plural = "Пакеты"
 
     def __str__(self):
-        return f"{self.packet_group}({self.name})"
+        if self.club_computer_group:
+            return f"{self.club_computer_group} ({self.name})"
+        if self.packet_group:
+            return f"{self.packet_group.computer_group} ({self.name})"
+        if self.club:
+            return f"{self.club} ({self.name})"
 
     @property
     def name(self):
@@ -302,8 +332,8 @@ class ClubBranchUser(TimestampModel):
         related_name="club_accounts",
         null=True, blank=True
     )
-    gizmo_id = models.IntegerField(null=True, blank=True, db_index=True)
-    gizmo_phone = models.CharField(max_length=12, null=True, db_index=True)
+    outer_id = models.IntegerField(null=True, blank=True, db_index=True)
+    outer_phone = models.CharField(max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
     first_name = models.CharField(max_length=100, null=True, blank=False)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
@@ -327,10 +357,14 @@ class ClubBranchUser(TimestampModel):
 
     @property
     def is_verified(self):
-        return bool(self.gizmo_id)
+        return bool(self.outer_id)
 
     def __str__(self):
-        return f"{self.login}({self.gizmo_phone})"
+        if self.outer_phone:
+            return f"{self.login}({self.outer_phone})"
+        if self.user and self.user.mobile_phone:
+            return f"{self.login}({self.user.mobile_phone})"
+        return self.login
 
     class Meta:
         verbose_name = "Юзер в гизмо"

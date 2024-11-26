@@ -9,7 +9,7 @@ from apps.integrations.gizmo.users_services import GizmoUpdateComputerStateByUse
 def check_user_session(club_user):
     active_users = GizmoUpdateComputerStateByUserSessionsService(instance=club_user.club_branch).run()
     print(f"{active_users=}")
-    active_session = next((u for u in active_users if u['user_gizmo_id'] == club_user.gizmo_id), None)
+    active_session = next((u for u in active_users if u['user_gizmo_id'] == club_user.outer_id), None)
     if active_session:
         if not Booking.objects.filter(
                 club_user=club_user,
@@ -28,5 +28,5 @@ def check_user_session(club_user):
             )
             BookedComputer.objects.create(
                 booking=booking,
-                computer=ClubComputer.objects.filter(gizmo_id=active_session['computer_gizmo_id']).first()
+                computer=ClubComputer.objects.filter(outer_id=active_session['computer_gizmo_id']).first()
             )

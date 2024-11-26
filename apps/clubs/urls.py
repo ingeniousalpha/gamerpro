@@ -1,12 +1,8 @@
 from django.urls import path
 
 from apps.clubs.views import (
-    ClublistView,
-    ClubBranchlistView,
-    BROClubBranchlistView,
-    ClubBranchDetailView,
-    ClubBranchTimePacketListView,
-    ClubUserCashbackView,
+    ClublistView, ClubBranchlistView, BROClubBranchlistView, ClubBranchDetailView, ClubBranchTimePacketListView,
+    ClubUserCashbackView, SenetClubBranchUserLoginView, SenetClubBranchUserRegisterView
 )
 
 urlpatterns = [
@@ -15,5 +11,7 @@ urlpatterns = [
     path('branches', ClubBranchlistView.as_view()),
     path('branches/bro', BROClubBranchlistView.as_view()),
     path('branches/<int:pk>', ClubBranchDetailView.as_view()),
+    path('branches/<int:pk>/users/register/', SenetClubBranchUserRegisterView.as_view()),
+    path('branches/<int:pk>/users/login/', SenetClubBranchUserLoginView.as_view()),
     path('branches/<int:pk>/time_packets/<int:hall_id>', ClubBranchTimePacketListView.as_view()),
 ]

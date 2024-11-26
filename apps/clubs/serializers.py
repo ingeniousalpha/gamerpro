@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.authentication.exceptions import UserNotFound
+from . import SoftwareTypes
 from .models import (
     Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
     ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup
@@ -47,8 +48,12 @@ class ClubUserSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
     def get_user(self, obj):
-        if self.user and ClubBranchUser.objects.filter(user=self.user, club_branch=obj).exists():
-            return BaseClubUserSerializer(obj, context=self.context).data
+        if obj.club.software_type == SoftwareTypes.SENET:
+            club_branch = obj.main_club_branch or obj
+        else:
+            club_branch = obj
+        if self.user and ClubBranchUser.objects.filter(user=self.user, club_branch=club_branch).exists():
+            return BaseClubUserSerializer(club_branch, context=self.context).data
 
 
 class ClubListSerializer(serializers.ModelSerializer):

@@ -3,12 +3,12 @@ from django.db import transaction
 from apps.clubs.models import ClubComputer, ClubComputerGroup
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import GizmoRequestError
-from apps.integrations.gizmo.serializers import GizmoComputersSaveSerializer, GizmoComputerGroupsSaveSerializer
+from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer, OuterComputersSaveSerializer
 
 
 class GizmoGetComputerGroupsService(BaseGizmoService):
     endpoint = "/api/hostgroups"
-    save_serializer = GizmoComputerGroupsSaveSerializer
+    save_serializer = OuterComputerGroupsSaveSerializer
     method = "GET"
 
     def save(self, response):
@@ -16,13 +16,13 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
             resp_data = response['result']
             for gizmo_comp_group in resp_data:
                 if not ClubComputerGroup.objects.filter(
-                    gizmo_id=gizmo_comp_group['id'],
+                    outer_id=gizmo_comp_group['id'],
                     club_branch_id=self.instance.id
                 ).exists():
                     try:
                         serializer = self.save_serializer(
                             data={
-                                "gizmo_id": gizmo_comp_group['id'],
+                                "outer_id": gizmo_comp_group['id'],
                                 "name": gizmo_comp_group['name'],
                                 "club_branch": self.instance.id,
                             }
@@ -35,7 +35,7 @@ class GizmoGetComputerGroupsService(BaseGizmoService):
 
 class GizmoGetComputersService(BaseGizmoService):
     endpoint = "/api/hostcomputers"
-    save_serializer = GizmoComputersSaveSerializer
+    save_serializer = OuterComputersSaveSerializer
     method = "GET"
 
     def save(self, response):
@@ -45,7 +45,7 @@ class GizmoGetComputersService(BaseGizmoService):
             with transaction.atomic():
                 for gizmo_computer in resp_data:
                     computer = ClubComputer.objects.filter(
-                        gizmo_id=gizmo_computer['id'],
+                        outer_id=gizmo_computer['id'],
                         club_branch_id=self.instance.id
                     ).first()
 
@@ -58,7 +58,7 @@ class GizmoGetComputersService(BaseGizmoService):
 
                         if not computer.group:
                             group = ClubComputerGroup.objects.filter(
-                                gizmo_id=gizmo_computer['hostGroupId'],
+                                outer_id=gizmo_computer['hostGroupId'],
                                 club_branch_id=self.instance.id
                             ).first()
                             if group:
@@ -69,15 +69,15 @@ class GizmoGetComputersService(BaseGizmoService):
                     else:
                         group_id = None
                         if group := ClubComputerGroup.objects.filter(
-                                gizmo_id=gizmo_computer['hostGroupId'],
+                                outer_id=gizmo_computer['hostGroupId'],
                                 club_branch_id=self.instance.id
                         ).first():
                             group_id = group.id
                         serializer = self.save_serializer(
                             data={
-                                "gizmo_id": gizmo_computer['id'],
+                                "outer_id": gizmo_computer['id'],
                                 "number": gizmo_computer['number'],
-                                "gizmo_hostname": gizmo_computer['hostname'],
+                                "outer_hostname": gizmo_computer['hostname'],
                                 "club_branch": self.instance.id,
                                 "is_locked": bool(gizmo_computer['state'] == 2),
                                 "is_broken": bool(gizmo_computer['state'] in [1, 3]),

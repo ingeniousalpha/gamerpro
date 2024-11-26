@@ -10,29 +10,29 @@ from apps.clubs.services import get_correct_phone
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError, \
     GizmoLoginAlreadyExistsError
-from apps.integrations.gizmo.serializers import GizmoUserSaveSerializer
+from apps.integrations.soft_serializers import OuterUserSaveSerializer
 
 User = get_user_model()
 
 
 class GizmoGetUsersService(BaseGizmoService):
     endpoint = "/api/users"
-    save_serializer = GizmoUserSaveSerializer
+    save_serializer = OuterUserSaveSerializer
     method = "GET"
 
     def save(self, response):
         if response.get('result') and isinstance(response['result'], list):
             resp_data = response['result']
-            existed_ids = list(ClubBranchUser.objects.filter(club_branch=self.instance).values_list('gizmo_id', flat=True))
+            existed_ids = list(ClubBranchUser.objects.filter(club_branch=self.instance).values_list('outer_id', flat=True))
             non_existent_users = list(filter(lambda i: i['id'] not in existed_ids, resp_data))
 
             for gizmo_user in non_existent_users:
                 try:
-                    gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
+                    outer_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
                     serializer = self.save_serializer(
                         data={
-                            "gizmo_id": gizmo_user['id'],
-                            "gizmo_phone": gizmo_phone,
+                            "outer_id": gizmo_user['id'],
+                            "outer_phone": outer_phone,
                             "login": gizmo_user['username'],
                             "first_name": gizmo_user['firstName'],
                             "club_branch": self.instance.id
@@ -77,13 +77,13 @@ class GizmoSyncUsersService(BaseGizmoService):
             for user in users_to_update:
                 need_update = False
 
-                if user.gizmo_id != gizmo_map[user.login]['id']:
-                    user.gizmo_id = gizmo_map[user.login]['id']
+                if user.outer_id != gizmo_map[user.login]['id']:
+                    user.outer_id = gizmo_map[user.login]['id']
                     need_update = True
 
-                gizmo_phone = get_correct_phone(gizmo_map[user.login]['phone'], gizmo_map[user.login]['mobilePhone'])
-                if user.gizmo_phone is None and gizmo_phone:
-                    user.gizmo_phone = gizmo_phone
+                outer_phone = get_correct_phone(gizmo_map[user.login]['phone'], gizmo_map[user.login]['mobilePhone'])
+                if user.outer_phone is None and outer_phone:
+                    user.outer_phone = outer_phone
                     need_update = True
 
                 if user.first_name is None and gizmo_map[user.login]['firstName']:
@@ -94,17 +94,17 @@ class GizmoSyncUsersService(BaseGizmoService):
                     users_to_update_list.append(user)
 
             if users_to_update_list:
-                ClubBranchUser.objects.bulk_update(users_to_update_list, ['gizmo_id', 'first_name', 'gizmo_phone'])
+                ClubBranchUser.objects.bulk_update(users_to_update_list, ['outer_id', 'first_name', 'outer_phone'])
 
             # CREATE NON EXISTENT USERS
             users_to_create_list = []
             for gizmo_user in non_existent_logins:
                 try:
-                    gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
+                    outer_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
                     users_to_create_list.append(
                         ClubBranchUser(
-                            gizmo_id=gizmo_user['id'],
-                            gizmo_phone=gizmo_phone,
+                            outer_id=gizmo_user['id'],
+                            outer_phone=outer_phone,
                             login=gizmo_user['username'],
                             first_name=gizmo_user['firstName'],
                             club_branch=self.instance
@@ -132,30 +132,30 @@ class GizmoGetUserByUsernameService(BaseGizmoService):
         if not gizmo_user:
             raise UserNotFound
 
-        gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
-        if not gizmo_phone and not self.kwargs.get('mobile_phone'):
+        outer_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
+        if not outer_phone and not self.kwargs.get('mobile_phone'):
             raise UserDoesNotHavePhoneNumber
 
         try:
-            user = User.objects.filter(mobile_phone=gizmo_phone).first()
+            user = User.objects.filter(mobile_phone=outer_phone).first()
             if user:
                 user = user.id
             existing_club_user = ClubBranchUser.objects.filter(
                 club_branch_id=self.instance.id, login=gizmo_user['username']
             ).first()
             if existing_club_user:
-                serializer = GizmoUserSaveSerializer(
+                serializer = OuterUserSaveSerializer(
                     instance=existing_club_user,
                     data={
-                        "gizmo_id": gizmo_user['id'],
+                        "outer_id": gizmo_user['id'],
                         "club_branch": self.instance.id,
                     }
                 )
             else:
-                serializer = GizmoUserSaveSerializer(
+                serializer = OuterUserSaveSerializer(
                     data={
-                        "gizmo_id": gizmo_user['id'],
-                        "gizmo_phone": gizmo_phone,
+                        "outer_id": gizmo_user['id'],
+                        "outer_phone": outer_phone,
                         "login": gizmo_user['username'],
                         "first_name": gizmo_user['firstName'],
                         "club_branch": self.instance.id,
@@ -205,7 +205,7 @@ class GizmoGetUserBalanceService(BaseGizmoService):
         if not gizmo_user:
             raise UserNotFound
 
-        club_user = ClubBranchUser.objects.filter(gizmo_id=gizmo_user["userId"]).first()
+        club_user = ClubBranchUser.objects.filter(outer_id=gizmo_user["userId"]).first()
         if club_user:
             club_user.balance = gizmo_user['balance']
             club_user.save()
@@ -231,14 +231,14 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
 
             if len(resp_data) > 0:
                 ClubComputer.objects.filter(
-                    gizmo_id__in=[r['hostId'] for r in resp_data],
+                    outer_id__in=[r['hostId'] for r in resp_data],
                     club_branch_id=self.instance.id,
                     is_active_session=False
                 ).update(is_active_session=True)
 
             # when resp_data is [], then it updates all computers
             ClubComputer.objects.filter(club_branch_id=self.instance.id)\
-                .exclude(gizmo_id__in=[r['hostId'] for r in resp_data],)\
+                .exclude(outer_id__in=[r['hostId'] for r in resp_data],)\
                 .filter(is_active_session=True)\
                 .update(is_active_session=False)
 
@@ -258,7 +258,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
             )
             active_users_ids = [u['user_gizmo_id'] for u in active_users]
             for booking in uncompleted_bookings:
-                if booking.club_user.gizmo_id not in active_users_ids:
+                if booking.club_user.outer_id not in active_users_ids:
                     booking.status = BookingStatuses.COMPLETED
                     booking.save(update_fields=['status'])
                     send_push_about_booking_status(booking.uuid, BookingStatuses.COMPLETED)
@@ -266,7 +266,7 @@ class GizmoUpdateComputerStateByUserSessionsService(BaseGizmoService):
             # Bookings where computer is turning on...
             starting_bookings = Booking.objects.filter(club_branch_id=self.instance.id, is_starting_session=True)
             for booking in starting_bookings:
-                if booking.club_user.gizmo_id in active_users_ids:
+                if booking.club_user.outer_id in active_users_ids:
                     booking.is_starting_session = False
                     booking.save(update_fields=['is_starting_session'])
 

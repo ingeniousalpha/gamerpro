@@ -5,7 +5,7 @@ from django.forms import TextInput, NumberInput
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
 from django.http import HttpResponseRedirect
-from .tasks import synchronize_gizmo_club_branch
+from .tasks import synchronize_club_branch
 from .models import *
 from apps.bot.tasks import bot_approve_user_from_admin_task, undelete_club_user_task, bot_create_gizmo_user_task
 from ..payments.models import Payment
@@ -60,7 +60,7 @@ class FilterByClubMixin:
 
 @admin.register(ClubTimePacketGroup)
 class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
+    list_display = ('outer_id', 'name', 'is_active', 'club_branch')
     list_editable = ('is_active',)
 
 
@@ -68,7 +68,7 @@ class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
-        'gizmo_id',
+        'outer_id',
         'display_name',
         'packet_group',
         'club_computer_group',
@@ -108,9 +108,9 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'group',
-        'gizmo_id',
+        'outer_id',
         'number',
-        'gizmo_hostname',
+        'outer_hostname',
         'is_booked',
         'is_active_session',
         'is_locked',
@@ -176,7 +176,7 @@ class ClubBranchComputerInline(FilterByClubMixin, admin.TabularInline):
     extra = 0
     ordering = ['number']
     fields = (
-        'id', 'group', 'layout_group', 'gizmo_id', 'gizmo_hostname',
+        'id', 'group', 'layout_group', 'outer_id', 'outer_hostname',
         'is_locked', 'is_active_session', 'is_broken', 'is_deleted'
     )
     readonly_fields = ('group',)
@@ -207,6 +207,7 @@ class ClubAdmin(admin.ModelAdmin):
     inlines = [ClubBranchInline]
     fields = (
         'name',
+        'software_type',
         'description',
         'code',
         'is_bro_chain',
@@ -223,14 +224,16 @@ class ClubPerkAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'club',
+        'main_club_branch',
         'name',
+        'outer_id',
         'trader_name',
         'trader',
         'address',
         'city',
         'api_host',
-        'api_user',
-        'api_password',
+        ('api_user', 'api_password'),
+        ('cashbox_user', 'cashbox_password'),
         'gizmo_payment_method',
         'gizmo_points_method',
         'is_active',
@@ -266,10 +269,9 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     }
 
     def response_change(self, request, obj):
-        if "sync_gizmo" in request.POST:
-            print('sync_gizmo')
-            synchronize_gizmo_club_branch.delay(obj.id)
-            self.message_user(request, "Synchronizing GIZMO club info")
+        if "sync_branch" in request.POST:
+            synchronize_club_branch.delay(obj.id)
+            self.message_user(request, "Club branch synchronization started")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 
@@ -277,9 +279,9 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchUserForm(forms.ModelForm):
     class Meta:
         model = ClubBranchUser
-        fields = ['first_name', 'login', 'gizmo_phone', ]
+        fields = ['first_name', 'login', 'outer_phone', ]
         widgets = {
-            'gizmo_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
+            'outer_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
         }
 
     def __init__(self, *args, **kwargs):
@@ -314,14 +316,14 @@ class ClubBranchUserForm(forms.ModelForm):
 
         return first_name
 
-    def clean_gizmo_phone(self):
-        gizmo_phone = self.cleaned_data.get('gizmo_phone')
+    def clean_outer_phone(self):
+        outer_phone = self.cleaned_data.get('outer_phone')
 
-        # Validate gizmo_phone format +7XXXXXXXXXX
-        if not re.match(r'^\+\d\d{10}$', gizmo_phone):
+        # Validate outer_phone format +7XXXXXXXXXX
+        if not re.match(r'^\+\d\d{10}$', outer_phone):
             raise forms.ValidationError("Телефон должен быть формата +7XXXXXXXXXX")
 
-        return gizmo_phone
+        return outer_phone
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -348,8 +350,8 @@ class ClubBranchUserForm(forms.ModelForm):
 
 @admin.register(ClubBranchUser)
 class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
-    search_fields = ('gizmo_id', 'login', 'gizmo_phone', 'user__mobile_phone', 'first_name')
-    list_display = ('gizmo_id', 'login', 'gizmo_phone', 'club_branch', 'created_at',)
+    search_fields = ('outer_id', 'login', 'outer_phone', 'user__mobile_phone', 'first_name')
+    list_display = ('outer_id', 'login', 'outer_phone', 'club_branch', 'created_at')
     form = ClubBranchUserForm
 
     def get_form(self, request, obj=None, **kwargs):
@@ -368,14 +370,14 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     def get_fields(self, request, obj=None):
         # Check if we are adding a new object or changing an existing one
         if obj is None:  # This means we are in the "Add" view
-            return ('first_name', 'login', 'gizmo_phone')
+            return ('first_name', 'login', 'outer_phone')
         else:  # This means we are in the "Change" view
             return (
                 'created_at',
                 'club_branch',
                 'user',
-                'gizmo_id',
-                'gizmo_phone',
+                'outer_id',
+                'outer_phone',
                 'login',
                 'first_name',
                 'created_by',
@@ -387,8 +389,8 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
                 'created_at',
                 'club_branch',
                 'user',
-                'gizmo_id',
-                'gizmo_phone',
+                'outer_id',
+                'outer_phone',
                 'login',
                 'first_name',
                 'created_by',
@@ -414,8 +416,8 @@ class ClubBranchUserInline(admin.TabularInline):
     extra = 0
     fields = (
         "club_branch",
-        "gizmo_id",
-        "gizmo_phone",
+        "outer_id",
+        "outer_phone",
         "login",
         "first_name",
         "balance",
@@ -455,7 +457,7 @@ class ClubComputerGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'name',
-        'gizmo_id',
+        'outer_id',
         'is_deleted',
         'club_branch',
     )

@@ -10,8 +10,9 @@ from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBoo
     NotApprovedUserCanNotBookSeveralComputers, NotSufficientCashbackAmount
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
-from apps.bookings.tasks import gizmo_book_computers, gizmo_lock_computers, send_push_about_booking_status, \
-    gizmo_bro_add_time_and_set_booking_expiration
+from apps.bookings.tasks import gizmo_book_computers, lock_computers, send_push_about_booking_status, \
+    gizmo_bro_add_time_and_set_booking_expiration, senet_replenish_user_balance
+from apps.clubs import SoftwareTypes
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.serializers import ClubBranchSerializer
 from apps.clubs.services import get_cashback
@@ -69,6 +70,7 @@ class BaseCreateBookingSerializer(
             amount = attrs['time_packet'].price
         else:
             amount = attrs.get('amount', Decimal(0))
+        attrs['amount'] = amount
         attrs['commission_amount'] = Booking.get_commission_amount(amount)
         attrs['total_amount'] = attrs['commission_amount'] + amount
         return attrs
@@ -126,7 +128,7 @@ class CreateBookingByPaymentSerializer(BaseCreateBookingSerializer):
             ).run()
             if payment_url:
                 if config.INTEGRATIONS_TURNED_ON:
-                    gizmo_lock_computers(str(instance.uuid))
+                    lock_computers(str(instance.uuid))
                 self.context['payment_url'] = payment_url
             else:
                 raise Exception("There is no payment_url")
@@ -162,9 +164,11 @@ class CreateBookingByCardPaymentSerializer(BaseCreateBookingSerializer):
                 raise OVRecurrentPaymentFailed(error)
             if config.INTEGRATIONS_TURNED_ON:
                 if instance.club_branch.club.name.lower() == "bro":
-                    gizmo_lock_computers(str(instance.uuid))
+                    lock_computers(str(instance.uuid))
                     if instance.club_user.is_verified:
                         gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid))
+                elif instance.club_branch.club.software_type == SoftwareTypes.SENET:
+                    lock_computers(str(instance.uuid))
                 else:
                     gizmo_book_computers(str(instance.uuid))
             self.context['status'] = PAYMENT_STATUSES_MAPPER.get(int(payment.status))
@@ -192,9 +196,12 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
             instance.save()
             if config.INTEGRATIONS_TURNED_ON:
                 if instance.club_branch.club.name.lower() == "bro":
-                    gizmo_lock_computers(str(instance.uuid))
+                    lock_computers(str(instance.uuid))
                     if instance.club_user.is_verified:
                         gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid), by_points=True)
+                elif instance.club_branch.club.software_type == SoftwareTypes.SENET:
+                    lock_computers(str(instance.uuid))
+                    senet_replenish_user_balance.delay(instance.uuid, True)
                 else:
                     # TODO: this need to check is it working
                     gizmo_book_computers(str(instance.uuid))
@@ -226,7 +233,7 @@ class CreateBookingByTimePacketKaspiSerializer(CreateBookingByPaymentSerializer)
             ).run()
             if deeplink_url:
                 if config.INTEGRATIONS_TURNED_ON:
-                    gizmo_lock_computers(str(instance.uuid))
+                    lock_computers(str(instance.uuid))
                 self.context['payment_url'] = deeplink_url
             else:
                 # self.context['payment_url'] = "https://kaspi.kz/pay/quickpayment?quick_pay_id=BRO2126950030318289c5-3d25-4b36-95fa-e754fae88c5f19:08:02"

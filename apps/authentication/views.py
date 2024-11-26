@@ -1,29 +1,27 @@
-from django.contrib.auth import get_user_model
-from django.conf import settings
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenRefreshView as DRFTokenRefreshView
-from rest_framework.generics import CreateAPIView, GenericAPIView
+import logging
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView as DRFTokenRefreshView
 
 from apps.common.mixins import PublicJSONRendererMixin
-
-# from apps.notifications.tasks import task_send_letter_for_email_confirmation
+from .exceptions import UserNotFound
+from .models import TGAuthUser
 from .serializers import (
-    SigninWithoutOTPSerializer, TokenRefreshSerializer, SigninByUsernameSerializer, VerifyOTPSerializer,
+    SigninWithoutOTPSerializer, TokenRefreshSerializer, VerifyOTPSerializer,
     MyTokenObtainSerializer, SigninByUsernameNewSerializer,
-    SigninWithOTPSerializer, RegisterV2Serializer)
-from .services import generate_access_and_refresh_tokens_for_user
-from ..bookings.services import check_user_session
-from ..clubs.exceptions import NeedToInputUserLogin
-from ..clubs.services import get_club_branch_user_by_username
-from ..integrations.gizmo.users_services import GizmoGetUserByUsernameService
-from ..users.services import get_or_create_user_by_phone
-
-from rest_framework_simplejwt.views import TokenObtainPairView
-
+    SigninWithOTPSerializer, RegisterV2Serializer, VerifyOTPV3Serializer, SetEmailSerializer
+)
+from .services import tg_auth_send_otp_code, generate_access_and_refresh_tokens_for_user
+from ..clubs.exceptions import EmailIsRequired
+from ..common.exceptions import InvalidInputData
 
 User = get_user_model()
+logger = logging.getLogger("authentication")
 
 
 class SigninView(PublicJSONRendererMixin, CreateAPIView):
@@ -100,3 +98,57 @@ class TokenRefreshView(PublicJSONRendererMixin, DRFTokenRefreshView):
 
 class MyFastTokenView(TokenObtainPairView):
     serializer_class = MyTokenObtainSerializer
+
+
+class SendOTPV3View(PublicJSONRendererMixin, GenericAPIView):
+    queryset = TGAuthUser.objects.all()
+    serializer_class = None
+
+    def post(self, request, *args, **kwargs):
+        mobile_phone = request.data.get('mobile_phone')
+        print(mobile_phone)
+        tg_user = self.get_queryset().filter(mobile_phone=mobile_phone).first()
+        print(tg_user)
+        if tg_user:
+            if not tg_auth_send_otp_code(mobile_phone):
+                raise InvalidInputData
+            data = {}
+        else:
+            data = {"telegram_auth_url": f"https://t.me/{settings.TG_AUTH_BOT_USERNAME}"}
+        return Response(data)
+
+
+class VerifyOTPV3View(PublicJSONRendererMixin, GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = VerifyOTPV3Serializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user, created = User.objects.update_or_create(
+            mobile_phone=request.data.get('mobile_phone'),
+            defaults={'last_otp': request.data.get('otp_code'), 'is_mobile_phone_verified': True}
+        )
+        if created or not user.email:
+            raise EmailIsRequired
+        return Response(generate_access_and_refresh_tokens_for_user(user))
+
+
+class SetEmailView(PublicJSONRendererMixin, GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = SetEmailSerializer
+
+    def get_object(self):
+        mobile_phone = str(self.request.data.get('mobile_phone'))
+        try:
+            return User.objects.get(mobile_phone=mobile_phone)
+        except User.DoesNotExist:
+            logger.error(f"Invalid or unknown phone number: {mobile_phone}")
+            raise UserNotFound
+
+    def post(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(instance=user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(generate_access_and_refresh_tokens_for_user(user))

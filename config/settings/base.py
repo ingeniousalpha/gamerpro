@@ -84,6 +84,8 @@ CONSTANCE_CONFIG = {
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
     "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
+    "EMAIL_OTP_SENDER": ("", "Почта отправителя", str),
+    "EMAIL_OTP_SUBJECT": ("Верификация в Lobby App", "Тема письма", str),
     "FREE_SECONDS_BEFORE_START_TARIFFING": (0, "Бесплатное время перед началом тарификации (сек)", int),
     "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
     "MULTIBOOKING_LAUNCHING_TIME": (10, "Время, которое компьютеры еще показываются недоступными в приле (мин)", int),
@@ -112,6 +114,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
         "KASPI_PAYMENT_DEEPLINK_HOST",
     )),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
+    ("Email OTP settings", ("EMAIL_OTP_SENDER", "EMAIL_OTP_SUBJECT")),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
 ])
@@ -276,15 +279,12 @@ MEDIA_ROOT = os.path.join(PROJECT_DIR, "..", "media")
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_DOMAIN = "http://127.0.0.1:8008"
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-# smtp
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
-EMAIL_HOST = 'smtp.yandex.com'
-EMAIL_HOST_USER = ''  # from which email letters will be sent
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-EMAIL_ADMIN_USER = 'usembaevsultan08@gmail.com'  # to which email clients' letters for support will be sent
-EMAIL_DEVELOPER = 'usembaevsultan08@gmail.com'
-EMAIL_PORT = 465
+
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = os.getenv("SMTP_PORT")
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
 REST_FRAMEWORK = {
     # "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -397,6 +397,11 @@ LOGGING = {
             'propagate': True,
         },
         'gizmo': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'senet': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
