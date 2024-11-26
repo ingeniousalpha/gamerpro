@@ -56,7 +56,7 @@ class DepositReplenishmentSerializer(RequestUserPropertyMixin, serializers.Model
             user_received_amount=validated_data['user_received_amount'],
             commission_amount=commission_amount,
             total_amount=total_amount,
-            user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
+            user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).outer_id,
             payment_card=validated_data['payment_card']
         ).run()
         payment.replenishment = replenishment
@@ -97,7 +97,7 @@ class BookingProlongSerializer(RequestUserPropertyMixin, serializers.ModelSerial
             amount=validated_data['amount'],
             commission_amount=commission_amount,
             total_amount=total_amount,
-            user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).gizmo_id,
+            user_gizmo_id=self.user.get_club_account(validated_data['club_branch']).outer_id,
             payment_card=validated_data['payment_card'],
             booking=validated_data.get('booking')
         ).run()
@@ -141,8 +141,8 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
 
         GizmoSetTimePacketToUser(
             instance=validated_data['club_branch'],
-            user_id=validated_data['booking'].club_user.gizmo_id,
-            product_id=validated_data['time_packet'].gizmo_id
+            user_id=validated_data['booking'].club_user.outer_id,
+            product_id=validated_data['time_packet'].outer_id
         ).run()
         payment.replenishment = replenishment
         payment.save()
@@ -150,7 +150,7 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
             try:
                 GizmoCreateDepositTransactionService(
                     instance=validated_data['booking'].club_branch,
-                    user_gizmo_id=validated_data['booking'].club_user.gizmo_id,
+                    user_gizmo_id=validated_data['booking'].club_user.outer_id,
                     booking=validated_data['booking'],
                     user_received_amount=validated_data['booking'].amount,
                     commission_amount=validated_data['booking'].commission_amount,

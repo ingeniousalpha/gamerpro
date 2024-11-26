@@ -114,7 +114,7 @@ class BookedComputer(models.Model):
 
 
 class DepositReplenishment(TimestampModel):
-    gizmo_id = models.IntegerField(null=True)
+    outer_id = models.IntegerField(null=True)
     club_branch = models.ForeignKey(
         "clubs.ClubBranch",
         on_delete=models.CASCADE,

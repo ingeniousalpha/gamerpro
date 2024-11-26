@@ -227,7 +227,7 @@ class ComputerSessionFinishView(JSONRendererMixin, BookingMixin, GenericAPIView)
         if config.INTEGRATIONS_TURNED_ON:
             GizmoEndUserSessionService(
                 instance=booking.club_branch,
-                user_id=booking.club_user.gizmo_id
+                user_id=booking.club_user.outer_id
             ).run()
             if booking.status == BookingStatuses.SESSION_STARTED:
                 unlock_computers.delay(booking.uuid)

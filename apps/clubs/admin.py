@@ -60,7 +60,7 @@ class FilterByClubMixin:
 
 @admin.register(ClubTimePacketGroup)
 class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
-    list_display = ('gizmo_id', 'name', 'is_active', 'club_branch')
+    list_display = ('outer_id', 'name', 'is_active', 'club_branch')
     list_editable = ('is_active',)
 
 
@@ -68,7 +68,7 @@ class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
-        'gizmo_id',
+        'outer_id',
         'display_name',
         'packet_group',
         'club_computer_group',
@@ -108,7 +108,7 @@ class ClubComputerAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'group',
-        'gizmo_id',
+        'outer_id',
         'number',
         'outer_hostname',
         'is_booked',
@@ -279,9 +279,9 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchUserForm(forms.ModelForm):
     class Meta:
         model = ClubBranchUser
-        fields = ['first_name', 'login', 'gizmo_phone', ]
+        fields = ['first_name', 'login', 'outer_phone', ]
         widgets = {
-            'gizmo_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
+            'outer_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
         }
 
     def __init__(self, *args, **kwargs):
@@ -316,14 +316,14 @@ class ClubBranchUserForm(forms.ModelForm):
 
         return first_name
 
-    def clean_gizmo_phone(self):
-        gizmo_phone = self.cleaned_data.get('gizmo_phone')
+    def clean_outer_phone(self):
+        outer_phone = self.cleaned_data.get('outer_phone')
 
-        # Validate gizmo_phone format +7XXXXXXXXXX
-        if not re.match(r'^\+\d\d{10}$', gizmo_phone):
+        # Validate outer_phone format +7XXXXXXXXXX
+        if not re.match(r'^\+\d\d{10}$', outer_phone):
             raise forms.ValidationError("Телефон должен быть формата +7XXXXXXXXXX")
 
-        return gizmo_phone
+        return outer_phone
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -370,14 +370,14 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
     def get_fields(self, request, obj=None):
         # Check if we are adding a new object or changing an existing one
         if obj is None:  # This means we are in the "Add" view
-            return ('first_name', 'login', 'gizmo_phone')
+            return ('first_name', 'login', 'outer_phone')
         else:  # This means we are in the "Change" view
             return (
                 'created_at',
                 'club_branch',
                 'user',
-                'gizmo_id',
-                'gizmo_phone',
+                'outer_id',
+                'outer_phone',
                 'login',
                 'first_name',
                 'created_by',
@@ -389,8 +389,8 @@ class ClubBranchUserAdmin(FilterByClubMixin, admin.ModelAdmin):
                 'created_at',
                 'club_branch',
                 'user',
-                'gizmo_id',
-                'gizmo_phone',
+                'outer_id',
+                'outer_phone',
                 'login',
                 'first_name',
                 'created_by',
@@ -457,7 +457,7 @@ class ClubComputerGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'name',
-        'gizmo_id',
+        'outer_id',
         'is_deleted',
         'club_branch',
     )

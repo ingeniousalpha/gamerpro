@@ -4,15 +4,15 @@ from apps.clubs.models import ClubBranchUser, ClubComputer, ClubComputerGroup, C
 
 
 class GizmoUserSaveSerializer(serializers.ModelSerializer):
-    gizmo_phone = serializers.CharField(required=False, allow_blank=True)
+    outer_phone = serializers.CharField(required=False, allow_blank=True)
     login = serializers.CharField(required=False, allow_blank=True)
     first_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = ClubBranchUser
         fields = (
-            'gizmo_id',
-            'gizmo_phone',
+            'outer_id',
+            'outer_phone',
             'login',
             'first_name',
             'club_branch',
@@ -23,7 +23,7 @@ class GizmoComputersSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubComputer
         fields = (
-            'gizmo_id',
+            'outer_id',
             'number',
             'gizmo_hostname',
             'is_locked',
@@ -37,7 +37,7 @@ class GizmoTimePacketGroupSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacketGroup
         fields = (
-            'gizmo_id',
+            'outer_id',
             'name',
             'club_branch'
         )
@@ -47,7 +47,7 @@ class GizmoTimePacketSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubTimePacket
         fields = (
-            "gizmo_id",
+            "outer_id",
             "gizmo_name",
             "display_name",
             "description",

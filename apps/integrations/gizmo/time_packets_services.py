@@ -22,12 +22,12 @@ class GizmoGetTimePacketGroupsService(BaseGizmoService):
             resp_data = resp.get('data')
             for time_packet_group in resp_data:
                 if not ClubTimePacketGroup.objects.filter(
-                    gizmo_id=time_packet_group['id'],
+                    outer_id=time_packet_group['id'],
                     club_branch_id=self.instance.id
                 ).exists():
                     try:
                         serializer = self.save_serializer(data={
-                            "gizmo_id": time_packet_group['id'],
+                            "outer_id": time_packet_group['id'],
                             "name": time_packet_group['name'],
                             "club_branch": self.instance.id,
                         })
@@ -52,7 +52,7 @@ class GizmoGetTimePacketsService(BaseGizmoService):
             for time_packet in resp_data:
                 try:
                     packet_group = self.instance.packet_groups.filter(
-                        gizmo_id=time_packet['productGroupId']
+                        outer_id=time_packet['productGroupId']
                     ).first()
                     if packet_group:
                         serializer = self.save_serializer(data={

@@ -56,7 +56,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     if not from_balance and not booking.time_packet:
         GizmoCreateDepositTransactionService(
             instance=booking.club_branch,
-            user_gizmo_id=booking.club_user.gizmo_id,
+            user_gizmo_id=booking.club_user.outer_id,
             booking=booking,
             user_received_amount=booking.amount,
             commission_amount=booking.commission_amount,
@@ -68,14 +68,14 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
             extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
             GizmoAddPaidTimeToUser(
                 instance=booking.club_branch,
-                user_id=booking.club_user.gizmo_id,
+                user_id=booking.club_user.outer_id,
                 minutes=extra_minutes,
                 price=booking.time_packet.price
             ).run()
         GizmoSetTimePacketToUser(
             instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
-            product_id=booking.time_packet.gizmo_id
+            user_id=booking.club_user.outer_id,
+            product_id=booking.time_packet.outer_id
         ).run()
         if config.CASHBACK_TURNED_ON and booking.amount >= 100:
             add_cashback(
@@ -87,7 +87,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
     for booked_computer in booking.computers.all():
         GizmoLockComputerService(
             instance=booking.club_branch,
-            computer_id=booked_computer.computer.gizmo_id
+            computer_id=booked_computer.computer.outer_id
         ).run()
         booked_computer.computer.is_locked = True
         booked_computer.computer.save(update_fields=['is_locked'])
@@ -119,8 +119,8 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
                 # SET TIME PACKET FOR FIRSTLY CANCELLED BOOKINGS OF UNVERIFIED CLUB USER
                 GizmoSetTimePacketToUser(
                     instance=delayed.booking.club_branch,
-                    user_id=delayed.booking.club_user.gizmo_id,
-                    product_id=delayed.time_packet.gizmo_id
+                    user_id=delayed.booking.club_user.outer_id,
+                    product_id=delayed.time_packet.outer_id
                 ).run()
         delayed_times.delete()
 
@@ -128,7 +128,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
             and not user.is_used_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION"):
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
+            user_id=booking.club_user.outer_id,
             minutes=extra_minutes,
             price=booking.time_packet.price
         ).run()
@@ -137,14 +137,14 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
     if by_points:
         GizmoSetPointsToUser(
             instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id,
+            user_id=booking.club_user.outer_id,
             amount=booking.time_packet.price
         ).run()
 
     GizmoSetTimePacketToUser(
         instance=booking.club_branch,
-        user_id=booking.club_user.gizmo_id,
-        product_id=booking.time_packet.gizmo_id,
+        user_id=booking.club_user.outer_id,
+        product_id=booking.time_packet.outer_id,
         by_points=by_points,
     ).run()
 
@@ -190,10 +190,10 @@ def gizmo_start_user_session(booking_uuid):
     booking.status = BookingStatuses.SESSION_STARTED
     booking.save(update_fields=['status'])
     # todo: check is user session already started?
-    computer_gizmo_id = booking.computers.first().computer.gizmo_id
+    computer_gizmo_id = booking.computers.first().computer.outer_id
     GizmoStartUserSessionService(
         instance=booking.club_branch,
-        user_id=booking.club_user.gizmo_id,
+        user_id=booking.club_user.outer_id,
         computer_id=computer_gizmo_id
     ).run()
     send_push_about_booking_status(booking.uuid, BookingStatuses.SESSION_STARTED)
@@ -214,7 +214,7 @@ def cancel_booking(booking_uuid):
     if booking.club_branch.club.software_type == SoftwareTypes.GIZMO and booking.club_user.is_verified:
         GizmoEndUserSessionService(
             instance=booking.club_branch,
-            user_id=booking.club_user.gizmo_id
+            user_id=booking.club_user.outer_id
         ).run()
     # cel_app.send_task(
     #     name="apps.bookings.tasks.gizmo_unlock_computers",
@@ -279,13 +279,13 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
     for index, booked_computer in enumerate(booking.computers.all()):
         GizmoUnlockComputerService(
             instance=booking.club_branch,
-            computer_id=booked_computer.computer.gizmo_id
+            computer_id=booked_computer.computer.outer_id
         ).run()
         if index == 0:
             GizmoStartUserSessionService(
                 instance=booking.club_branch,
-                user_id=booking.club_user.gizmo_id,
-                computer_id=booked_computer.computer.gizmo_id
+                user_id=booking.club_user.outer_id,
+                computer_id=booked_computer.computer.outer_id
             ).run()
             cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
         else:

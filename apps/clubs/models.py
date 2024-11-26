@@ -208,7 +208,7 @@ class DayModel(models.Model):
 
 
 class ClubTimePacketGroup(models.Model):
-    gizmo_id = models.IntegerField(null=True)
+    outer_id = models.IntegerField(null=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     club_branch = models.ForeignKey(
