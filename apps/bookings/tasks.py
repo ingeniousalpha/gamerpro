@@ -1,25 +1,27 @@
+import logging
+
+from constance import config
 from django.core.cache import cache
-from django.db.models import Sum
-from decimal import Decimal
 
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs import SoftwareTypes
-from apps.clubs.models import ClubBranch
 from apps.clubs.services import add_cashback, subtract_cashback
 from apps.clubs.tasks import _sync_club_branch_computers
 from apps.integrations.gizmo.computers_services import GizmoLockComputerService, GizmoUnlockComputerService
 from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransactionService
-from apps.integrations.gizmo.time_packets_services import GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, \
-    GizmoSetPointsToUser
+from apps.integrations.gizmo.time_packets_services import (
+    GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, GizmoSetPointsToUser
+)
 from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
 from apps.integrations.senet.computer_services import SenetLockComputersService, SenetUnlockComputersService
 from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
 from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
+from apps.payments.models import Payment
 from config.celery_app import cel_app
-from constance import config
 
+logger = logging.getLogger("bookings")
 
 BOOKING_STATUS_TRANSITION_PUSH_TEXT = {
     BookingStatuses.ACCEPTED: {
@@ -90,7 +92,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         booked_computer.computer.is_locked = True
         booked_computer.computer.save(update_fields=['is_locked'])
 
-    gizmo_unlock_computers_and_booking_expire.apply_async(
+    unlock_computers_and_make_booking_expired.apply_async(
         (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
     )
@@ -168,7 +170,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         time_packet_name=booking.time_packet.display_name,
         computers=[str(bc.computer.number) for bc in booking.computers.all()]
     )
-    gizmo_unlock_computers_and_booking_expire.apply_async(
+    unlock_computers_and_make_booking_expired.apply_async(
         (str(booking.uuid),),
         countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
     )
@@ -221,7 +223,7 @@ def cancel_booking(booking_uuid):
 
 
 @cel_app.task
-def gizmo_unlock_computers_and_booking_expire(booking_uuid):
+def unlock_computers_and_make_booking_expired(booking_uuid):
     booking = Booking.objects.filter(uuid=booking_uuid).first()
     if not booking or booking.status != BookingStatuses.ACCEPTED:
         return
@@ -321,6 +323,10 @@ def lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
 
     if is_locked:
         unlock_computers.apply_async((str(booking.uuid), True), countdown=unlock_after * 60)
+        unlock_computers_and_make_booking_expired(
+            (str(booking.uuid),),
+            countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
+        )
 
 
 @cel_app.task
@@ -342,17 +348,31 @@ def send_push_about_booking_status(booking_uuid, status):
 
 
 @cel_app.task
-def senet_replenish_user_balance(booking_uuid):
+def senet_replenish_user_balance(booking_uuid, use_cashback=False):
+    logger.info(f"({booking_uuid}) Task senet_replenish_user_balance started")
     booking = (
         Booking.objects
         .filter(uuid=booking_uuid)
-        .select_related('club_user', 'club_branch__club')
+        .select_related('club_user__user', 'club_branch__club')
         .first()
     )
-    if not (booking and booking.club_branch.club.software_type == SoftwareTypes.SENET):
+    if not booking:
+        logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Booking not found")
+        return False
+    if booking.club_branch.club.software_type != SoftwareTypes.SENET:
+        logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Invalid software type")
+        return False
+    if use_cashback:
+        if not subtract_cashback(booking.club_user.user, booking.club_branch.club, booking.amount):
+            logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Cashback subtraction error")
+            return False
+    elif Payment.objects.filter(booking=booking, status=PaymentStatuses.PAYMENT_APPROVED).exists():
+        logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Invalid payment status")
         return False
     SenetReplenishUserBalanceService(
         instance=booking.club_branch,
         account_id=booking.club_user.outer_id,
         amount=booking.amount
     ).run()
+    logger.info(f"({booking_uuid}) Task senet_replenish_user_balance finished")
+    return True

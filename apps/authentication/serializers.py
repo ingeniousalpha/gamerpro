@@ -1,18 +1,18 @@
-from django.contrib.auth import get_user_model
-from django.conf import settings
-from django.db.models import Q
-from phonenumber_field.serializerfields import PhoneNumberField
-from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from six import text_type
 import datetime
 
-from .exceptions import UserNotFound, InvalidOTP
-from .models import TGAuthUser, VerifiedOTP
-from .services import verify_otp, generate_access_and_refresh_tokens_for_user, tg_auth_verify, tg_auth_send_otp_code
-from apps.users.services import get_or_create_user_by_phone
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer as BaseTokenRefreshSerializer
+from six import text_type
+
 from apps.bot.tasks import bot_notify_about_new_user_task
+from apps.users.services import get_or_create_user_by_phone
+from .exceptions import UserNotFound, InvalidOTP, UserAlreadyExists
+from .models import TGAuthUser, VerifiedOTP
+from .services import generate_access_and_refresh_tokens_for_user, tg_auth_verify, tg_auth_send_otp_code
 from ..clubs import SoftwareTypes
 from ..clubs.exceptions import ClubBranchNotFound, NeedToInputUserLogin, NeedToInputUserMobilePhone
 from ..clubs.models import ClubBranch, ClubBranchUser
@@ -474,3 +474,36 @@ class MyTokenObtainSerializer(serializers.Serializer):
             "access_token": text_type(new_token),
         }
 
+
+class VerifyOTPV3Serializer(serializers.Serializer):
+    mobile_phone = serializers.CharField(required=True)
+    otp_code = serializers.CharField(required=True, min_length=4, max_length=4)
+
+    def validate(self, attrs):
+        super().validate(attrs)
+        tg_user = TGAuthUser.objects.filter(mobile_phone=attrs['mobile_phone']).first()
+        if not tg_user:
+            raise UserNotFound
+        if not (attrs and attrs['otp_code'] and attrs['otp_code'].isnumeric()):
+            raise InvalidInputData
+        if not tg_auth_verify(**attrs):
+            raise InvalidOTP
+        return attrs
+
+
+class SetEmailSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+    name = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('email', 'name')
+
+    def validate(self, attrs):
+        super().validate(attrs)
+        user = self.instance
+        if not (user.last_otp and user.last_otp == self.initial_data.get('otp_code')):
+            raise InvalidOTP
+        if user.name and user.email:
+            raise UserAlreadyExists
+        return attrs

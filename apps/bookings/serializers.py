@@ -11,7 +11,7 @@ from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBoo
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
 from apps.bookings.tasks import gizmo_book_computers, lock_computers, send_push_about_booking_status, \
-    gizmo_bro_add_time_and_set_booking_expiration
+    gizmo_bro_add_time_and_set_booking_expiration, senet_replenish_user_balance
 from apps.clubs import SoftwareTypes
 from apps.clubs.exceptions import ComputerDoesNotBelongToClubBranch, ComputerIsAlreadyBooked
 from apps.clubs.serializers import ClubBranchSerializer
@@ -70,6 +70,7 @@ class BaseCreateBookingSerializer(
             amount = attrs['time_packet'].price
         else:
             amount = attrs.get('amount', Decimal(0))
+        attrs['amount'] = amount
         attrs['commission_amount'] = Booking.get_commission_amount(amount)
         attrs['total_amount'] = attrs['commission_amount'] + amount
         return attrs
@@ -200,6 +201,7 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
                         gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid), by_points=True)
                 elif instance.club_branch.club.software_type == SoftwareTypes.SENET:
                     lock_computers(str(instance.uuid))
+                    senet_replenish_user_balance.delay(instance.uuid, True)
                 else:
                     # TODO: this need to check is it working
                     gizmo_book_computers(str(instance.uuid))

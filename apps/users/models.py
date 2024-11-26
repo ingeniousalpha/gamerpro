@@ -19,8 +19,9 @@ class User(PermissionsMixin, AbstractBaseUser):
         verbose_name_plural = _("Учетная запись")
 
     uuid = models.UUIDField("UUID пользователя", default=uuid_lib.uuid4, unique=True)
-    email = models.EmailField("Почта", max_length=40, unique=True)
-    full_name = models.CharField("Имя", max_length=256, null=True, blank=True)
+    email = models.EmailField("Почта", max_length=40, unique=True, null=True, blank=True)
+    name = models.CharField("Имя", max_length=256, null=True, blank=True)
+    last_otp = models.CharField("Последний успешный OTP", max_length=4, null=True, blank=True)
     mobile_phone = PhoneNumberField("Моб. телефон", blank=True, null=True)
     secret_key = models.UUIDField("Секретный ключ", default=uuid_lib.uuid4, unique=True)
     club_branches = models.ManyToManyField("clubs.ClubBranch", blank=True, related_name="admins")
@@ -82,12 +83,6 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     def set_password(self, raw_password):
         super(User, self).set_password(raw_password)
-
-    @property
-    def full_name(self):
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        return self.first_name
 
     def set_active(self):
         self.is_active = True

@@ -1,6 +1,7 @@
 from apps.clubs.models import ClubBranchUser
 from apps.clubs.services import get_correct_phone
 from apps.integrations.senet.base import BaseSenetService
+from apps.integrations.senet.exceptions import SenetIntegrationError
 from apps.integrations.soft_serializers import OuterUserSaveSerializer
 
 
@@ -105,3 +106,52 @@ class SenetSearchUserByPhoneService(BaseSenetService):
 
     def finalize_response(self, response):
         return self.user_found
+
+
+class SenetSearchUserByUsernameService(BaseSenetService):
+    endpoint = "/api/v2/account/?limit=1&search={username}"
+    method = "GET"
+    save_serializer = None
+
+    def run_request(self):
+        return self.fetch(path_params={"username": self.kwargs.get("username")})
+
+    def finalize_response(self, response):
+        if not (
+            response['results']
+            and response['results'][0]
+            and response['results'][0]['dic_user']
+            and response['results'][0]['dic_user'].get('login') == self.kwargs.get("username")
+        ):
+            raise SenetIntegrationError('Аккаунт с таким username не найден.')
+        return response['results'][0]
+
+
+class SenetCreateUserService(BaseSenetService):
+    endpoint = "/api/v2/account/"
+    method = "POST"
+    save_serializer = None
+
+    def run_request(self):
+        return self.fetch(json={
+            "account_type": 1,
+            "dic_user": {
+                "login": self.kwargs["username"],
+                "password": self.kwargs["password"],
+                "phone": self.kwargs["mobile_phone"],
+                "email": self.kwargs["email"]
+            }
+        })
+
+    def finalize_response(self, response):
+        if response.get('code') == -2:
+            if response['dic_user'].get('login'):
+                error_msg = "Пользователь с указанным username уже существует"
+            elif response['dic_user'].get('password'):
+                error_msg = "Пароль не соответствует требованиям"
+            else:
+                error_msg = "Непредвиденная ошибка, обратитесь в службу поддержки"
+            self.log_error(error_msg)
+            self.log_error(str(response))
+            raise SenetIntegrationError(error_msg)
+        return response

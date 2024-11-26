@@ -10,8 +10,7 @@ from apps.integrations.gizmo.users_services import GizmoGetUsersService, GizmoUp
 from apps.integrations.senet.computer_services import (
     SenetGetComputerZonesService, SenetGetComputersWithSessionsService
 )
-from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
-from apps.integrations.senet.time_packet_services import SenetGetTimePacketsV1Service, SenetGetTimePacketsV2Service
+from apps.integrations.senet.time_packet_services import SenetGetTimePacketsV2Service
 from apps.integrations.senet.users_services import SenetGetUsersService
 from config.celery_app import cel_app
 

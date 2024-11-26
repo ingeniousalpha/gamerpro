@@ -46,7 +46,7 @@ class SenetReplenishUserBalanceService(BaseSenetCashboxService):
         return self.fetch(json={
             "devid": cashbox_id,
             "account_id": self.kwargs["account_id"],
-            "amount": self.kwargs["amount"],
+            "amount": str(self.kwargs["amount"]),
             "payment_type": 1,
             "comment": "Оплата из приложения Lobby"
         })

@@ -1,12 +1,7 @@
 from django.urls import path
 from .views import (
-    SigninView,
-    SigninV2View,
-    TokenRefreshView,
-    VerifyOTPV2View,
-    SigninByUsernameView,
-    MyFastTokenView,
-    RegisterV2View
+    SigninView, SigninV2View, TokenRefreshView, VerifyOTPV2View, SigninByUsernameView, MyFastTokenView,
+    RegisterV2View, SendOTPV3View, VerifyOTPV3View, SetEmailView
 )
 
 urlpatterns = [
@@ -18,6 +13,7 @@ urlpatterns = [
     path("v2/verify/", VerifyOTPV2View.as_view(), name="verify_otp_view"),
     path("v2/register/", RegisterV2View.as_view(), name="register_view"),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh_view"),
+    path("v3/send-otp/", SendOTPV3View.as_view(), name="send_otp_v3_view"),
+    path("v3/verify-otp/", VerifyOTPV3View.as_view(), name="verify_otp_v3_view"),
+    path("v3/set-email/", SetEmailView.as_view(), name="set_email_v3_view"),
 ]
-
-
