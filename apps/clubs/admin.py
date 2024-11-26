@@ -207,6 +207,7 @@ class ClubAdmin(admin.ModelAdmin):
     inlines = [ClubBranchInline]
     fields = (
         'name',
+        'software_type',
         'description',
         'code',
         'is_bro_chain',
@@ -224,6 +225,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'club',
         'name',
+        'outer_id',
         'trader_name',
         'trader',
         'address',

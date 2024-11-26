@@ -28,6 +28,9 @@ class Club(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
+    software_type = models.CharField(choices=[
+        ("Senet", "Senet"), ("Gizmo", "Gizmo")
+    ], null=True, max_length=20)
 
     class Meta:
         verbose_name = "Клуб"
@@ -55,6 +58,7 @@ class ClubBranchLegalEntity(models.Model):
 
 
 class ClubBranch(OuterServiceLogHistory):
+    outer_id = models.CharField("Внешний ID точки в системе партнера", null=True, blank=True, max_length=20)
     club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name="branches")
     name = models.CharField(max_length=50)
     trader_name = models.CharField(max_length=256, default="")
@@ -112,7 +116,7 @@ class ClubPerk(models.Model):
 class ClubComputerGroup(models.Model):
     club_branch = models.ForeignKey(ClubBranch, on_delete=models.CASCADE, related_name="computer_groups")
     name = models.CharField(max_length=20)
-    gizmo_id = models.IntegerField(null=True)
+    outer_id = models.IntegerField(null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
