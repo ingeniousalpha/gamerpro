@@ -71,16 +71,21 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
              )
         ).order_by('priority')
 
-        if today == 1:
+        if today == 2:
             extra_queryset = super().get_queryset().filter(
                 club_computer_group_id=self.kwargs.get('hall_id'),
                 is_active=True, available_days__number=7,
-            ).filter(Q(available_time_start__gte=F('available_time_end')))
+            ).filter(Q(available_time_start__gte=F('available_time_end')) &
+                     Q(available_time_end__gt=timezone.now().time()))
             minus_queryset = super().get_queryset().filter(
                 club_computer_group_id=self.kwargs.get('hall_id'),
                 is_active=True, available_days__number=today,
-            ).filter(Q(available_time_start__gte=F('available_time_end')))
-            return (res_queryset | extra_queryset).distinct().exclude(pk__in=minus_queryset.values('pk'))
+            ).filter(Q(available_time_start__gte=F('available_time_end')) &
+                     Q(available_time_start__gt=timezone.now().time()))
+            res_queryset = (res_queryset | extra_queryset).distinct()
+            if minus_queryset:
+                res_queryset = res_queryset.exclude(pk__in=minus_queryset.values('pk'))
+            return res_queryset
 
         return res_queryset
 
