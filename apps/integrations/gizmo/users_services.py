@@ -10,14 +10,14 @@ from apps.clubs.services import get_correct_phone
 from apps.integrations.gizmo.base import BaseGizmoService
 from apps.integrations.gizmo.exceptions import UserDoesNotHavePhoneNumber, GizmoRequestError, \
     GizmoLoginAlreadyExistsError
-from apps.integrations.gizmo.serializers import GizmoUserSaveSerializer
+from apps.integrations.soft_serializers import OuterUserSaveSerializer
 
 User = get_user_model()
 
 
 class GizmoGetUsersService(BaseGizmoService):
     endpoint = "/api/users"
-    save_serializer = GizmoUserSaveSerializer
+    save_serializer = OuterUserSaveSerializer
     method = "GET"
 
     def save(self, response):
@@ -31,8 +31,8 @@ class GizmoGetUsersService(BaseGizmoService):
                     gizmo_phone = get_correct_phone(gizmo_user['phone'], gizmo_user['mobilePhone'])
                     serializer = self.save_serializer(
                         data={
-                            "gizmo_id": gizmo_user['id'],
-                            "gizmo_phone": gizmo_phone,
+                            "outer_id": gizmo_user['id'],
+                            "outer_phone": gizmo_phone,
                             "login": gizmo_user['username'],
                             "first_name": gizmo_user['firstName'],
                             "club_branch": self.instance.id
