@@ -105,7 +105,7 @@ def bot_create_gizmo_user_task(club_branch_user_login, club_branch_id):
     club_user = ClubBranchUser.objects.filter(
         club_branch_id=club_branch_id,
         login=club_branch_user_login,
-        gizmo_id__isnull=True,
+        outer_id__isnull=True,
     )
 
     if not club_user:
