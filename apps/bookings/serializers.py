@@ -200,8 +200,8 @@ class CreateBookingByCashbackSerializer(BaseCreateBookingSerializer):
                     if instance.club_user.is_verified:
                         gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid), by_points=True)
                 elif instance.club_branch.club.software_type == SoftwareTypes.SENET:
-                    lock_computers(str(instance.uuid))
-                    senet_replenish_user_balance.delay(instance.uuid, True)
+                    if lock_computers(str(instance.uuid)):
+                        senet_replenish_user_balance.delay(instance.uuid, True)
                 else:
                     # TODO: this need to check is it working
                     gizmo_book_computers(str(instance.uuid))

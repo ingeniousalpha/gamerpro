@@ -297,6 +297,7 @@ def gizmo_unlock_computers_and_start_user_session(booking_uuid):
 def lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
     """unlock_after - in minutes"""
 
+    is_locked = False
     booking = (
         Booking.objects
         .filter(uuid=booking_uuid)
@@ -305,11 +306,10 @@ def lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
         .first()
     )
     if not booking:
-        return
+        return is_locked
 
     software_type = booking.club_branch.club.software_type
     booked_computers = booking.computers.all().select_related('computer')
-    is_locked = False
     if software_type == SoftwareTypes.GIZMO:
         for booked_computer in booked_computers:
             GizmoLockComputerService(instance=booking.club_branch, computer_id=booked_computer.computer.outer_id).run()
@@ -323,10 +323,11 @@ def lock_computers(booking_uuid, unlock_after=config.PAYMENT_EXPIRY_TIME):
 
     if is_locked:
         unlock_computers.apply_async((str(booking.uuid), True), countdown=unlock_after * 60)
-        unlock_computers_and_make_booking_expired(
+        unlock_computers_and_make_booking_expired.apply_async(
             (str(booking.uuid),),
             countdown=config.FREE_SECONDS_BEFORE_START_TARIFFING
         )
+    return is_locked
 
 
 @cel_app.task
@@ -356,18 +357,23 @@ def senet_replenish_user_balance(booking_uuid, use_cashback=False):
         .select_related('club_user__user', 'club_branch__club')
         .first()
     )
+    is_cancelled = False
     if not booking:
         logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Booking not found")
         return False
-    if booking.club_branch.club.software_type != SoftwareTypes.SENET:
+    elif booking.club_branch.club.software_type != SoftwareTypes.SENET:
         logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Invalid software type")
-        return False
-    if use_cashback:
+        is_cancelled = True
+    elif use_cashback:
         if not subtract_cashback(booking.club_user.user, booking.club_branch.club, booking.amount):
             logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Cashback subtraction error")
-            return False
-    elif Payment.objects.filter(booking=booking, status=PaymentStatuses.PAYMENT_APPROVED).exists():
+            is_cancelled = True
+    elif not Payment.objects.filter(booking=booking, status=PaymentStatuses.PAYMENT_APPROVED).exists():
         logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Invalid payment status")
+        is_cancelled = True
+    if is_cancelled:
+        booking.status = BookingStatuses.CANCELLED
+        booking.save(update_fields=['status'])
         return False
     SenetReplenishUserBalanceService(
         instance=booking.club_branch,

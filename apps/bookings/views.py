@@ -143,13 +143,15 @@ class UnlockBookedComputersView(JSONRendererMixin, BookingMixin, GenericAPIView)
             return Response({})
 
         elif booking.status == BookingStatuses.ACCEPTED:
-            booking.status = BookingStatuses.PLAYING
-            booking.is_starting_session = True
-            booking.save(update_fields=['status', 'is_starting_session'])
             if booking.club_branch.club.software_type == SoftwareTypes.GIZMO:
                 gizmo_unlock_computers_and_start_user_session(booking.uuid)
+                booking.status = BookingStatuses.PLAYING
+                booking.is_starting_session = True
+                booking.save(update_fields=['status', 'is_starting_session'])
             elif booking.club_branch.club.software_type == SoftwareTypes.SENET:
                 unlock_computers.delay(booking.uuid)
+                booking.status = BookingStatuses.COMPLETED
+                booking.save(update_fields=['status'])
             send_push_about_booking_status.delay(booking.uuid, BookingStatuses.PLAYING)
 
         elif (
