@@ -50,17 +50,19 @@ def add_cashback(user, club, from_amount: Decimal = None, amount: int = None):
 
 
 def subtract_cashback(user, club, amount: int = None):
-    logger.info(f"Function subtract_cashback for user ({user}) started")
+    print(f"Function subtract_cashback for user ({user}) started")
     user_cb = ClubUserCashback.objects.filter(user=user, club=club).first()
     if not user_cb:
-        logger.info(f"Function subtract_cashback for user ({user}) failed. User not found")
+        print(f"Function subtract_cashback for user ({user}) failed. User not found")
         return False
     if user_cb.cashback_amount < amount:
-        logger.info(f"Function subtract_cashback for user ({user}) failed. User's cashback is not enough")
+        print(f"Function subtract_cashback for user ({user}) failed. User's cashback is not enough")
         return False
+    print(f"Function subtract_cashback for user ({user}) initial cashback amount = {user_cb.cashback_amount}")
     user_cb.cashback_amount -= amount
     user_cb.save()
-    logger.info(f"Function subtract_cashback for user ({user}) finished")
+    print(f"Function subtract_cashback for user ({user}) updated cashback amount = {user_cb.cashback_amount}")
+    print(f"Function subtract_cashback for user ({user}) finished")
     return True
 
 
