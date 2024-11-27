@@ -131,6 +131,7 @@ class ClubComputerLayoutGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
 
 
 class ClubBranchInline(FilterByClubMixin, admin.TabularInline):
+    club_filter_field = "id"
     model = ClubBranch
     extra = 0
     fields = ('name', 'api_host',)
