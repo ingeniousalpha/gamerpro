@@ -236,6 +236,7 @@ def unlock_computers_and_make_booking_expired(booking_uuid):
 
 @cel_app.task
 def unlock_computers(booking_uuid, check_payment=False):
+    logger.info(f"({booking_uuid}) Task unlock_computers started")
     booking = (
         Booking.objects
         .filter(uuid=booking_uuid)
@@ -244,6 +245,7 @@ def unlock_computers(booking_uuid, check_payment=False):
         .first()
     )
     if not booking:
+        logger.error(f"({booking_uuid}) Task unlock_computers failed: Booking not found")
         return
 
     # TODO: rewrite this
@@ -252,15 +254,21 @@ def unlock_computers(booking_uuid, check_payment=False):
 
     software_type = booking.club_branch.club.software_type
     booked_computers = booking.computers.all().select_related('computer')
+    logger.info(f"({booking_uuid}) Task unlock_computers: Booked computers ({booked_computers})")
     if software_type == SoftwareTypes.GIZMO:
+        logger.info(f"({booking_uuid}) Task unlock_computers: GIZMO")
+
         for booked_computer in booked_computers:
+            logger.info(f"({booking_uuid}) Task unlock_computers: Number {booked_computer.computer.number}")
             GizmoUnlockComputerService(
                 instance=booking.club_branch,
                 computer_id=booked_computer.computer.outer_id
             ).run()
             cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
     elif software_type == SoftwareTypes.SENET:
+        logger.info(f"({booking_uuid}) Task unlock_computers: SENET")
         for booked_computer in booked_computers:
+            logger.info(f"({booking_uuid}) Task unlock_computers: Number {booked_computer.computer.number}")
             SenetUnlockComputersService(
                 instance=booking.club_branch,
                 computers=[booked_computer.computer.outer_id]
@@ -268,6 +276,7 @@ def unlock_computers(booking_uuid, check_payment=False):
             cache.delete(f'BOOKING_STATUS_COMP_{booked_computer.computer.id}')
 
     _sync_club_branch_computers(booking.club_branch)
+    logger.info(f"({booking_uuid}) Task unlock_computers finished")
 
 
 @cel_app.task
