@@ -1,9 +1,11 @@
+import logging
 from decimal import Decimal
 
 from constance import config
 
 from .models import ClubBranchUser, ClubUserCashback
 
+logger = logging.getLogger("clubs")
 
 def get_correct_phone(*args):
     correct_phone = ""
@@ -48,11 +50,17 @@ def add_cashback(user, club, from_amount: Decimal = None, amount: int = None):
 
 
 def subtract_cashback(user, club, amount: int = None):
+    logger.info(f"Function subtract_cashback for user ({user}) started")
     user_cb = ClubUserCashback.objects.filter(user=user, club=club).first()
-    if not user_cb or user_cb.cashback_amount < amount:
+    if not user_cb:
+        logger.info(f"Function subtract_cashback for user ({user}) failed. User not found")
+        return False
+    if user_cb.cashback_amount < amount:
+        logger.info(f"Function subtract_cashback for user ({user}) failed. User's cashback is not enough")
         return False
     user_cb.cashback_amount -= amount
     user_cb.save()
+    logger.info(f"Function subtract_cashback for user ({user}) finished")
     return True
 
 
