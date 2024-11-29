@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.common.serializers import RequestUserPropertyMixin
-from apps.notifications.models import FirebaseToken
+from apps.notifications.models import FirebaseToken, JaryqLabOrder
 
 
 class FirebaseTokenSerializer(RequestUserPropertyMixin, serializers.ModelSerializer):
@@ -18,3 +18,10 @@ class FirebaseTokenSerializer(RequestUserPropertyMixin, serializers.ModelSeriali
         if self.user:
             attrs['user'] = self.user
         return attrs
+
+
+class CreateJaryqLabOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = JaryqLabOrder
+        fields = ('name', 'email', 'phone_number', 'description')

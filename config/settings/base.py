@@ -418,3 +418,5 @@ LOGGING = {
         }
     }
 }
+
+JARYQLAB_API_KEY = os.getenv("JARYQLAB_API_KEY")
