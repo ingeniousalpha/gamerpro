@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.db.models import Q
 from django.forms import TextInput, NumberInput
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib import admin
@@ -44,7 +45,6 @@ class FilterByClubMixin:
     list_filter = (ClubBranchListFilter,)
 
     def get_queryset(self, request):
-        print('FilterByClubMixin')
         queryset = super().get_queryset(request)
 
         if request.user.club_branches.exists():
@@ -65,7 +65,7 @@ class ClubTimePacketGroupAdmin(FilterByClubMixin, admin.ModelAdmin):
 
 
 @admin.register(ClubTimePacket)
-class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
+class ClubTimePacketAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'outer_id',
@@ -82,13 +82,19 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
         'is_active',
     )
     list_editable = ('priority', 'is_active', 'price',)
+    list_filter = ('club', 'packet_group__club_branch')
     ordering = ('priority',)
-    club_filter_field = "packet_group__club_branch"
 
-    def lookup_allowed(self, lookup, value):
-        if lookup == 'club_computer_group__club_branch':
-            return True
-        return super().lookup_allowed(lookup, value)
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        club_branches = request.user.club_branches.all()
+        queryset = queryset.filter(
+            Q(packet_group__club_branch__id__in=list(club_branches.values_list('id', flat=True)))
+            | Q(club__id__in=list(club_branches.values_list('club_id', flat=True)))
+        )
+        return queryset
 
     def days_available(self, obj):
         days = obj.available_days.values_list('name', flat=True)
@@ -98,7 +104,6 @@ class ClubTimePacketAdmin(FilterByClubMixin, admin.ModelAdmin):
     def time_available(self, obj):
         if obj.available_time_start and obj.available_time_end:
             return '{0}-{1}'.format(obj.available_time_start, obj.available_time_end)
-
         return '-'
 
 
