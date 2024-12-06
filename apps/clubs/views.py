@@ -174,7 +174,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
     def get_object(self):
         return get_object_or_404(ClubBranch, pk=self.kwargs.get('pk'))
 
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         exception_message = "{} Пожалуйста, обратитесь к администратору или в службу поддержки."
         club_branch = self.get_object()
         if club_branch.main_club_branch:
@@ -183,7 +183,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
             raise SenetIntegrationError(
                 exception_message.format("Вы уже авторизованы в выбранном филиале клуба.")
             )
-        phone_number = request.user.mobile_phone
+        phone_number = str(request.user.mobile_phone)
         phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
         response = SenetSearchUserService(instance=club_branch, phone_number=phone_number).run()
         club_branch_users = []
