@@ -187,9 +187,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
         phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
         response = SenetSearchUserService(instance=club_branch, phone_number=phone_number).run()
         club_branch_users = []
-        print(f'senet_accounts: {response}')
         for senet_account in response:
-            print(f'senet_account: {senet_account["dic_user"]["login"]}')
             club_branch_user = (
                 ClubBranchUser.objects
                 .filter(club_branch=club_branch, login=senet_account["dic_user"]["login"])
@@ -203,15 +201,12 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
                     login=senet_account['dic_user'].get('login'),
                     balance=senet_account.get('account_amount')
                 )
-            print(f'senet_account user: {club_branch_user.user}')
             if club_branch_user.user is None:
-                print("senet_account appended")
                 club_branch_users.append(club_branch_user)
         if not club_branch_users:
             raise SenetIntegrationError(
                 exception_message.format("Аккаунт закреплен за другим пользователем.")
             )
-        print(f"club_branch_users: {club_branch_users}")
         return Response(ShortClubUserSerializer(club_branch_users, many=True).data, status=status.HTTP_200_OK)
 
 
