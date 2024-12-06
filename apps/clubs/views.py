@@ -238,6 +238,8 @@ class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
                     exception_message.format("Аккаунт закреплен за другим пользователем.")
                 )
         club_branch_user.user = request.user
-        club_branch_user.first_name = request.user.name
         club_branch_user.save(update_fields=['user', 'first_name', 'updated_at'])
+        if request.user.name:
+            club_branch_user.first_name = request.user.name
+            club_branch_user.save(update_fields=['first_name'])
         return Response({}, status=status.HTTP_200_OK)
