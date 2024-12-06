@@ -45,7 +45,7 @@ class UserPerkInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('id', 'mobile_phone', 'email', 'is_email_confirmed', 'is_staff', 'created_at')
+    list_display = ('id', 'mobile_phone', 'name', 'email', 'is_email_confirmed', 'is_staff', 'created_at')
     list_filter = ('is_staff',)
     list_display_links = ('id', 'mobile_phone', 'email', 'is_staff',)
     search_fields = ('email', 'uuid', 'mobile_phone')
@@ -67,6 +67,7 @@ class UserAdmin(BaseUserAdmin):
                 'created_at',
                 'uuid',
                 'mobile_phone',
+                'name',
                 'email',
                 'password',
                 'is_superuser',

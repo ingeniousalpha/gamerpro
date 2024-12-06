@@ -207,6 +207,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
             raise SenetIntegrationError(
                 exception_message.format("Аккаунт закреплен за другим пользователем.")
             )
+        print(f"club_branch_users: {club_branch_users}")
         return Response(ShortClubUserSerializer(club_branch_users, many=True).data, status=status.HTTP_200_OK)
 
 
@@ -237,5 +238,6 @@ class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
                     exception_message.format("Аккаунт закреплен за другим пользователем.")
                 )
         club_branch_user.user = request.user
-        club_branch_user.save(update_fields=['user', 'updated_at'])
+        club_branch_user.first_name = request.user.name
+        club_branch_user.save(update_fields=['user', 'first_name', 'updated_at'])
         return Response({}, status=status.HTTP_200_OK)
