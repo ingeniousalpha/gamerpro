@@ -8,7 +8,8 @@ from .models import (
     Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
     ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup
 )
-from .services import get_cashback, get_senet_user_balance
+from .services import get_cashback
+from ..users.services import get_senet_user_balance
 
 
 class ShortClubUserSerializer(serializers.ModelSerializer):
