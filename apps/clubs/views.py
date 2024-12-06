@@ -11,13 +11,14 @@ from apps.clubs.exceptions import NeedToInputUserLogin
 from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubComputerGroup, ClubBranchUser
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
-    ClubUserCashbackSerializer
+    ClubUserCashbackSerializer, ShortClubUserSerializer
 )
 from apps.clubs.tasks import _sync_club_branch_computers
+from apps.common.exceptions import InvalidInputData
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin, PrivateJSONRendererMixin
 from apps.common.pagination import ClubsPagination
 from apps.integrations.senet.exceptions import SenetIntegrationError
-from apps.integrations.senet.users_services import SenetCreateUserService, SenetSearchUserByUsernameService
+from apps.integrations.senet.users_services import SenetCreateUserService, SenetSearchUserService
 
 
 class ClublistView(PublicJSONRendererMixin, ListAPIView):
@@ -166,6 +167,49 @@ class SenetClubBranchUserRegisterView(PrivateJSONRendererMixin, GenericAPIView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
+class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
+    queryset = ClubBranchUser.objects.all()
+    serializer_class = None
+
+    def get_object(self):
+        return get_object_or_404(ClubBranch, pk=self.kwargs.get('pk'))
+
+    def post(self, request, *args, **kwargs):
+        exception_message = "{} Пожалуйста, обратитесь к администратору или в службу поддержки."
+        club_branch = self.get_object()
+        if club_branch.main_club_branch:
+            club_branch = club_branch.main_club_branch
+        if ClubBranchUser.objects.filter(club_branch=club_branch, user=request.user).exists():
+            raise SenetIntegrationError(
+                exception_message.format("Вы уже авторизованы в выбранном филиале клуба.")
+            )
+        phone_number = request.user.mobile_phone
+        phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
+        response = SenetSearchUserService(instance=club_branch, phone_number=phone_number).run()
+        club_branch_users = []
+        for senet_account in response:
+            club_branch_user = (
+                ClubBranchUser.objects
+                .filter(club_branch=club_branch, login=senet_account["dic_user"]["login"])
+                .first()
+            )
+            if not club_branch_user:
+                club_branch_user = ClubBranchUser.objects.create(
+                    club_branch=club_branch,
+                    outer_id=senet_account.get('account_id'),
+                    outer_phone=senet_account['dic_user'].get('phone'),
+                    login=senet_account['dic_user'].get('login'),
+                    balance=senet_account.get('account_amount')
+                )
+            if club_branch_user.user is None:
+                club_branch_users.append(club_branch_user)
+        if not club_branch_users:
+            raise SenetIntegrationError(
+                exception_message.format("Аккаунт закреплен за другим пользователем.")
+            )
+        return Response(ShortClubUserSerializer(club_branch_users).data, status=status.HTTP_200_OK)
+
+
 class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
     queryset = ClubBranchUser.objects.all()
     serializer_class = None
@@ -175,47 +219,23 @@ class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         exception_message = "{} Пожалуйста, обратитесь к администратору или в службу поддержки."
-        username = request.data.get('username')
-        if not isinstance(username, str) or not username:
-            raise NeedToInputUserLogin
         club_branch = self.get_object()
         if club_branch.main_club_branch:
             club_branch = club_branch.main_club_branch
-        if (
-            ClubBranchUser.objects
-            .filter(club_branch=club_branch, user=request.user)
-            .exclude(login=username)
-            .exists()
-        ):
+        if ClubBranchUser.objects.filter(club_branch=club_branch, user=request.user).exists():
             raise SenetIntegrationError(
-                exception_message.format("У Вас уже есть аккаунт в выбранном филиале клуба.")
+                exception_message.format("Вы уже авторизованы в выбранном филиале клуба.")
             )
-        response = SenetSearchUserByUsernameService(instance=club_branch, username=username).run()
-        if request.user.email != response['dic_user'].get('email'):
-            raise SenetIntegrationError(
-                exception_message.format("Ваш email не совпадает c закрепленным за аккаунтом.")
-            )
-        user_by_username = (
-            ClubBranchUser.objects
-            .filter(club_branch=club_branch, login=username)
-            .order_by('-created_at')
-            .first()
-        )
-        if user_by_username:
-            if not user_by_username.user:
-                user_by_username.user = request.user
-                user_by_username.save(update_fields=['user', 'updated_at'])
-            elif user_by_username.user != request.user:
+        club_branch_user = ClubBranchUser.objects.filter(id=request.data.get('account_id')).first()
+        if not club_branch_user:
+            raise InvalidInputData
+        if club_branch_user.user:
+            if club_branch_user.user == request.user:
+                return Response({}, status=status.HTTP_200_OK)
+            else:
                 raise SenetIntegrationError(
                     exception_message.format("Аккаунт закреплен за другим пользователем.")
                 )
-        else:
-            ClubBranchUser.objects.create(
-                club_branch=club_branch,
-                user=request.user,
-                outer_id=response.get('account_id'),
-                outer_phone=response['dic_user'].get('phone'),
-                login=response['dic_user'].get('login'),
-                balance=response.get('account_amount')
-            )
+        club_branch_user.user = request.user
+        club_branch_user.save(update_fields=['user', 'updated_at'])
         return Response({}, status=status.HTTP_200_OK)

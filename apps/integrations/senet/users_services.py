@@ -108,23 +108,20 @@ class SenetSearchUserByPhoneService(BaseSenetService):
         return self.user_found
 
 
-class SenetSearchUserByUsernameService(BaseSenetService):
-    endpoint = "/api/v2/account/?limit=1&search={username}"
+class SenetSearchUserService(BaseSenetService):
+    endpoint = "/api/v2/account/?limit=1&search={phone_number}"
     method = "GET"
     save_serializer = None
 
     def run_request(self):
-        return self.fetch(path_params={"username": self.kwargs.get("username")})
+        return self.fetch(path_params={"phone_number": self.kwargs.get("phone_number")})
 
     def finalize_response(self, response):
-        if not (
-            response['results']
-            and response['results'][0]
-            and response['results'][0]['dic_user']
-            and response['results'][0]['dic_user'].get('login') == self.kwargs.get("username")
-        ):
-            raise SenetIntegrationError('Аккаунт с таким username не найден.')
-        return response['results'][0]
+        if response['count'] == 0:
+            raise SenetIntegrationError('Аккаунт не найден.')
+        limit = 10
+        max_count = limit if response['count'] > limit else response['count']
+        return response['results'][:max_count]
 
 
 class SenetCreateUserService(BaseSenetService):

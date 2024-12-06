@@ -13,6 +13,13 @@ from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
 from .services import get_cashback
 
 
+class ShortClubUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ClubBranchUser
+        fields = ('id', 'login')
+
+
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
     login = serializers.SerializerMethodField()
     balance = serializers.SerializerMethodField()
