@@ -122,6 +122,7 @@ class SenetSearchUserService(BaseSenetService):
             raise SenetIntegrationError('Аккаунт не найден.')
         limit = 10
         max_count = limit if response['count'] > limit else response['count']
+        print(f"max_count: {max_count}")
         return response['results'][:max_count]
 
 
