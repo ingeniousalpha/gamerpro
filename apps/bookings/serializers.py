@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.authentication.exceptions import UserNotFound, UserAlreadyHasActiveBooking, \
-    NotApprovedUserCanNotBookSeveralComputers, NotSufficientCashbackAmount
+    NotApprovedUserCanNotBookSeveralComputers, NotSufficientAmount
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking, BookedComputer
 from apps.bookings.tasks import gizmo_book_computers, lock_computers, send_push_about_booking_status, \
@@ -52,7 +52,10 @@ class BaseCreateBookingSerializer(
             raise NotApprovedUserCanNotBookSeveralComputers
         if self.context.get('booking_method') == 'by_cashback':
             if get_cashback(club_user.user, club_user.club_branch.club) < attrs['time_packet'].price:
-                raise NotSufficientCashbackAmount
+                raise NotSufficientAmount
+        if self.context.get('booking_method') == 'for_free':
+            if club_user.balance < 1000:
+                raise NotSufficientAmount
 
         attrs['club_user'] = club_user
 
@@ -304,3 +307,34 @@ class BookingSerializer(serializers.ModelSerializer):
         return date_format_with_t(
             obj.created_at + timezone.timedelta(seconds=config.FREE_SECONDS_BEFORE_START_TARIFFING)
         )
+
+
+class CreateBookingForFreeSerializer(BaseCreateBookingSerializer):
+
+    class Meta(BaseCreateBookingSerializer.Meta):
+        fields = BaseCreateBookingSerializer.Meta.fields
+
+    def extra_task(self, instance, validated_data):
+        try:
+            instance.for_free = True
+            instance.save()
+            if config.INTEGRATIONS_TURNED_ON:
+                if instance.club_branch.club.name.lower() == "bro":
+                    lock_computers(str(instance.uuid))
+                    if instance.club_user.is_verified:
+                        gizmo_bro_add_time_and_set_booking_expiration.delay(str(instance.uuid), by_points=True)
+                elif instance.club_branch.club.software_type == SoftwareTypes.SENET:
+                    if lock_computers(str(instance.uuid)):
+                        senet_replenish_user_balance.delay(instance.uuid, True)
+                else:
+                    # TODO: this need to check is it working
+                    gizmo_book_computers(str(instance.uuid))
+            send_push_about_booking_status.delay(instance.uuid, BookingStatuses.ACCEPTED)
+        except Exception as e:
+            logger.error(f"CreateBookingByCashbackSerializer Error: {str(e)}")
+            raise e
+
+    def to_representation(self, instance):
+        return {
+            "booking_uuid": str(instance.uuid)
+        }

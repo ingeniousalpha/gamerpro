@@ -5,7 +5,7 @@ from config.constants.error_codes import (
     INVALID_OTP,
     USER_ALREADY_HAS_ACTIVE_BOOKING,
     NOT_APPROVED_USER_CAN_NOT_BOOK_SEVERAL_COMPUTERS,
-    NOT_SUFFICIENT_CASHBACK_AMOUNT
+    NOT_SUFFICIENT_AMOUNT
 )
 
 
@@ -24,9 +24,9 @@ class NotApprovedUserCanNotBookSeveralComputers(BaseAPIException):
     default_code = NOT_APPROVED_USER_CAN_NOT_BOOK_SEVERAL_COMPUTERS
 
 
-class NotSufficientCashbackAmount(BaseAPIException):
+class NotSufficientAmount(BaseAPIException):
     status_code = 400
-    default_code = NOT_SUFFICIENT_CASHBACK_AMOUNT
+    default_code = NOT_SUFFICIENT_AMOUNT
 
 
 class UserAlreadyExists(BaseAPIException):

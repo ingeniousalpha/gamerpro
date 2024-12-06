@@ -55,6 +55,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'status',
         'use_balance',
         'use_cashback',
+        'for_free',
         'platform',
         'amount',
         'commission_amount',
@@ -87,6 +88,8 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
              return mark_safe(f'<div style="background:#52C135;">Оплачено</div>')
          if obj.use_cashback:
              return mark_safe(f'<div style="background:#52C135;">Оплачено Бонусами</div>')
+         if obj.for_free:
+             return mark_safe(f'<div style="background:#52C135;">Бесплатно</div>')
          return "Не оплачено"
     is_paid.short_description = "Статус оплаты"
 

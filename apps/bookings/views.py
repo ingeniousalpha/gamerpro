@@ -10,7 +10,7 @@ from apps.bookings.serializers import (
     BookingSerializer,
     CreateBookingByTimePacketPaymentSerializer,
     CreateBookingByTimePacketCardPaymentSerializer,
-    CreateBookingByCashbackSerializer, CreateBookingByTimePacketKaspiSerializer
+    CreateBookingByCashbackSerializer, CreateBookingByTimePacketKaspiSerializer, CreateBookingForFreeSerializer
 )
 from apps.common.mixins import PublicJSONRendererMixin, JSONRendererMixin
 from . import BookingStatuses
@@ -264,3 +264,14 @@ class BookingHistoryView(JSONRendererMixin, ListAPIView):
 class BookingDetailView(JSONRendererMixin, BookingMixin, RetrieveAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+
+
+class CreateBookingForFreeView(JSONRendererMixin, CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = CreateBookingForFreeSerializer
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'booking_method': 'for_free'
+        }

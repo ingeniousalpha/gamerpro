@@ -249,7 +249,14 @@ def unlock_computers(booking_uuid, check_payment=False):
         return
 
     # TODO: rewrite this
-    if check_payment and (booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists() or booking.use_cashback):
+    if (
+        check_payment
+        and (
+            booking.payments.filter(status=PaymentStatuses.PAYMENT_APPROVED).exists()
+            or booking.use_cashback
+            or booking.for_free
+        )
+    ):
         return
 
     software_type = booking.club_branch.club.software_type
@@ -373,6 +380,9 @@ def senet_replenish_user_balance(booking_uuid, use_cashback=False):
     elif booking.club_branch.club.software_type != SoftwareTypes.SENET:
         logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Invalid software type")
         is_cancelled = True
+    elif booking.for_free:
+        logger.info(f"({booking_uuid}) Task senet_replenish_user_balance cancelled: The booking is free")
+        return True
     elif use_cashback:
         if not subtract_cashback(booking.club_user.user, booking.club_branch.club, booking.amount):
             logger.error(f"({booking_uuid}) Task senet_replenish_user_balance failed: Cashback subtraction error")

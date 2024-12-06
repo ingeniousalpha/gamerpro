@@ -22,22 +22,27 @@ class ShortClubUserSerializer(serializers.ModelSerializer):
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
     login = serializers.SerializerMethodField()
     balance = serializers.SerializerMethodField()
+    account_balance = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
             'login',
             'balance',
+            'account_balance',
             'is_verified',
         )
 
     def get_balance(self, obj):
         if self.user:
+            return get_cashback(user=self.user, club=obj.club)
+        return 0
+
+    def get_account_balance(self, obj):
+        if self.user:
             if obj.club.software_type == SoftwareTypes.SENET:
                 club_branch_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
                 return get_senet_user_balance(club_branch_user)
-            else:
-                return get_cashback(user=self.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
