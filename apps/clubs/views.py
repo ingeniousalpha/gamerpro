@@ -183,9 +183,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
             raise SenetIntegrationError(
                 exception_message.format("Вы уже авторизованы в выбранном филиале клуба.")
             )
-        phone_number = str(request.user.mobile_phone)
-        phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
-        response = SenetSearchUserService(instance=club_branch, phone_number=phone_number).run()
+        response = SenetSearchUserService(instance=club_branch, phone_number=request.user.mobile_phone_without_code).run()
         club_branch_users = []
         for senet_account in response:
             club_branch_user = (

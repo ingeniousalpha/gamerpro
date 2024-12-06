@@ -4,6 +4,7 @@ from decimal import Decimal
 from constance import config
 
 from .models import ClubBranchUser, ClubUserCashback
+from ..integrations.senet.users_services import SenetSearchUserService
 
 logger = logging.getLogger("clubs")
 
@@ -70,4 +71,18 @@ def get_cashback(user, club):
     user_cb = ClubUserCashback.objects.filter(user=user, club=club).first()
     if user_cb:
         return user_cb.cashback_amount
+    return 0
+
+
+def get_senet_user_balance(club_branch_user):
+    response = SenetSearchUserService(
+        instance=club_branch_user.club_branch,
+        phone_number=club_branch_user.user.mobile_phone_without_code
+    ).run()
+    for account in response:
+        if club_branch_user.outer_id == account.get('account_id'):
+            total_balance = int(account.get('account_amount')) + int(account.get('bonus_account_amount'))
+            club_branch_user.balance = total_balance
+            club_branch_user.save(update_fields=['balance'])
+            return total_balance
     return 0

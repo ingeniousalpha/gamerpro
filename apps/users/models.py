@@ -101,6 +101,12 @@ class User(PermissionsMixin, AbstractBaseUser):
         elif software_type == SoftwareTypes.SENET:
             return self.club_accounts.filter(club_branch=(club_branch.main_club_branch or club_branch)).first()
 
+    @property
+    def mobile_phone_without_code(self):
+        phone_number = str(self.mobile_phone)
+        phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
+        return phone_number
+
 
 class UserOneVisionPayer(models.Model):
     user = models.ForeignKey(

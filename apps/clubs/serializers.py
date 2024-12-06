@@ -2,15 +2,13 @@ from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.authentication.exceptions import UserNotFound
+from apps.common.serializers import RequestUserPropertyMixin
 from . import SoftwareTypes
 from .models import (
     Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
     ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup
 )
-from apps.common.serializers import RequestUserPropertyMixin
-from apps.integrations.gizmo.users_services import GizmoGetUserBalanceService
-from .services import get_cashback
+from .services import get_cashback, get_senet_user_balance
 
 
 class ShortClubUserSerializer(serializers.ModelSerializer):
@@ -34,7 +32,11 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
 
     def get_balance(self, obj):
         if self.user:
-            return get_cashback(user=self.user, club=obj.club)
+            if obj.club.software_type == SoftwareTypes.SENET:
+                club_branch_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
+                get_senet_user_balance(club_branch_user)
+            else:
+                return get_cashback(user=self.user, club=obj.club)
         return 0
 
     def get_login(self, obj):
