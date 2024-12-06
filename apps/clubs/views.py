@@ -187,6 +187,7 @@ class SenetClubBranchUserListView(PrivateJSONRendererMixin, GenericAPIView):
         phone_number = phone_number[2:] if phone_number[0] == "+" else phone_number[1:]
         response = SenetSearchUserService(instance=club_branch, phone_number=phone_number).run()
         club_branch_users = []
+        print(f'senet_accounts: {response}')
         for senet_account in response:
             print(f'senet_account: {senet_account["dic_user"]["login"]}')
             club_branch_user = (
