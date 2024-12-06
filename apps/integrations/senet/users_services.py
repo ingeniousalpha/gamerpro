@@ -117,12 +117,14 @@ class SenetSearchUserService(BaseSenetService):
         return self.fetch(path_params={"phone_number": self.kwargs.get("phone_number")})
 
     def finalize_response(self, response):
-        print(f"response count: {response['count']}")
+        print(f"SenetSearchUserService response_count: {response['count']}")
         if response['count'] == 0:
             raise SenetIntegrationError('Аккаунт не найден.')
         limit = 10
         max_count = limit if response['count'] > limit else response['count']
-        print(f"max_count: {max_count}")
+        print(f"SenetSearchUserService max_count: {max_count}")
+        print(f"SenetSearchUserService full response: {response['results']}")
+        print(f"SenetSearchUserService short response: {response['results'][:max_count]}")
         return response['results'][:max_count]
 
 
