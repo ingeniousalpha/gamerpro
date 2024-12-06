@@ -35,7 +35,7 @@ class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
         if self.user:
             if obj.club.software_type == SoftwareTypes.SENET:
                 club_branch_user = ClubBranchUser.objects.filter(user=self.user, club_branch=obj).first()
-                get_senet_user_balance(club_branch_user)
+                return get_senet_user_balance(club_branch_user)
             else:
                 return get_cashback(user=self.user, club=obj.club)
         return 0

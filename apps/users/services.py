@@ -66,7 +66,8 @@ def get_senet_user_balance(club_branch_user):
             balance = int(float(account.get('account_amount')))
             bonus_balance = int(float(account.get('bonus_account_amount')))
             total_balance = balance + bonus_balance
-            club_branch_user.balance = total_balance
-            club_branch_user.save(update_fields=['balance'])
+            if club_branch_user.balance != total_balance:
+                club_branch_user.balance = total_balance
+                club_branch_user.save(update_fields=['balance'])
             return total_balance
     return 0
