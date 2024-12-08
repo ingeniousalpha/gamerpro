@@ -5,7 +5,7 @@ from config.constants.error_codes import (
     INVALID_OTP,
     USER_ALREADY_HAS_ACTIVE_BOOKING,
     NOT_APPROVED_USER_CAN_NOT_BOOK_SEVERAL_COMPUTERS,
-    NOT_SUFFICIENT_AMOUNT
+    NOT_SUFFICIENT_AMOUNT, EMAIL_ALREADY_TAKEN
 )
 
 
@@ -37,3 +37,8 @@ class UserAlreadyExists(BaseAPIException):
 class InvalidOTP(BaseAPIException):
     status_code = 400
     default_code = INVALID_OTP
+
+
+class EmailAlreadyTaken(BaseAPIException):
+    status_code = 400
+    default_code = EMAIL_ALREADY_TAKEN

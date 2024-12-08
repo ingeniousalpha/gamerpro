@@ -10,7 +10,7 @@ from six import text_type
 
 from apps.bot.tasks import bot_notify_about_new_user_task
 from apps.users.services import get_or_create_user_by_phone
-from .exceptions import UserNotFound, InvalidOTP, UserAlreadyExists
+from .exceptions import UserNotFound, InvalidOTP, UserAlreadyExists, EmailAlreadyTaken
 from .models import TGAuthUser, VerifiedOTP
 from .services import generate_access_and_refresh_tokens_for_user, tg_auth_verify, tg_auth_send_otp_code
 from ..clubs import SoftwareTypes
@@ -504,6 +504,8 @@ class SetEmailSerializer(serializers.ModelSerializer):
         user = self.instance
         if not (user.last_otp and user.last_otp == self.initial_data.get('otp_code')):
             raise InvalidOTP
+        if User.objects.filter(email=attrs['email']).exists():
+            raise EmailAlreadyTaken
         if user.name and user.email:
             raise UserAlreadyExists
         return attrs
