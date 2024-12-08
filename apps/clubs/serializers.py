@@ -13,10 +13,11 @@ from ..users.services import get_senet_user_balance
 
 
 class ShortClubUserSerializer(serializers.ModelSerializer):
+    account_id = serializers.IntegerField(source='id')
 
     class Meta:
         model = ClubBranchUser
-        fields = ('id', 'login')
+        fields = ('account_id', 'login')
 
 
 class BaseClubUserSerializer(RequestUserPropertyMixin, serializers.Serializer):
