@@ -12,6 +12,7 @@ from .models import Document, AppVersion, City
 from .serializers import DocumentListSerializer, CitiesListSerializer
 from ..bookings.models import Booking, BookingStatuses
 from ..clubs.models import ClubBranch
+from ..payments import PaymentProviders
 from ..payments.models import Payment, PaymentStatuses
 from ..users.models import User
 
@@ -232,38 +233,45 @@ def reports_view(request):
     start_datetime = request.GET.get('start_datetime')
     end_datetime = request.GET.get('end_datetime')
     use_cashback = request.GET.get('use_cashback') == 'on'
-    conditions = Q()
+    paid_by_kaspi = request.GET.get('paid_by_kaspi') == 'on'
+    conditions, edited = Q(), False
     if club_branch:
-        conditions = conditions & Q(club_branch__name=club_branch)
+        conditions, edited = conditions & Q(club_branch__name=club_branch), True
     if start_datetime:
-        conditions = conditions & Q(created_at__gte=start_datetime)
+        conditions, edited = conditions & Q(created_at__gte=start_datetime), True
     if end_datetime:
-        conditions = conditions & Q(created_at__lte=end_datetime)
+        conditions, edited = conditions & Q(created_at__lte=end_datetime), True
     if not use_cashback:
-        conditions = conditions & Q(use_cashback=False)
-    bookings = (
-        Booking.objects
-        .select_related('club_branch')
-        .filter(conditions)
-        .prefetch_related('payments')
-        .filter(Q(use_cashback=True) | Q(payments__status=PaymentStatuses.PAYMENT_APPROVED))
-        .annotate(
-            cashback_sum=Case(
-                When(use_cashback=True, then=F('total_amount')),
-                default=Value(0),
-                output_field=DecimalField(max_digits=8, decimal_places=2)
-            ),
-            payments_sum=Coalesce(
-                Sum(
-                    'payments__amount',
-                    filter=Q(payments__status=PaymentStatuses.PAYMENT_APPROVED),
+        conditions, edited = conditions & Q(use_cashback=False), True
+    if paid_by_kaspi:
+        conditions, edited = conditions & Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) & Q(payments__provider=PaymentProviders.KASPI), True
+
+    if not edited:
+        bookings = Booking.objects.none()
+    else:
+        bookings = (
+            Booking.objects
+            .select_related('club_branch')
+            .filter(conditions)
+            .prefetch_related('payments')
+            .filter(Q(use_cashback=True) | Q(payments__status=PaymentStatuses.PAYMENT_APPROVED))
+            .annotate(
+                cashback_sum=Case(
+                    When(use_cashback=True, then=F('total_amount')),
+                    default=Value(0),
                     output_field=DecimalField(max_digits=8, decimal_places=2)
-                ), Decimal(0)
-            ),
-            total_sum=F('cashback_sum') + F('payments_sum')
+                ),
+                payments_sum=Coalesce(
+                    Sum(
+                        'payments__amount',
+                        filter=Q(payments__status=PaymentStatuses.PAYMENT_APPROVED),
+                        output_field=DecimalField(max_digits=8, decimal_places=2)
+                    ), Decimal(0)
+                ),
+                total_sum=F('cashback_sum') + F('payments_sum')
+            )
+            .order_by('created_at', 'club_branch__name')
         )
-        .order_by('created_at', 'club_branch__name')
-    )
     return render(
         request=request,
         template_name='reports.html',
@@ -273,10 +281,11 @@ def reports_view(request):
             "start_datetime": start_datetime,
             "end_datetime": end_datetime,
             "use_cashback": use_cashback,
+            "paid_by_kaspi": paid_by_kaspi,
             "bookings": bookings,
             "total_amount": bookings.aggregate(
                 total=Sum('total_sum', output_field=DecimalField(max_digits=8, decimal_places=2))
-            ).get('total')
+            ).get('total') if bookings.exists() else 0
         }
     )
 
