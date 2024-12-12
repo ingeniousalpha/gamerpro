@@ -234,21 +234,18 @@ def reports_view(request):
     end_datetime = request.GET.get('end_datetime')
     use_cashback = request.GET.get('use_cashback') == 'on'
     paid_by_kaspi = request.GET.get('paid_by_kaspi') == 'on'
-    conditions, edited = Q(), False
-    if club_branch:
-        conditions, edited = conditions & Q(club_branch__name=club_branch), True
-    if start_datetime:
-        conditions, edited = conditions & Q(created_at__gte=start_datetime), True
-    if end_datetime:
-        conditions, edited = conditions & Q(created_at__lte=end_datetime), True
-    if not use_cashback:
-        conditions, edited = conditions & Q(use_cashback=False), True
-    if paid_by_kaspi:
-        conditions, edited = conditions & Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) & Q(payments__provider=PaymentProviders.KASPI), True
-
-    if not edited:
+    if not club_branch:
         bookings = Booking.objects.none()
     else:
+        conditions = Q(club_branch__name=club_branch)
+        if start_datetime:
+            conditions = conditions & Q(created_at__gte=start_datetime)
+        if end_datetime:
+            conditions = conditions & Q(created_at__lte=end_datetime)
+        if not use_cashback:
+            conditions = conditions & Q(use_cashback=False)
+        if paid_by_kaspi:
+            conditions = conditions & Q(payments__status=PaymentStatuses.PAYMENT_APPROVED) & Q(payments__provider=PaymentProviders.KASPI)
         bookings = (
             Booking.objects
             .select_related('club_branch')
