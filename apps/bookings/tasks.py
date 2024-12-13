@@ -70,7 +70,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
                 instance=booking.club_branch,
                 user_id=booking.club_user.outer_id,
                 minutes=extra_minutes,
-                price=booking.time_packet.price
+                price=booking.time_packet.actual_price
             ).run()
         GizmoSetTimePacketToUser(
             instance=booking.club_branch,
@@ -130,7 +130,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
             instance=booking.club_branch,
             user_id=booking.club_user.outer_id,
             minutes=extra_minutes,
-            price=booking.time_packet.price
+            price=booking.time_packet.actual_price
         ).run()
         user.use_perk(club, "EXTRA_MINUTES_TO_FIRST_TRANSACTION")
 
@@ -138,7 +138,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         GizmoSetPointsToUser(
             instance=booking.club_branch,
             user_id=booking.club_user.outer_id,
-            amount=booking.time_packet.price
+            amount=booking.time_packet.actual_price
         ).run()
 
     GizmoSetTimePacketToUser(
@@ -150,7 +150,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
 
     if by_points:
         subtract_cashback(
-            user=user, club=club, amount=booking.time_packet.price
+            user=user, club=club, amount=booking.time_packet.actual_price
         )
 
     if config.CASHBACK_TURNED_ON and not by_points and booking.amount >= 100:

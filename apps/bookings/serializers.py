@@ -51,7 +51,7 @@ class BaseCreateBookingSerializer(
         if not club_user.is_verified and len(attrs['computers']) > 1:
             raise NotApprovedUserCanNotBookSeveralComputers
         if self.context.get('booking_method') == 'by_cashback':
-            if get_cashback(club_user.user, club_user.club_branch.club) < attrs['time_packet'].price:
+            if get_cashback(club_user.user, club_user.club_branch.club) < attrs['time_packet'].actual_price:
                 raise NotSufficientAmount
         if self.context.get('booking_method') == 'for_free':
             if club_user.balance < 1000:
@@ -70,7 +70,7 @@ class BaseCreateBookingSerializer(
 
         attrs['computers'] = computers
         if attrs.get('time_packet'):
-            amount = attrs['time_packet'].price
+            amount = attrs['time_packet'].actual_price
         else:
             amount = attrs.get('amount', Decimal(0))
         attrs['amount'] = amount

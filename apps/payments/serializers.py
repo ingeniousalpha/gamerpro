@@ -117,8 +117,8 @@ class BookingProlongByTimePacketSerializer(RequestUserPropertyMixin, serializers
         )
 
     def validate(self, attrs):
-        commission_amount = Booking.get_commission_amount(attrs['time_packet'].price)
-        total_amount = commission_amount + Decimal(attrs['time_packet'].price)
+        commission_amount = Booking.get_commission_amount(attrs['time_packet'].actual_price)
+        total_amount = commission_amount + Decimal(attrs['time_packet'].actual_price)
         attrs['club_branch'] = attrs['booking'].club_branch
         attrs['club_user'] = attrs['booking'].club_user
         attrs['commission_amount'] = commission_amount

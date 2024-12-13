@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from apps.authentication.services import validate_password
 from apps.clubs import SoftwareTypes
-from apps.clubs.exceptions import NeedToInputUserLogin
+from apps.clubs.exceptions import NeedToInputUserLogin, ClubBranchNotFound
 from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubComputerGroup, ClubBranchUser
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
@@ -67,20 +67,20 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        hall = (
-            ClubComputerGroup.objects
-            .filter(id=self.kwargs.get('hall_id'))
-            .select_related("club_branch__club")
+        club_branch = (
+            ClubBranch.objects
+            .filter(id=self.kwargs.get('pk'))
+            .select_related('club')
             .first()
         )
-        if not hall:
-            return ClubTimePacket.objects.none()
+        if not club_branch:
+            raise ClubBranchNotFound
         queryset = super().get_queryset().filter(
             is_active=True,
             available_days__number=timezone.now().astimezone().weekday() + 1
         )
-        if hall.club_branch.club.software_type == SoftwareTypes.SENET:
-            queryset = queryset.filter(club=hall.club_branch.club)
+        if club_branch.club.software_type == SoftwareTypes.SENET:
+            queryset = queryset.filter(club=club_branch.club)
         else:
             queryset = queryset.filter(club_computer_group_id=self.kwargs.get('hall_id'))
         return queryset.filter(
@@ -91,24 +91,6 @@ class ClubBranchTimePacketListView(JSONRendererMixin, ListAPIView):
                 available_time_start__lte=timezone.now().astimezone().time()))
              )
         ).order_by('priority')
-
-        if today == 2:
-            extra_queryset = super().get_queryset().filter(
-                club_computer_group_id=self.kwargs.get('hall_id'),
-                is_active=True, available_days__number=7,
-            ).filter(Q(available_time_start__gte=F('available_time_end')) &
-                     Q(available_time_end__gt=timezone.now().time()))
-            minus_queryset = super().get_queryset().filter(
-                club_computer_group_id=self.kwargs.get('hall_id'),
-                is_active=True, available_days__number=today,
-            ).filter(Q(available_time_start__gte=F('available_time_end')) &
-                     Q(available_time_start__gt=timezone.now().time()))
-            res_queryset = (res_queryset | extra_queryset).distinct()
-            if minus_queryset:
-                res_queryset = res_queryset.exclude(pk__in=minus_queryset.values('pk'))
-            return res_queryset
-
-        return res_queryset
 
 
 class ClubUserCashbackView(JSONRendererMixin, RetrieveAPIView):

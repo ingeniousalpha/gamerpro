@@ -236,6 +236,14 @@ class ClubTimePacket(models.Model):
     display_name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, null=True, blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
+    price_for_holidays = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Цена праздничного дня"
+    )
+    use_holiday_price = models.BooleanField(default=False, verbose_name="Использовать цену праздничного дня")
     minutes = models.IntegerField(default=0, null=True, blank=True)
     club = models.ForeignKey(
         Club,
@@ -279,6 +287,12 @@ class ClubTimePacket(models.Model):
     @property
     def name(self):
         return self.display_name or self.gizmo_name
+
+    @property
+    def actual_price(self):
+        if self.use_holiday_price and self.price_for_holidays:
+            return self.price_for_holidays
+        return self.price
 
 
 class DelayedTimeSetting(TimestampModel):

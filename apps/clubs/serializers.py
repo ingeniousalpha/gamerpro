@@ -376,6 +376,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
 
 
 class ClubTimePacketListSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
     is_available = serializers.SerializerMethodField()
 
     class Meta:
@@ -386,6 +387,9 @@ class ClubTimePacketListSerializer(serializers.ModelSerializer):
             'price',
             'is_available',
         )
+
+    def get_price(self, obj):
+        return obj.actual_price
 
     def get_is_available(self, obj):
         if not obj.available_time_start:

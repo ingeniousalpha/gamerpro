@@ -74,6 +74,8 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'club_computer_group',
         'minutes',
         'price',
+        'price_for_holidays',
+        'use_holiday_price',
         'priority',
         'days_available',
         # 'available_time_start',
@@ -81,8 +83,12 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'time_available',
         'is_active',
     )
-    list_editable = ('priority', 'is_active', 'price',)
-    list_filter = ('club', 'packet_group__club_branch')
+    list_editable = ('priority', 'is_active', 'price', 'price_for_holidays', 'use_holiday_price')
+    list_filter = (
+        ('club', admin.RelatedOnlyFieldListFilter),
+        'is_active',
+        ('packet_group__club_branch', admin.RelatedOnlyFieldListFilter)
+    )
     ordering = ('priority',)
 
     def get_queryset(self, request):
