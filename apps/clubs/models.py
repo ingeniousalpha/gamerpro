@@ -68,6 +68,7 @@ class ClubBranch(OuterServiceLogHistory):
         related_name='siblings',
         verbose_name="Основной филиал"
     )
+    use_holiday_price = models.BooleanField(default=False, verbose_name="Использовать цену праздничного дня")
     name = models.CharField(max_length=50)
     trader_name = models.CharField(max_length=256, default="")
     address = models.CharField(max_length=255)
@@ -243,7 +244,6 @@ class ClubTimePacket(models.Model):
         blank=True,
         verbose_name="Цена праздничного дня"
     )
-    use_holiday_price = models.BooleanField(default=False, verbose_name="Использовать цену праздничного дня")
     minutes = models.IntegerField(default=0, null=True, blank=True)
     club = models.ForeignKey(
         Club,
@@ -290,7 +290,12 @@ class ClubTimePacket(models.Model):
 
     @property
     def actual_price(self):
-        if self.use_holiday_price and self.price_for_holidays:
+        club_branch = None
+        if self.packet_group:
+            club_branch = self.packet_group.club_branch
+        elif self.club_computer_group:
+            club_branch = self.club_computer_group.club_branch
+        if club_branch and club_branch.use_holiday_price and self.price_for_holidays:
             return self.price_for_holidays
         return self.price
 

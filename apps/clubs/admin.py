@@ -75,7 +75,6 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'minutes',
         'price',
         'price_for_holidays',
-        'use_holiday_price',
         'priority',
         'days_available',
         # 'available_time_start',
@@ -83,7 +82,7 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'time_available',
         'is_active',
     )
-    list_editable = ('priority', 'is_active', 'price', 'price_for_holidays', 'use_holiday_price')
+    list_editable = ('priority', 'is_active', 'price', 'price_for_holidays')
     list_filter = (
         ('club', admin.RelatedOnlyFieldListFilter),
         'is_active',
@@ -237,6 +236,7 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
     fields = (
         'club',
         'main_club_branch',
+        'use_holiday_price',
         'name',
         'outer_id',
         'trader_name',
@@ -264,12 +264,16 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
         ClubBranchPriceInline,
         ClubBranchComputerInline,
     ]
-    list_filter = ()
+    list_filter = (
+        ('club', admin.RelatedOnlyFieldListFilter),
+        ('trader', admin.RelatedOnlyFieldListFilter),
+    )
     club_filter_field = "id"
-    list_editable = ('priority', 'is_active', 'is_ready',)
+    list_editable = ('use_holiday_price', 'priority', 'is_active', 'is_ready',)
     list_display = (
         'id',
         '__str__',
+        'use_holiday_price',
         'api_host',
         'priority',
         'is_active',
