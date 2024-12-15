@@ -352,9 +352,9 @@ class ClubBranchUser(TimestampModel):
         null=True, blank=True
     )
     outer_id = models.IntegerField(null=True, blank=True, db_index=True)
-    outer_phone = models.CharField(max_length=12, null=True, db_index=True)
+    outer_phone = models.CharField("Номер телефона", max_length=12, null=True, db_index=True)
     login = models.CharField(max_length=50)
-    first_name = models.CharField(max_length=100, null=True, blank=False)
+    first_name = models.CharField("Имя", max_length=100, null=True, blank=False)
     balance = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
     created_by = models.ForeignKey(
         "users.User", on_delete=models.CASCADE,

@@ -1,5 +1,6 @@
 import re
 
+from datetime import datetime as dt
 from django import forms
 from django.db.models import Q
 from django.forms import TextInput, NumberInput
@@ -295,9 +296,12 @@ class ClubBranchModelAdmin(FilterByClubMixin, admin.ModelAdmin):
 class ClubBranchUserForm(forms.ModelForm):
     class Meta:
         model = ClubBranchUser
-        fields = ['first_name', 'login', 'outer_phone', ]
+        fields = ["first_name", "login", "outer_phone", ]
         widgets = {
-            'outer_phone': TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
+            "outer_phone": TextInput(attrs={'class': 'phone-mask', 'placeholder': '+7XXXZZZZZZZ'})
+        }
+        labels = {
+            "login": "ИИН"
         }
 
     def __init__(self, *args, **kwargs):
@@ -305,13 +309,43 @@ class ClubBranchUserForm(forms.ModelForm):
         print("form kwargs: ", kwargs)
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
+        # if self.instance.club_branch.club.code == "bro":
+        #     self.Meta
+
+    def bro_is_valid_iin(self, iin):
+        born_date = iin[:6]
+        sex_century = int(iin[6])
+
+        try:
+            dt.strptime(born_date, "%y%m%d")
+        except ValueError as e:
+            return False
+
+        if sex_century > 6 or sex_century < 0:
+            return False
+
+        c_sum_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        c_sum_2 = [3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2]
+
+        checksum = sum([int(i) * v for i, v in zip(iin, c_sum_1)]) % 11
+
+        if checksum == 10:
+            checksum = sum([int(i) * v for i, v in zip(iin, c_sum_2)]) % 11
+
+        if checksum != int(iin[-1]):
+            return False
+
+        return True
 
     def clean_login(self):
 
         login = self.cleaned_data.get('login')
 
         if not login.isdigit() or len(login) > 12:
-            raise forms.ValidationError("Логин должен состоять только из цифр и  не длиннее 12 цифр")
+            raise forms.ValidationError("Логин должен состоять только из 12 цифр")
+
+        if not self.bro_is_valid_iin(login):
+            raise forms.ValidationError("Введен некорректный ИИН")
 
         if "bot_approve_user_from_admin" in self.request.POST or "undelete_club_user" in self.request.POST:
             return login

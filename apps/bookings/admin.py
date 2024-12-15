@@ -47,26 +47,30 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         'payment_card',
         'is_time_packet_set',
     )
-    fields = (
-        'uuid',
-        'created_at',
-        'club_branch',
-        'club_user',
-        'status',
-        'use_balance',
-        'use_cashback',
-        'for_free',
-        'platform',
-        'amount',
-        'commission_amount',
-        'total_amount',
-        'payment_card',
-        'expiration_date',
-        'is_cancelled',
-        'is_starting_session',
-        'time_packet',
-        'is_time_packet_set',
-    )
+
+    def get_fields(self, request, obj=None):
+        fields = [
+            'uuid',
+            'created_at',
+            'club_branch',
+            'club_user',
+            'status',
+            'use_balance',
+            'use_cashback',
+            'for_free',
+            'platform',
+            'amount',
+            'commission_amount',
+            'total_amount',
+            'payment_card',
+            'expiration_date',
+            'is_starting_session',
+            'time_packet',
+            'is_time_packet_set',
+        ]
+        if request.user.is_superuser:
+            fields.append('is_cancelled')
+        return fields
 
     def response_change(self, request, obj):
         if "set_time_packet" in request.POST:
