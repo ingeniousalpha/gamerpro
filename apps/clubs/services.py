@@ -37,7 +37,8 @@ def add_cashback(user, club, from_amount: Decimal = None, amount: int = None):
         amount_to_add = int(amount)
 
     if amount_to_add == 0:
-        raise Exception("There is no amount_to_add for cashback")
+        logger.info("There is no amount_to_add for cashback")
+        return False
 
     user_cb = ClubUserCashback.objects.filter(user=user, club=club).first()
     if user_cb:
