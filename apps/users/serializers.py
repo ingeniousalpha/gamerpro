@@ -4,12 +4,10 @@ from rest_framework import serializers
 User = get_user_model()
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    mobile_phone = serializers.CharField(read_only=True)
+
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "full_name",
-            "mobile_phone",
-        ]
+        fields = ("id", "mobile_phone", "name", "email")

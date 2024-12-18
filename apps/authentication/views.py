@@ -106,9 +106,7 @@ class SendOTPV3View(PublicJSONRendererMixin, GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         mobile_phone = request.data.get('mobile_phone')
-        print(mobile_phone)
         tg_user = self.get_queryset().filter(mobile_phone=mobile_phone).first()
-        print(tg_user)
         if tg_user:
             if not tg_auth_send_otp_code(mobile_phone):
                 raise InvalidInputData
@@ -129,8 +127,6 @@ class VerifyOTPV3View(PublicJSONRendererMixin, GenericAPIView):
             mobile_phone=request.data.get('mobile_phone'),
             defaults={'last_otp': request.data.get('otp_code'), 'is_mobile_phone_verified': True}
         )
-        if created or not user.email:
-            raise EmailIsRequired
         return Response(generate_access_and_refresh_tokens_for_user(user))
 
 
