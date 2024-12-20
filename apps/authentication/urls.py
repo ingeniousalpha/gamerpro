@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     SigninView, SigninV2View, TokenRefreshView, VerifyOTPV2View, SigninByUsernameView, MyFastTokenView,
-    RegisterV2View, SendOTPV3View, VerifyOTPV3View, SetEmailView
+    RegisterV2View, SendOTPV3View, VerifyOTPV3View
 )
 
 urlpatterns = [
@@ -15,5 +15,4 @@ urlpatterns = [
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh_view"),
     path("v3/send-otp/", SendOTPV3View.as_view(), name="send_otp_v3_view"),
     path("v3/verify-otp/", VerifyOTPV3View.as_view(), name="verify_otp_v3_view"),
-    path("v3/set-email/", SetEmailView.as_view(), name="set_email_v3_view"),
 ]

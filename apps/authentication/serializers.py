@@ -489,23 +489,3 @@ class VerifyOTPV3Serializer(serializers.Serializer):
         if not tg_auth_verify(**attrs):
             raise InvalidOTP
         return attrs
-
-
-class SetEmailSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-    name = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'name')
-
-    def validate(self, attrs):
-        super().validate(attrs)
-        user = self.instance
-        if not (user.last_otp and user.last_otp == self.initial_data.get('otp_code')):
-            raise InvalidOTP
-        if User.objects.filter(email=attrs['email']).exists():
-            raise EmailAlreadyTaken
-        if user.name and user.email:
-            raise UserAlreadyExists
-        return attrs

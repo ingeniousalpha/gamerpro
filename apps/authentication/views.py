@@ -9,15 +9,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView as DRFTokenRefreshView
 
 from apps.common.mixins import PublicJSONRendererMixin
-from .exceptions import UserNotFound
 from .models import TGAuthUser
 from .serializers import (
     SigninWithoutOTPSerializer, TokenRefreshSerializer, VerifyOTPSerializer,
     MyTokenObtainSerializer, SigninByUsernameNewSerializer,
-    SigninWithOTPSerializer, RegisterV2Serializer, VerifyOTPV3Serializer, SetEmailSerializer
+    SigninWithOTPSerializer, RegisterV2Serializer, VerifyOTPV3Serializer
 )
 from .services import tg_auth_send_otp_code, generate_access_and_refresh_tokens_for_user
-from ..clubs.exceptions import EmailIsRequired
 from ..common.exceptions import InvalidInputData
 
 User = get_user_model()
@@ -130,24 +128,4 @@ class VerifyOTPV3View(PublicJSONRendererMixin, GenericAPIView):
         if user.email and user.email[-7:] == '@gp.com':
             user.email = None
             user.save(update_fields=['email', 'updated_at'])
-        return Response(generate_access_and_refresh_tokens_for_user(user))
-
-
-class SetEmailView(PublicJSONRendererMixin, GenericAPIView):
-    queryset = User.objects.all()
-    serializer_class = SetEmailSerializer
-
-    def get_object(self):
-        mobile_phone = str(self.request.data.get('mobile_phone'))
-        try:
-            return User.objects.get(mobile_phone=mobile_phone)
-        except User.DoesNotExist:
-            logger.error(f"Invalid or unknown phone number: {mobile_phone}")
-            raise UserNotFound
-
-    def post(self, request, *args, **kwargs):
-        user = self.get_object()
-        serializer = self.get_serializer(instance=user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
         return Response(generate_access_and_refresh_tokens_for_user(user))
