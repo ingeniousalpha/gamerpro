@@ -127,6 +127,9 @@ class VerifyOTPV3View(PublicJSONRendererMixin, GenericAPIView):
             mobile_phone=request.data.get('mobile_phone'),
             defaults={'last_otp': request.data.get('otp_code'), 'is_mobile_phone_verified': True}
         )
+        if user.email and user.email[-7:] == '@gp.com':
+            user.email = None
+            user.save(update_fields=['email', 'updated_at'])
         return Response(generate_access_and_refresh_tokens_for_user(user))
 
 
