@@ -1,3 +1,5 @@
+from constance import config
+from django.core.cache import cache
 from django.db import transaction
 
 from apps.clubs.models import ClubComputer, ClubComputerGroup
@@ -51,6 +53,8 @@ class GizmoGetComputersService(BaseGizmoService):
 
                     if computer:
                         computer.is_deleted = gizmo_computer['isDeleted']
+                        if computer.is_locked and gizmo_computer['state'] == 0:
+                            cache.set(f'BOOKING_STATUS_COMP_{computer.id}', True, config.COMPUTER_UNLOCK_DELAY*60)
                         computer.is_locked = bool(gizmo_computer['state'] == 2)
                         computer.is_broken = bool(gizmo_computer['state'] in [1, 3])
                         computer.number = gizmo_computer['number']

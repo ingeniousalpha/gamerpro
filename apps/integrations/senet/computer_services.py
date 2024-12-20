@@ -1,3 +1,6 @@
+from constance import config
+from django.core.cache import cache
+
 from apps.clubs.models import ClubComputerGroup, ClubComputer
 from apps.integrations.senet.base import BaseSenetService
 from apps.integrations.soft_serializers import OuterComputerGroupsSaveSerializer, OuterComputersSaveSerializer
@@ -74,6 +77,11 @@ class SenetGetComputersWithSessionsService(BaseSenetService):
                     except Exception as e:
                         self.log_error(e)
                 else:
+                    if (
+                        (computer.is_locked and not outer_computer['is_locked'])
+                        or (computer.is_broken and outer_computer['work_mode'] == 0)
+                    ):
+                        cache.set(f'BOOKING_STATUS_COMP_{computer.id}', True, config.COMPUTER_UNLOCK_DELAY * 60)
                     computer.number = outer_computer['num']
                     computer.group = computer_group
                     computer.is_active_session = outer_computer['user_session_id'] is not None

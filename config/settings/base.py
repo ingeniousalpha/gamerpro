@@ -84,8 +84,6 @@ CONSTANCE_CONFIG = {
     "EXCEPTION_HANDLING_STATUS": (True, "Статус отлавливания исключений", bool),
     "USE_DEFAULT_OTP": (True, "Использовать код по умолчанию", bool),
     "DEFAULT_OTP": ("1111", "Код по умолчанию", str),
-    "EMAIL_OTP_SENDER": ("", "Почта отправителя", str),
-    "EMAIL_OTP_SUBJECT": ("Верификация в Lobby App", "Тема письма", str),
     "FREE_SECONDS_BEFORE_START_TARIFFING": (0, "Бесплатное время перед началом тарификации (сек)", int),
     "PAYMENT_EXPIRY_TIME": (5, "Время на оплату (мин)", int),
     "MULTIBOOKING_LAUNCHING_TIME": (10, "Время, которое компьютеры еще показываются недоступными в приле (мин)", int),
@@ -98,6 +96,7 @@ CONSTANCE_CONFIG = {
     "KASPI_PAYMENT_DEEPLINK_HOST": (
         "https://server.gamerpro.kz", "Диплинк для возвращения в прилу после успешной оплаты", str
     ),
+    "COMPUTER_UNLOCK_DELAY": (5, "Задержка разблокировки компьютера (мин)", int),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
@@ -114,7 +113,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict([
         "KASPI_PAYMENT_DEEPLINK_HOST",
     )),
     ("OTP settings", ("USE_DEFAULT_OTP", "DEFAULT_OTP",)),
-    ("Email OTP settings", ("EMAIL_OTP_SENDER", "EMAIL_OTP_SUBJECT")),
+    ("Computers", ("COMPUTER_UNLOCK_DELAY",)),
     ("Exception Handling", ("EXCEPTION_HANDLING_STATUS",)),
     ("Error messages", tuple(ERROR_MESSAGES.keys())),
 ])

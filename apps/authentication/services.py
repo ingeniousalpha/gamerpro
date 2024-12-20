@@ -133,22 +133,3 @@ def generate_access_and_refresh_tokens_for_user(user):
         "refresh_token": str(refresh),
         "access_token": str(refresh.access_token),
     }
-
-
-def send_email_verification_otp(recipient_email):
-    sender_email = config.EMAIL_OTP_SENDER
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-    msg['Subject'] = config.EMAIL_OTP_SUBJECT
-    msg.attach(MIMEText(f'Код подтверждения: 1111'))
-    try:
-        server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
-        server.ehlo()
-        server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
-        server.sendmail(sender_email, recipient_email, msg.as_string())
-        server.close()
-        logger_users.info(f'Sending otp to {recipient_email} succeed')
-    except Exception as e:
-        logger_users.info(f'Sending otp to {recipient_email} failed')
-        logger_users.exception(e)
