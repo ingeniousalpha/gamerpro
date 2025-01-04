@@ -70,6 +70,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         ]
         if request.user.is_superuser:
             fields.append('is_cancelled')
+            fields.append('is_time_packet_set')
         return fields
 
     def response_change(self, request, obj):

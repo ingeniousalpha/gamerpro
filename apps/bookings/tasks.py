@@ -13,7 +13,11 @@ from apps.integrations.gizmo.deposits_services import GizmoCreateDepositTransact
 from apps.integrations.gizmo.time_packets_services import (
     GizmoAddPaidTimeToUser, GizmoSetTimePacketToUser, GizmoSetPointsToUser
 )
-from apps.integrations.gizmo.users_services import GizmoStartUserSessionService, GizmoEndUserSessionService
+from apps.integrations.gizmo.users_services import (
+    GizmoStartUserSessionService,
+    GizmoEndUserSessionService,
+    GizmoGetUserByUsernameService,
+)
 from apps.integrations.senet.computer_services import SenetLockComputersService, SenetUnlockComputersService
 from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
 from apps.notifications.tasks import fcm_push_notify_user
@@ -64,6 +68,7 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
     elif booking.time_packet:
         print('booking time_packet activating...')
+        GizmoGetUserByUsernameService(instance=booking.club_branch, username=booking.club_user.login).run()
         if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
             extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
             GizmoAddPaidTimeToUser(
