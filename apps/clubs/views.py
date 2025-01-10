@@ -27,7 +27,7 @@ class ClublistView(PublicJSONRendererMixin, ListAPIView):
     serializer_class = ClubListSerializer
 
 
-class ClubViewSet(PublicJSONRendererMixin, viewsets.GenericViewSet, mixins.ListModelMixin):
+class ClubListV2View(PublicJSONRendererMixin, ListAPIView):
     queryset = Club.objects.all()
     serializer_class = ClubListV2Serializer
     pagination_class = ClubsPagination
@@ -48,11 +48,18 @@ class ClubViewSet(PublicJSONRendererMixin, viewsets.GenericViewSet, mixins.ListM
             .order_by('id')
         )
 
-    @action(detail=True, methods=['get'])
-    def branches(self, request, pk):
-        branches = ClubBranch.objects.filter(club=self.get_object(), is_active=True, is_turned_on=True).order_by('id')
-        serializer = ClubBranchListV2Serializer(branches, many=True, context=self.get_serializer_context())
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ClubBranchListV2View(PublicJSONRendererMixin, ListAPIView):
+    queryset = ClubBranch.objects.all()
+    serializer_class = ClubBranchListV2Serializer
+    pagination_class = ClubsPagination
+
+    def get_object(self):
+        return get_object_or_404(Club, pk=self.kwargs.get('pk'))
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(club=self.get_object())
 
 
 class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):

@@ -96,6 +96,7 @@ class ClubListV2Serializer(serializers.ModelSerializer):
     class Meta:
         model = Club
         fields = (
+            'id',
             'name',
             'description',
             'logo',
@@ -148,6 +149,7 @@ class ClubBranchListV2Serializer(ClubUserSerializer):
     class Meta:
         model = ClubBranch
         fields = (
+            'id',
             'user',
             'is_favorite',
             'address',

@@ -1,11 +1,8 @@
-from rest_framework import routers
+from django.urls import path
 
-from apps.clubs.views import ClubViewSet
+from apps.clubs.views import ClubListV2View, ClubBranchListV2View
 
-
-urlpatterns = []
-
-router = routers.DefaultRouter()
-router.register('', ClubViewSet)
-
-urlpatterns += router.urls
+urlpatterns = [
+    path('', ClubListV2View.as_view()),
+    path('<int:pk>/branches', ClubBranchListV2View.as_view()),
+]
