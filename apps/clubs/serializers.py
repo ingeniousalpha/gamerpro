@@ -148,11 +148,11 @@ class ClubBranchListV2Serializer(ClubUserSerializer):
     class Meta:
         model = ClubBranch
         fields = (
+            'user',
             'is_favorite',
             'address',
             'free_computer_count',
             'total_computer_count',
-            'login',
         )
 
     def get_is_favorite(self, obj):
