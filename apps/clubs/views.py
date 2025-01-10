@@ -50,22 +50,7 @@ class ClubViewSet(PublicJSONRendererMixin, viewsets.GenericViewSet, mixins.ListM
 
     @action(detail=True, methods=['get'])
     def branches(self, request, pk):
-        favorite_branches = []
-        user = request.user
-        if user.is_authenticated:
-            favorite_branches = user.favorite_club_branches.all().values_list('id', flat=True)
-        branches = (
-            ClubBranch.objects
-            .filter(club=self.get_object(), is_active=True, is_turned_on=True)
-            .annotate(
-                is_favorite=Case(
-                    When(id__in=favorite_branches, then=True),
-                    default=False,
-                    output_field=BooleanField()
-                )
-            )
-            .order_by('-is_favorite', 'id')
-        )
+        branches = ClubBranch.objects.filter(club=self.get_object(), is_active=True, is_turned_on=True).order_by('id')
         serializer = ClubBranchListV2Serializer(branches, many=True, context=self.get_serializer_context())
         return Response(serializer.data, status=status.HTTP_200_OK)
 

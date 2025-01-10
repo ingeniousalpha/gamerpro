@@ -107,10 +107,6 @@ class ClubListV2Serializer(serializers.ModelSerializer):
             'total_computer_count',
         )
 
-    @cached_property
-    def branch(self):
-        return self.instance.branches.filter(is_active=True, is_turned_on=True).prefetch_related('computers').first()
-
     def get_logo(self, obj):
         return self.context.get('request').build_absolute_uri(obj.logo.url) if obj.logo else None
 
@@ -119,22 +115,33 @@ class ClubListV2Serializer(serializers.ModelSerializer):
         return False
 
     def get_address(self, obj):
-        return self.branch.address if not obj.is_chain and self.branch else None
+        if not obj.is_chain:
+            branch = obj.branches.filter(is_active=True, is_turned_on=True).first()
+            if branch:
+                return branch.address
+        return None
 
     def get_free_computer_count(self, obj):
-        if not obj.is_chain and self.branch:
-            return (
-                self.branch.computers
-                .filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False)
-                .count()
-            )
+        if not obj.is_chain:
+            branch = obj.branches.filter(is_active=True, is_turned_on=True).first()
+            if branch:
+                return (
+                    branch.computers
+                    .filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False)
+                    .count()
+                )
         return None
 
     def get_total_computer_count(self, obj):
-        return self.branch.computers.filter(is_deleted=False).count() if not obj.is_chain and self.branch else None
+        if not obj.is_chain:
+            branch = obj.branches.filter(is_active=True, is_turned_on=True).first()
+            if branch:
+                return branch.computers.filter(is_deleted=False).count()
+        return None
 
 
 class ClubBranchListV2Serializer(ClubUserSerializer):
+    is_favorite = serializers.SerializerMethodField()
     free_computer_count = serializers.SerializerMethodField()
     total_computer_count = serializers.SerializerMethodField()
 
@@ -147,6 +154,10 @@ class ClubBranchListV2Serializer(ClubUserSerializer):
             'total_computer_count',
             'login',
         )
+
+    def get_is_favorite(self, obj):
+        # For some unknown reason "favorite club branches" was implemented on frontend side
+        return False
 
     def get_free_computer_count(self, obj):
         return obj.computers.filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False).count()
