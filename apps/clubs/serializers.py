@@ -108,8 +108,6 @@ class ClubListV2Serializer(serializers.ModelSerializer):
 
     @cached_property
     def branch(self):
-        if self.instance.is_chain:
-            return None
         return self.instance.branches.filter(is_active=True, is_turned_on=True).prefetch_related('computers').first()
 
     def get_logo(self, obj):
@@ -120,10 +118,10 @@ class ClubListV2Serializer(serializers.ModelSerializer):
         return False
 
     def get_address(self, obj):
-        return self.branch.address if self.branch else None
+        return self.branch.address if not obj.is_chain and self.branch else None
 
     def get_free_computer_count(self, obj):
-        if self.branch:
+        if not obj.is_chain and self.branch:
             return (
                 self.branch.computers
                 .filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False)
@@ -132,7 +130,7 @@ class ClubListV2Serializer(serializers.ModelSerializer):
         return None
 
     def get_total_computer_count(self, obj):
-        return self.branch.computers.filter(is_deleted=False).count() if self.branch else None
+        return self.branch.computers.filter(is_deleted=False).count() if not obj.is_chain and self.branch else None
 
 
 class ClubBranchListV2Serializer(ClubUserSerializer):
