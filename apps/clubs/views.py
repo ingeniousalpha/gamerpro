@@ -39,7 +39,7 @@ class ClubViewSet(PublicJSONRendererMixin, viewsets.GenericViewSet, mixins.ListM
             .annotate(
                 branch_count=Count('branches', filter=(Q(branches__is_active=True) & Q(branches__is_turned_on=True))),
                 is_chain=Case(
-                    When(branch_count=1, then=True),
+                    When(branch_count__gt=1, then=True),
                     default=False,
                     output_field=BooleanField()
                 )
