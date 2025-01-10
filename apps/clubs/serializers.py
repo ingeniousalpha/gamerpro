@@ -1,5 +1,6 @@
 from django.core.cache import cache
 from django.utils import timezone
+from django.utils.functional import cached_property
 from rest_framework import serializers
 
 from apps.common.serializers import RequestUserPropertyMixin
@@ -80,6 +81,79 @@ class ClubListSerializer(serializers.ModelSerializer):
             'name',
             'description',
         )
+
+
+class ClubListV2Serializer(serializers.ModelSerializer):
+    # The decision to combine "Club" and "ClubBranch" fields belongs to the project manager a.k.a. Zhalgas
+
+    logo = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
+    free_computer_count = serializers.SerializerMethodField()
+    total_computer_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Club
+        fields = (
+            'name',
+            'description',
+            'logo',
+            'software_type',
+            'is_favorite',
+            'is_chain',
+            'address',
+            'free_computer_count',
+            'total_computer_count',
+        )
+
+    @cached_property
+    def branch(self):
+        if self.instance.is_chain:
+            return None
+        return self.instance.branches.filter(is_active=True, is_turned_on=True).prefetch_related('computers').first()
+
+    def get_logo(self, obj):
+        return self.context.get('request').build_absolute_uri(obj.logo.url) if obj.logo else None
+
+    def get_is_favorite(self, obj):
+        # For some unknown reason "favorite clubs" was implemented on frontend side
+        return False
+
+    def get_address(self, obj):
+        return self.branch.address if self.branch else None
+
+    def get_free_computer_count(self, obj):
+        if self.branch:
+            return (
+                self.branch.computers
+                .filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False)
+                .count()
+            )
+        return None
+
+    def get_total_computer_count(self, obj):
+        return self.branch.computers.filter(is_deleted=False).count() if self.branch else None
+
+
+class ClubBranchListV2Serializer(ClubUserSerializer):
+    free_computer_count = serializers.SerializerMethodField()
+    total_computer_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubBranch
+        fields = (
+            'is_favorite',
+            'address',
+            'free_computer_count',
+            'total_computer_count',
+            'login',
+        )
+
+    def get_free_computer_count(self, obj):
+        return obj.computers.filter(is_active_session=False, is_locked=False, is_broken=False, is_deleted=False).count()
+
+    def get_total_computer_count(self, obj):
+        return obj.computers.filter(is_deleted=False).count()
 
 
 class ClubBranchPriceSerializer(serializers.ModelSerializer):

@@ -222,6 +222,7 @@ class ClubAdmin(admin.ModelAdmin):
         'software_type',
         'description',
         'code',
+        'logo',
         'is_bro_chain',
     )
 

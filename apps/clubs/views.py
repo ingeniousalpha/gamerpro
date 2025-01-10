@@ -1,17 +1,18 @@
-from django.db.models import Q, F
+from django.db.models import Q, F, Count, Case, When, BooleanField
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
 from rest_framework.response import Response
 
 from apps.authentication.services import validate_password
 from apps.clubs import SoftwareTypes
 from apps.clubs.exceptions import NeedToInputUserLogin, ClubBranchNotFound
-from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubComputerGroup, ClubBranchUser
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubBranchUser
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
-    ClubUserCashbackSerializer, ShortClubUserSerializer
+    ClubUserCashbackSerializer, ShortClubUserSerializer, ClubListV2Serializer, ClubBranchListV2Serializer
 )
 from apps.clubs.tasks import _sync_club_branch_computers
 from apps.common.exceptions import InvalidInputData
@@ -24,6 +25,49 @@ from apps.integrations.senet.users_services import SenetCreateUserService, Senet
 class ClublistView(PublicJSONRendererMixin, ListAPIView):
     queryset = Club.objects.all()
     serializer_class = ClubListSerializer
+
+
+class ClubViewSet(PublicJSONRendererMixin, viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = Club.objects.all()
+    serializer_class = ClubListV2Serializer
+    pagination_class = ClubsPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return (
+            queryset
+            .annotate(
+                branch_count=Count('branches', filter=(Q(branches__is_active=True) & Q(branches__is_turned_on=True))),
+                is_chain=Case(
+                    When(branch_count=1, then=True),
+                    default=False,
+                    output_field=BooleanField()
+                )
+            )
+            .filter(branch_count__gt=0)
+            .order_by('id')
+        )
+
+    @action(detail=True, methods=['get'])
+    def branches(self, request, pk):
+        favorite_branches = []
+        user = request.user
+        if user.is_authenticated:
+            favorite_branches = user.favorite_club_branches.all().values_list('id', flat=True)
+        branches = (
+            ClubBranch.objects
+            .filter(club=self.get_object(), is_active=True, is_turned_on=True)
+            .annotate(
+                is_favorite=Case(
+                    When(id__in=favorite_branches, then=True),
+                    default=False,
+                    output_field=BooleanField()
+                )
+            )
+            .order_by('-is_favorite', 'id')
+        )
+        serializer = ClubBranchListV2Serializer(branches, many=True, context=self.get_serializer_context())
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ClubBranchlistView(PublicJSONRendererMixin, ListAPIView):

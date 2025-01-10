@@ -26,6 +26,9 @@ class User(PermissionsMixin, AbstractBaseUser):
     secret_key = models.UUIDField("Секретный ключ", default=uuid_lib.uuid4, unique=True)
     club_branches = models.ManyToManyField("clubs.ClubBranch", blank=True, related_name="admins")
 
+    favorite_clubs = models.ManyToManyField("clubs.Club", blank=True, verbose_name='Любимые клубы')
+    favorite_club_branches = models.ManyToManyField("clubs.ClubBranch", blank=True, verbose_name='Любимые филиалы клубов')
+
     is_active = models.BooleanField("Активный", default=True)
     is_staff = models.BooleanField("Сотрудник", default=False)
     is_email_confirmed = models.BooleanField("Почта подтверждена", default=False)

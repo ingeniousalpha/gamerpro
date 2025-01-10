@@ -31,6 +31,7 @@ class Club(models.Model):
     description = models.TextField()
     is_bro_chain = models.BooleanField(default=False)
     software_type = models.CharField(choices=SoftwareTypes.choices, null=True, max_length=20)
+    logo = models.ImageField(upload_to="images", null=True, blank=True, verbose_name='Логотип')
 
     class Meta:
         verbose_name = "Клуб"
