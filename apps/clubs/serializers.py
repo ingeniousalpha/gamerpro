@@ -470,6 +470,7 @@ class ClubTimePacketListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'description',
             'price',
             'is_available',
         )

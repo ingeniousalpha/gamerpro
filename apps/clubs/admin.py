@@ -71,6 +71,7 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'id',
         'outer_id',
         'display_name',
+        'description',
         'packet_group',
         'club_computer_group',
         'minutes',
@@ -83,7 +84,7 @@ class ClubTimePacketAdmin(admin.ModelAdmin):
         'time_available',
         'is_active',
     )
-    list_editable = ('priority', 'is_active', 'price', 'price_for_holidays')
+    list_editable = ('priority', 'is_active', 'price', 'price_for_holidays', 'description')
     list_filter = (
         ('club', admin.RelatedOnlyFieldListFilter),
         'is_active',
