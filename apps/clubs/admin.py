@@ -521,6 +521,7 @@ class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
         'id',
         'name',
         'code',
+        'bin',
         'branches_amount',
     )
     search_fields = (

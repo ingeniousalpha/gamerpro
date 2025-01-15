@@ -87,6 +87,8 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
                 return Response(resp_data)
 
             resp_data["sum"] = "{:.2f}".format(payment.amount)
+            if booking.club_branch.club.name.lower() != "bro":
+                resp_data["bin"] = booking.club_branch.trader.bin
 
             if command == "check":
                 payment.outer_id = resp_data["txn_id"]
