@@ -49,7 +49,7 @@ class Club(models.Model):
 class ClubBranchLegalEntity(models.Model):
     name = models.CharField(max_length=256, default="")
     code = models.CharField(max_length=30, default="")
-    bin = models.CharField(max_length=12, default="")
+    bin = models.CharField(max_length=12, default="", blank=True)
 
     def __str__(self):
         return self.name
