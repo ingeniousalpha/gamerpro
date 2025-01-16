@@ -68,6 +68,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             if booking_uuid == "777999":
                 resp_data["sum"] = sum
                 resp_data["comment"] = "OK"
+                resp_data["bin"] = "910130350407"
                 return Response(resp_data)
 
             booking = Booking.objects.filter(uuid=booking_uuid).first()
