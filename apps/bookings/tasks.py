@@ -3,6 +3,7 @@ import logging
 from constance import config
 from django.core.cache import cache
 
+from apps.authentication.exceptions import UserNotFound
 from apps.bookings import BookingStatuses
 from apps.bookings.models import Booking
 from apps.clubs import SoftwareTypes
@@ -16,7 +17,7 @@ from apps.integrations.gizmo.time_packets_services import (
 from apps.integrations.gizmo.users_services import (
     GizmoStartUserSessionService,
     GizmoEndUserSessionService,
-    GizmoGetUserByUsernameService,
+    GizmoGetUserByUsernameService, GizmoCreateUserService,
 )
 from apps.integrations.senet.computer_services import SenetLockComputersService, SenetUnlockComputersService
 from apps.integrations.senet.deposit_services import SenetReplenishUserBalanceService
@@ -68,7 +69,22 @@ def gizmo_book_computers(booking_uuid, from_balance=False):
         ).run()
     elif booking.time_packet:
         print('booking time_packet activating...')
-        GizmoGetUserByUsernameService(instance=booking.club_branch, username=booking.club_user.login).run()
+        # DOING IMPORTANT STUFF BEFORE SETTING TIMEPACKET:
+        # UPDATING GIZMO USER ID OR CREATE USER IF SOMEHOW HE IS ABSENT IN BRANCH GIZMO
+        try:
+            # THIS IS FOR CASE WHEN USER HAS DIFFERENT ID IN OUR SYSTEM
+            GizmoGetUserByUsernameService(instance=booking.club_branch, username=booking.club_user.login).run()
+        except UserNotFound:
+            # THIS IS FOR ANOMALY CASE IN FORUM BRANCH WHEN USER DISAPPEARS WITHOUT ANY REASON
+            gizmo_user_id = GizmoCreateUserService(
+                instance=booking.club_branch,
+                login=booking.club_user.login,
+                first_name=booking.club_user.first_name,
+                mobile_phone=booking.club_user.outer_phone,
+            ).run()
+            booking.club_user.outer_id = gizmo_user_id
+            booking.club_user.save(update_fields=['outer_id'])
+
         if Booking.objects.filter(club_user__user=booking.club_user.user).count() <= 1:
             extra_minutes = config.EXTRA_MINUTES_TO_FIRST_TRANSACTION  # add extra hour
             GizmoAddPaidTimeToUser(
@@ -109,7 +125,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
         'club_user', 'club_user__user', 'club_branch', 'club_branch__club', 'time_packet'
     ).prefetch_related('computers').filter(uuid=booking_uuid).first())
     print(f"uuid: {booking_uuid}, booking.status: {booking.status if booking else ''}", )
-    if not booking or (check_status and booking.status in [BookingStatuses.SESSION_STARTED, BookingStatuses.PLAYING]):
+    if not booking or (check_status and booking.status in [BookingStatuses.SESSION_STARTED]):
         return
 
     from apps.bot.tasks import bot_notify_about_booking_task

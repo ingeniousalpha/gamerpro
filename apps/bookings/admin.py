@@ -66,7 +66,6 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
             'expiration_date',
             'is_starting_session',
             'time_packet',
-            'is_time_packet_set',
         ]
         if request.user.is_superuser:
             fields.append('is_cancelled')
