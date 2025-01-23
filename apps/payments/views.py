@@ -66,7 +66,7 @@ class KaspiCallbackHandlerView(PublicAPIMixin, GenericAPIView):
             )
 
             if booking_uuid == "777999":
-                resp_data["sum"] = sum
+                resp_data["sum"] = 200
                 resp_data["comment"] = "OK"
                 resp_data["bin"] = "910130350407"
                 return Response(resp_data)
