@@ -17,4 +17,8 @@ cel_app.conf.beat_schedule = {
         'task': 'apps.clubs.tasks.synchronize_all_computers',
         'schedule': crontab(minute='*')
     },
+    'clean-old-logs': {
+        'task': 'apps.bookings.tasks.clean_old_logs',
+        'schedule': crontab(minute='*')
+    },
 }
