@@ -19,6 +19,6 @@ cel_app.conf.beat_schedule = {
     },
     'clean-old-logs': {
         'task': 'apps.bookings.tasks.clean_old_logs',
-        'schedule': crontab(minute='*')
+        'schedule': crontab(minute=0, hour=0),
     },
 }
