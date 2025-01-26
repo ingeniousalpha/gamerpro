@@ -25,7 +25,8 @@ from apps.notifications.tasks import fcm_push_notify_user
 from apps.payments import PaymentStatuses
 from apps.payments.models import Payment
 from config.celery_app import cel_app
-
+from django.db import connection
+from datetime import datetime, timedelta
 logger = logging.getLogger("bookings")
 
 BOOKING_STATUS_TRANSITION_PUSH_TEXT = {
@@ -422,3 +423,33 @@ def senet_replenish_user_balance(booking_uuid, use_cashback=False):
     ).run()
     logger.info(f"({booking_uuid}) Task senet_replenish_user_balance finished")
     return True
+
+
+
+@cel_app.task
+def clean_old_logs():
+
+    three_days_ago = datetime.now() - timedelta(days=3)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM integrations_outerserviceresponse
+                WHERE history_id IN (
+                    SELECT id FROM integrations_outerservicelog
+                    WHERE created_at < %s
+                );
+            """, [three_days_ago])
+            deleted_responses = cursor.rowcount
+            logger.info(f"Удалено {deleted_responses} строк из 'integrations_outerserviceresponse'.")
+
+            cursor.execute("""
+                DELETE FROM integrations_outerservicelog
+                WHERE created_at < %s;
+            """, [three_days_ago])
+            deleted_logs = cursor.rowcount  # Количество удаленных строк
+            logger.info(f"Удалено {deleted_logs} строк из 'integrations_outerservicelog'.")
+
+    except DatabaseError as e:
+        logger.error(f"Ошибка при очистке старых логов: {e}")
+
