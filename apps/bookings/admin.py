@@ -73,7 +73,7 @@ class BookingAdmin(FilterByClubMixin, admin.ModelAdmin):
         return fields
 
     def response_change(self, request, obj):
-        if "set_time_packet" in request.POST:
+        if True  or "set_time_packet" in request.POST:
             if obj.is_time_packet_set:
                 self.message_user(request, "Task gizmo_bro_add_time_and_set_booking_expiration уже запускался")
             else:
