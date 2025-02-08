@@ -99,6 +99,12 @@ class ClubBranch(OuterServiceLogHistory):
         related_name="club_branches",
         null=True, blank=True
     )
+    seating_plan = models.JSONField(
+        verbose_name="Рассадка компьютеров",
+        null=True,
+        blank=True,
+        help_text="JSON-массив с координатами и номерами компьютеров"
+    )
 
     class Meta:
         verbose_name = "Филиал Клуба"
