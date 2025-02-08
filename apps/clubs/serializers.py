@@ -319,6 +319,7 @@ class ClubBranchDetailSerializer(ClubUserSerializer):
             'user',
             'halls_info',
             'computers',
+            'seating_plan'
         )
 
     def get_name(self, obj):
@@ -435,6 +436,7 @@ class ClubBranchListSerializer(ClubUserSerializer):
             'user',
             'extra_data',
             'landing',
+            'seating_plan'
         )
 
     def get_name(self, obj):
@@ -501,3 +503,23 @@ class ClubUserCashbackSerializer(serializers.ModelSerializer):
                 'total_amount': 0
             }
         return representation
+
+class SeatingPositionSerializer(serializers.Serializer):
+    x = serializers.IntegerField()
+    y = serializers.IntegerField()
+    computer_number = serializers.IntegerField()
+
+class SeatingPlanSerializer(serializers.ModelSerializer):
+    seating_plan = serializers.ListField(child=SeatingPositionSerializer(), required=False)
+
+    class Meta:
+        model = ClubBranch
+        fields = ["id", "seating_plan"]
+
+    def validate_seating_plan(self, value):
+        seen_computers = set()
+        for seat in value:
+            if seat["computer_number"] in seen_computers:
+                raise serializers.ValidationError(f"Компьютер {seat['computer_number']} дублируется!")
+            seen_computers.add(seat["computer_number"])
+        return value
