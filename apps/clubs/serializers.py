@@ -517,9 +517,6 @@ class SeatingPlanSerializer(serializers.ModelSerializer):
         fields = ["id", "seating_plan"]
 
     def validate_seating_plan(self, value):
-        """
-        Проверяет, что компьютеры не повторяются.
-        """
         seen_computers = set()
         for seat in value:
             if seat["computer_number"] in seen_computers:
