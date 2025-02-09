@@ -5,7 +5,7 @@ from django.template.loader import get_template
 
 from apps.authentication.services import validate_password_in_forms
 
-from .models import User, UserPerk
+from .models import User, UserPerk, UserClubBranchPerk
 from ..authentication.admin import VerifiedOTPInline
 from ..clubs.admin import ClubBranchUserInline, ClubUserCashbackInline
 
@@ -109,3 +109,8 @@ class UserAdmin(BaseUserAdmin):
         self.request = request
         self.response = super().render_change_form(request, *args, **kwargs)
         return self.response
+
+
+@admin.register(UserClubBranchPerk)
+class UserClubBranchPerkAdmin(admin.ModelAdmin):
+    pass

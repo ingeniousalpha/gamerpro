@@ -535,3 +535,8 @@ class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
 
     def branches_amount(self, obj):
         return obj.club_branches.count()
+
+
+@admin.register(ClubBranchPerk)
+class ClubBranchPerkAdmin(admin.ModelAdmin):
+    pass

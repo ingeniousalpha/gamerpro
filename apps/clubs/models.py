@@ -99,6 +99,12 @@ class ClubBranch(OuterServiceLogHistory):
         related_name="club_branches",
         null=True, blank=True
     )
+    seating_plan = models.JSONField(
+        verbose_name="Рассадка компьютеров",
+        null=True,
+        blank=True,
+        help_text="JSON-массив с координатами и номерами компьютеров"
+    )
 
     class Meta:
         verbose_name = "Филиал Клуба"
@@ -110,6 +116,11 @@ class ClubBranch(OuterServiceLogHistory):
 
     def software_type(self):
         return self.club.software_type
+
+    def get_perk(self, code):
+        perk = self.club_branch_perks.filter(code=code).first()
+        if perk:
+            return perk.value
 
 
 class ClubPerk(models.Model):
@@ -127,6 +138,23 @@ class ClubPerk(models.Model):
 
     def __str__(self):
         return f"{self.club}/{self.code}"
+
+
+class ClubBranchPerk(models.Model):
+    club_branch = models.ForeignKey(
+        ClubBranch, related_name="club_branch_perks",
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50)
+    value = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ("club_branch", "code")
+
+    def __str__(self):
+        return f"{self.club_branch}/{self.code}"
 
 
 class ClubComputerGroup(models.Model):

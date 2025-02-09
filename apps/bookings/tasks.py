@@ -131,6 +131,7 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
 
     from apps.bot.tasks import bot_notify_about_booking_task
     user = booking.club_user.user
+    club_branch = booking.club_branch
     club = booking.club_branch.club
 
     print(f"BRO booking({str(booking.uuid)}) time_packet activating...")
@@ -145,8 +146,19 @@ def gizmo_bro_add_time_and_set_booking_expiration(booking_uuid, by_points=False,
                     product_id=delayed.time_packet.outer_id
                 ).run()
         delayed_times.delete()
-
-    if extra_minutes := club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
+    # if user has club branch perk, then no club perk needed
+    if extra_minutes := club_branch.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
+            and not user.is_used_clubbranch_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION"):
+        GizmoAddPaidTimeToUser(
+            instance=booking.club_branch,
+            user_id=booking.club_user.outer_id,
+            minutes=extra_minutes,
+            price=booking.time_packet.actual_price
+        ).run()
+        user.use_branch_perk(club_branch, "EXTRA_MINUTES_TO_FIRST_TRANSACTION")
+        print('llsslsl')
+    # if user has club perk
+    elif extra_minutes := club.get_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION") \
             and not user.is_used_perk("EXTRA_MINUTES_TO_FIRST_TRANSACTION"):
         GizmoAddPaidTimeToUser(
             instance=booking.club_branch,

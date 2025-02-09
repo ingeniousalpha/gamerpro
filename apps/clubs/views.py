@@ -13,6 +13,7 @@ from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
     ClubUserCashbackSerializer, ShortClubUserSerializer, ClubListV2Serializer, ClubBranchListV2Serializer
+, SeatingPlanSerializer,
 )
 from apps.clubs.tasks import _sync_club_branch_computers
 from apps.common.exceptions import InvalidInputData
@@ -258,3 +259,51 @@ class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
             club_branch_user.first_name = request.user.name
             club_branch_user.save(update_fields=['first_name'])
         return Response({}, status=status.HTTP_200_OK)
+
+
+
+
+class SeatingPlanViewSet(mixins.RetrieveModelMixin,
+                         mixins.UpdateModelMixin,
+                         mixins.DestroyModelMixin,
+                         viewsets.GenericViewSet):
+    serializer_class = SeatingPlanSerializer
+
+    def get_queryset(self):
+        branch_id = self.kwargs.get("pk")  # Используем `pk` из URL
+        if branch_id:
+            return ClubBranch.objects.filter(id=branch_id)
+        return ClubBranch.objects.none()
+
+    def get_object(self):
+        branch_id = self.kwargs.get("pk")
+        branch = ClubBranch.objects.filter(id=branch_id).first()
+        if not branch:
+            raise NotFound("Филиал не найден")
+        return branch
+
+
+    def create(self, request, *args, **kwargs):
+        branch = self.get_object()
+        serializer = self.get_serializer(branch, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    def retrieve(self, request, *args, **kwargs):
+        branch = self.get_object()
+        return Response({"seating_plan": branch.seating_plan or []}, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        branch = self.get_object()
+        serializer = self.get_serializer(branch, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        branch = self.get_object()
+        branch.seating_plan = None
+        branch.save(update_fields=["seating_plan"])
+        return Response({"message": "Рассадка удалена"}, status=status.HTTP_204_NO_CONTENT)

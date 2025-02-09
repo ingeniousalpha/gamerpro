@@ -8,7 +8,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from .managers import UserManager
 from apps.bookings.models import Booking
 from ..clubs import SoftwareTypes
-from ..clubs.models import ClubPerk
+from ..clubs.models import ClubPerk, ClubBranchPerk
 from ..common.models import TimestampModel
 
 
@@ -50,12 +50,22 @@ class User(PermissionsMixin, AbstractBaseUser):
     def is_used_perk(self, code):
         return self.perks.filter(perk__code=code).exists()
 
+    def is_used_clubbranch_perk(self, code):
+        return self.club_branch_perks.filter(branch_perk__code=code).exists()
+
     def use_perk(self, club, code):
         club_perk = ClubPerk.objects.filter(club=club, code=code).first()
         if club_perk:
             self.perks.add(UserPerk(perk=club_perk), bulk=False)
         else:
             print(f'There is no such perk: {club}, {code}')
+
+    def use_branch_perk(self, club_branch, code):
+        club_branch_perk = ClubBranchPerk.objects.filter(club=club_branch, code=code).first()
+        if club_branch_perk:
+            self.club_branch_perks.add(UserClubBranchPerk(branch_perk=club_branch_perk), bulk=False)
+        else:
+            print(f'There is no such perk: {club_branch}, {code}')
 
     # @property
     # def username(self):
@@ -144,3 +154,19 @@ class UserPerk(TimestampModel):
         related_name="perks",
         null=True, blank=True
     )
+
+
+class UserClubBranchPerk(TimestampModel):
+    branch_perk = models.ForeignKey(
+        "clubs.ClubBranchPerk",
+        related_name="used_users",
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="club_branch_perks",
+        null=True, blank=True
+    )
+
