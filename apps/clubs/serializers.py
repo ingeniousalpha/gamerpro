@@ -504,22 +504,19 @@ class ClubUserCashbackSerializer(serializers.ModelSerializer):
             }
         return representation
 
-class SeatingPositionSerializer(serializers.Serializer):
-    x = serializers.IntegerField()
-    y = serializers.IntegerField()
-    computer_number = serializers.IntegerField()
+
 
 class SeatingPlanSerializer(serializers.ModelSerializer):
-    seating_plan = serializers.ListField(child=SeatingPositionSerializer(), required=False)
+    halls = serializers.JSONField()
 
     class Meta:
         model = ClubBranch
-        fields = ["id", "seating_plan"]
+        fields = ["halls"]
 
-    def validate_seating_plan(self, value):
-        seen_computers = set()
-        for seat in value:
-            if seat["computer_number"] in seen_computers:
-                raise serializers.ValidationError(f"Компьютер {seat['computer_number']} дублируется!")
-            seen_computers.add(seat["computer_number"])
-        return value
+    def to_representation(self, instance):
+        return {"halls": instance.seating_plan or []}
+
+    def to_internal_value(self, data):
+        if "halls" not in data:
+            raise serializers.ValidationError({"halls": "Это поле обязательно."})
+        return {"seating_plan": data["halls"]}
