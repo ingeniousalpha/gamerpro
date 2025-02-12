@@ -5,6 +5,7 @@ from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
 from rest_framework.response import Response
+from rest_framework.generics import RetrieveUpdateAPIView
 
 from apps.authentication.services import validate_password
 from apps.clubs import SoftwareTypes
@@ -261,49 +262,16 @@ class SenetClubBranchUserLoginView(PrivateJSONRendererMixin, GenericAPIView):
         return Response({}, status=status.HTTP_200_OK)
 
 
-
-
-class SeatingPlanViewSet(mixins.RetrieveModelMixin,
-                         mixins.UpdateModelMixin,
-                         mixins.DestroyModelMixin,
-                         viewsets.GenericViewSet):
+class SeatingPlanRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = SeatingPlanSerializer
 
-    def get_queryset(self):
-        branch_id = self.kwargs.get("pk")  # Используем `pk` из URL
-        if branch_id:
-            return ClubBranch.objects.filter(id=branch_id)
-        return ClubBranch.objects.none()
-
     def get_object(self):
-        branch_id = self.kwargs.get("pk")
-        branch = ClubBranch.objects.filter(id=branch_id).first()
-        if not branch:
-            raise NotFound("Филиал не найден")
-        return branch
+        return get_object_or_404(ClubBranch, id=self.kwargs["pk"])
 
-
-    def create(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         branch = self.get_object()
         serializer = self.get_serializer(branch, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-    def retrieve(self, request, *args, **kwargs):
-        branch = self.get_object()
-        return Response({"seating_plan": branch.seating_plan or []}, status=status.HTTP_200_OK)
-
-    def update(self, request, *args, **kwargs):
-        branch = self.get_object()
-        serializer = self.get_serializer(branch, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        branch = self.get_object()
-        branch.seating_plan = None
+        branch.seating_plan = serializer.validated_data["seating_plan"]
         branch.save(update_fields=["seating_plan"])
-        return Response({"message": "Рассадка удалена"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data)
