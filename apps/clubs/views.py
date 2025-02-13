@@ -10,11 +10,11 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from apps.authentication.services import validate_password
 from apps.clubs import SoftwareTypes
 from apps.clubs.exceptions import NeedToInputUserLogin, ClubBranchNotFound
-from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubBranchUser
+from apps.clubs.models import Club, ClubBranch, ClubTimePacket, ClubUserCashback, ClubBranchUser, ClubBranchUserFeedback
 from apps.clubs.serializers import (
     ClubListSerializer, ClubBranchListSerializer, ClubBranchDetailSerializer, ClubTimePacketListSerializer,
     ClubUserCashbackSerializer, ShortClubUserSerializer, ClubListV2Serializer, ClubBranchListV2Serializer
-, SeatingPlanSerializer,
+, SeatingPlanSerializer, ClubBranchUserFeedbackSerializer
 )
 from apps.clubs.tasks import _sync_club_branch_computers
 from apps.common.exceptions import InvalidInputData
@@ -274,4 +274,25 @@ class SeatingPlanRetrieveUpdateView(RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         branch.seating_plan = serializer.validated_data["seating_plan"]
         branch.save(update_fields=["seating_plan"])
+        return Response(serializer.data)
+
+
+
+class ClubBranchUserFeedbackViewSet(viewsets.ModelViewSet):
+    serializer_class = ClubBranchUserFeedbackSerializer
+
+    def get_queryset(self):
+        club_branch_id = self.kwargs.get("club_branch_id")
+        return ClubBranchUserFeedback.objects.filter(club_branch_id=club_branch_id).select_related("user").order_by(
+            "-created_at")
+
+    def perform_create(self, serializer):
+        club_branch_id = self.kwargs.get("club_branch_id")
+        club_branch = get_object_or_404(ClubBranch, id=club_branch_id)
+        serializer.save(user=self.request.user, club_branch=club_branch)
+
+    @action(detail=False, methods=["get"])
+    def my_feedbacks(self, request, club_branch_id=None):
+        feedbacks = self.get_queryset().filter(user=request.user)
+        serializer = self.get_serializer(feedbacks, many=True)
         return Response(serializer.data)

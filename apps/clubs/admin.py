@@ -540,3 +540,9 @@ class ClubBranchLegalEntityAdmin(admin.ModelAdmin):
 @admin.register(ClubBranchPerk)
 class ClubBranchPerkAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(ClubBranchUserFeedback)
+class UserFeedbackAdmin(FilterByClubMixin, admin.ModelAdmin):
+    list_display = ("user", "club_branch", "created_at")
+    list_filter = ("club_branch", "created_at")
+    search_fields = ("user__email", "user__mobile_phone", "comment")

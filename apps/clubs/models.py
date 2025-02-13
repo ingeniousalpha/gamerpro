@@ -452,3 +452,26 @@ class ClubBranchAdmin(models.Model):
     class Meta:
         verbose_name = "Админ в телеге"
         verbose_name_plural = "Админы в телеге"
+
+
+class ClubBranchUserFeedback(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="feedbacks",
+    )
+    club_branch = models.ForeignKey(
+        ClubBranch,
+        on_delete=models.CASCADE,
+        related_name="feedbacks",
+    )
+    comment = models.TextField("Комментарий")
+    created_at = models.DateTimeField("Создано", auto_now=True)
+
+    class Meta:
+        verbose_name = "Обратная связь"
+        verbose_name_plural = "Обратная связь"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user} - {self.club_branch}"

@@ -7,7 +7,7 @@ from apps.common.serializers import RequestUserPropertyMixin
 from . import SoftwareTypes
 from .models import (
     Club, ClubBranch, ClubComputer, ClubBranchPrice, ClubBranchProperty, ClubBranchHardware,
-    ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup
+    ClubComputerGroup, ClubBranchUser, ClubTimePacket, ClubUserCashback, ClubComputerLayoutGroup, ClubBranchUserFeedback
 )
 from .services import get_cashback
 from ..users.services import get_senet_user_balance
@@ -520,3 +520,19 @@ class SeatingPlanSerializer(serializers.ModelSerializer):
         if "halls" not in data:
             raise serializers.ValidationError({"halls": "Это поле обязательно."})
         return {"seating_plan": data["halls"]}
+
+
+class ClubBranchUserFeedbackSerializer(serializers.ModelSerializer):
+    email = serializers.SerializerMethodField()
+    mobile_phone = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubBranchUserFeedback
+        fields = ["id", "user", "email", "mobile_phone", "comment", "created_at"]
+        read_only_fields = ["user", "created_at"]
+
+    def get_email(self, obj):
+        return obj.user.email if obj.user else None
+
+    def get_mobile_phone(self, obj):
+        return str(obj.user.mobile_phone) if obj.user else None
