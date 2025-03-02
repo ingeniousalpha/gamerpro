@@ -48,7 +48,7 @@ class GizmoTimePacketSaveSerializer(serializers.ModelSerializer):
         model = ClubTimePacket
         fields = (
             "outer_id",
-            "gizmo_name",
+            "outer_name",
             "display_name",
             "description",
             "price",
