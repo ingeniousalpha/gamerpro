@@ -59,6 +59,7 @@ class GizmoTimePacketSaveSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         display_name = validated_data.pop('display_name', "")
+        print(validated_data)
         time_packet, _ = self.Meta.model.objects.get_or_create(**validated_data)
         if not time_packet.display_name:
             time_packet.display_name = display_name
