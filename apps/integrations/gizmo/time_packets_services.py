@@ -43,7 +43,7 @@ class GizmoGetTimePacketsService(BaseGizmoService):
     method = "GET"
 
     def run_service(self):
-        return self.fetch(path_params={"limit": ParamKeyWords["limit"].get(self.instance.api_host, "Limit")})
+        return self.fetch(path_params={"limit": ParamKeyWords["limit"].get(self.instance.api_host, "Pagination.Limit")})
 
     def save(self, response):
         resp = response.get('result')
