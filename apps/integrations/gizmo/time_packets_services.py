@@ -54,7 +54,7 @@ class GizmoGetTimePacketsService(BaseGizmoService):
                     packet_group = self.instance.packet_groups.filter(
                         outer_id=time_packet['productGroupId']
                     ).first()
-                    computer_group = packet_group.club_computer_group
+                    computer_group = packet_group.computer_group
 
                     if packet_group:
                         serializer = self.save_serializer(data={
