@@ -54,6 +54,8 @@ class GizmoGetTimePacketsService(BaseGizmoService):
                     packet_group = self.instance.packet_groups.filter(
                         outer_id=time_packet['productGroupId']
                     ).first()
+                    computer_group = packet_group.club_computer_group
+
                     if packet_group:
                         serializer = self.save_serializer(data={
                             "outer_id": time_packet['id'],
@@ -63,6 +65,7 @@ class GizmoGetTimePacketsService(BaseGizmoService):
                             "price": time_packet['price'],
                             "minutes": time_packet.get('timeProduct', {}).get('minutes', 0),
                             "packet_group": packet_group.id,
+                            "club_computer_group": computer_group.id,
                         })
                         serializer.is_valid(raise_exception=True)
                         serializer.save()

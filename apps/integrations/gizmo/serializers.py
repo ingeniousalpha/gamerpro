@@ -54,6 +54,7 @@ class GizmoTimePacketSaveSerializer(serializers.ModelSerializer):
             "price",
             "minutes",
             "packet_group",
+            "club_computer_group"
         )
 
     def create(self, validated_data):
