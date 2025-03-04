@@ -25,7 +25,8 @@ class KaspiRetrievePaymentDeeplinkService(BaseKaspiService):
             "TranId": str(payment.uuid),
             "OrderId": str(self.instance.uuid),
             "Amount": int(payment.amount*100),
-            "Service": config.KASPI_PAYMENT_SERVICE_CODE,
+            "Service": config.KASPI_PAYMENT_SERVICE_CODE if self.instance.club_branch.club.name.lower() != "bro"
+                        else config.KASPI_PAYMENT_SERVICE_CODE_LOBBY,
             "returnUrl": config.KASPI_PAYMENT_DEEPLINK_HOST,
             "refererHost": "server.gamerpro.kz",
             "GenerateQrCode": False

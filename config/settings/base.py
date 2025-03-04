@@ -93,6 +93,7 @@ CONSTANCE_CONFIG = {
     "CASHBACK_PERCENT": (5, "% кэшбека от суммы транзакции", int),
     "EXTRA_MINUTES_TO_FIRST_TRANSACTION": (60, "Экстра минуты бесплатно для первой транзакции", int),
     "KASPI_PAYMENT_SERVICE_CODE": ("BRO", "SERVICE CODE для сервиса оплаты через Каспи банк", str),
+    "KASPI_PAYMENT_SERVICE_CODE_LOBBY": ("LOBBY", "SERVICE CODE для сервиса оплаты через Каспи банк для LOBBY", str),
     "KASPI_PAYMENT_DEEPLINK_HOST": (
         "https://server.gamerpro.kz", "Диплинк для возвращения в прилу после успешной оплаты", str
     ),
